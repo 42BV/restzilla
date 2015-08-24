@@ -10,6 +10,7 @@ import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
 
+import nl.mad.rest.EntityInformation;
 import nl.mad.rest.service.CrudService;
 
 import org.apache.commons.lang3.StringUtils;
@@ -108,8 +109,8 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
             Object input = objectMapper.readValue(request.getReader(), information.getCreateType());
-            conversionService.convert(input, information.getEntityClass());
-            Object output = service.save(input);
+            Object entity = conversionService.convert(input, information.getEntityClass());
+            Object output = service.save(entity);
             return conversionService.convert(output, information.getResultType());
         }
         
@@ -121,8 +122,8 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
             Object input = objectMapper.readValue(request.getReader(), information.getUpdateType());
-            conversionService.convert(input, information.getEntityClass());
-            Object output = service.save(input);
+            Object entity = conversionService.convert(input, information.getEntityClass());
+            Object output = service.save(entity);
             return conversionService.convert(output, information.getResultType());
         }
         

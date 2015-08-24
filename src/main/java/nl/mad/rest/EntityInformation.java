@@ -1,10 +1,9 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package nl.mad.rest.handler;
+package nl.mad.rest;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
-import nl.mad.rest.EnableRest;
 
 import org.springframework.data.domain.Persistable;
 

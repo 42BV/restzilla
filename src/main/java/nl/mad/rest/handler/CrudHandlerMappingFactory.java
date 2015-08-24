@@ -1,5 +1,6 @@
 package nl.mad.rest.handler;
 
+import nl.mad.rest.EntityInformation;
 import nl.mad.rest.service.CrudService;
 
 /**

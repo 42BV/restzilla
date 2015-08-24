@@ -31,7 +31,13 @@ public class BasePathHandlerMappingDelegate extends AbstractHandlerMapping {
         return handlerMapping;
     }
     
-    public void register(String basePath, CrudHandlerMapping handlerMapping) throws Exception {
+    /**
+     * Register a handler mapping.
+     * 
+     * @param basePath the base path
+     * @param handlerMapping the handler mapping
+     */
+    public void register(String basePath, CrudHandlerMapping handlerMapping) {
         handlerMappings.put(basePath, handlerMapping);
     }
 

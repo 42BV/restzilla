@@ -6,6 +6,8 @@ package nl.mad.rest.model;
 import javax.persistence.Entity;
 
 import nl.mad.rest.EnableRest;
+import nl.mad.rest.model.dto.CreateUserModel;
+import nl.mad.rest.model.dto.UpdateUserModel;
 import nl.mad.rest.model.dto.UserModel;
 
 /**
@@ -14,7 +16,9 @@ import nl.mad.rest.model.dto.UserModel;
  * @since Mar 11, 2015
  */
 @Entity
-@EnableRest(resultType = UserModel.class)
+@EnableRest(resultType = UserModel.class,
+            createType = CreateUserModel.class,
+            updateType = UpdateUserModel.class)
 public class User extends BaseEntity {
     
     private String name;

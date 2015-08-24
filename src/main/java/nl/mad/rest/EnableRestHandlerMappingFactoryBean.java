@@ -7,7 +7,6 @@ import nl.mad.rest.handler.BasePathHandlerMappingDelegate;
 import nl.mad.rest.handler.CrudHandlerMapping;
 import nl.mad.rest.handler.CrudHandlerMappingFactory;
 import nl.mad.rest.handler.DefaultCrudHandlerMappingFactory;
-import nl.mad.rest.handler.EntityInformation;
 import nl.mad.rest.service.CrudService;
 import nl.mad.rest.service.CrudServiceLocator;
 import nl.mad.rest.service.CrudServiceRegistry;
