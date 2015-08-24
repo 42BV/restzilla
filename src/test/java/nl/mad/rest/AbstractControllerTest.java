@@ -9,6 +9,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 /**
  * Template for testing the dynamic REST endpoints.
  *
@@ -23,12 +25,21 @@ public abstract class AbstractControllerTest extends AbstractSpringTest {
     @Autowired
     private HandlerMapping handlerMapping;
     
-    public MockHttpServletResponse call(MockHttpServletRequest request) throws Exception {
+    @Autowired
+    private ObjectMapper objectMapper;
+    
+    protected MockHttpServletResponse call(MockHttpServletRequest request) throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
         
         Object handler = handlerMapping.getHandler(request).getHandler();
         handlerAdapter.handle(request, response, handler);
         return response;
+    }
+    
+    protected void setContentAsJson(MockHttpServletRequest request, Object value) throws Exception {
+        request.setContentType("application/json");
+        String json = objectMapper.writeValueAsString(value);
+        request.setContent(json.getBytes());
     }
 
 }

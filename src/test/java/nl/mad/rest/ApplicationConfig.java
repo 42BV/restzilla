@@ -76,7 +76,7 @@ public class ApplicationConfig {
         Map<String, Object> jpaProperties = new HashMap<>();
         jpaProperties.put("hibernate.ejb.naming_strategy", ImprovedNamingStrategy.class.getName());
         jpaProperties.put("hibernate.dialect", hibernateDialect);
-        jpaProperties.put("hibernate.hbm2ddl.auto", "validate");
+        jpaProperties.put("hibernate.hbm2ddl.auto", "create-drop");
         jpaProperties.put("hibernate.jdbc.use_get_generated_keys", true);
         jpaProperties.put("hibernate.id.new_generator_mappings", true);
         jpaProperties.put("hibernate.generate_statistics", false);
@@ -135,7 +135,7 @@ public class ApplicationConfig {
         
         @Bean
         public DataSource dataSource() {
-            return new EmbeddedDatabaseBuilder().addScript("classpath:create.sql").setName("dev").setType(HSQL).build();
+            return new EmbeddedDatabaseBuilder().setName("dev").setType(HSQL).build();
         }
         
         @Bean

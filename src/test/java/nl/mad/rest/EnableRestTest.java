@@ -59,6 +59,43 @@ public class EnableRestTest extends AbstractControllerTest {
         MockHttpServletResponse response = call(request);
         Assert.assertEquals("{\"name\":\"Henk\"}", response.getContentAsString());
     }
+    
+    @Test
+    public void testCreate() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/user");
+        request.setMethod(RequestMethod.POST.name());
+        
+        User piet = new User();
+        piet.setName("Piet");
+        setContentAsJson(request, piet);
+
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"name\":\"Piet\"}", response.getContentAsString());
+        
+        Assert.assertEquals(Long.valueOf(1), 
+                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
+    }
+    
+    @Test
+    public void testUpdate() throws Exception {        
+        User henk = userBuilder.createUser("Henk");
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/user");
+        request.setMethod(RequestMethod.PUT.name());
+        
+        henk.setName("Piet");
+        setContentAsJson(request, henk);
+
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"name\":\"Piet\"}", response.getContentAsString());
+        
+        Assert.assertEquals(Long.valueOf(1), 
+                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
+    }
 
     @Test
     public void testDelete() throws Exception {
