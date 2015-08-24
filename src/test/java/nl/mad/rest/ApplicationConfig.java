@@ -105,8 +105,8 @@ public class ApplicationConfig {
     }
     
     @Bean
-    public EnableRestHandlerMappingFactoryBean enableRestHandlerMapping() {
-        EnableRestHandlerMappingFactoryBean enableRestFactoryBean = new EnableRestHandlerMappingFactoryBean();
+    public CrudHandlerMappingFactoryBean enableRestHandlerMapping() {
+        CrudHandlerMappingFactoryBean enableRestFactoryBean = new CrudHandlerMappingFactoryBean();
         enableRestFactoryBean.setBasePackageClass(ApplicationConfig.class);
         enableRestFactoryBean.setHandlerMappingFactory(new DefaultCrudHandlerMappingFactory(objectMapper(), conversionService()));
         return enableRestFactoryBean;

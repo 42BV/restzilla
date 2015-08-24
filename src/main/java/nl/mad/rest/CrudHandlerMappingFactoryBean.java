@@ -3,10 +3,10 @@
  */
 package nl.mad.rest;
 
-import nl.mad.rest.handler.BasePathHandlerMappingDelegate;
-import nl.mad.rest.handler.CrudHandlerMapping;
 import nl.mad.rest.handler.CrudHandlerMappingFactory;
+import nl.mad.rest.handler.RootCrudHandlerMapping;
 import nl.mad.rest.handler.DefaultCrudHandlerMappingFactory;
+import nl.mad.rest.handler.PublicHandlerMapping;
 import nl.mad.rest.service.CrudService;
 import nl.mad.rest.service.CrudServiceLocator;
 import nl.mad.rest.service.CrudServiceRegistry;
@@ -16,10 +16,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -36,8 +38,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * <br/><br/>
  * 
  * <code>
- * public EnableRestHandlerMappingFactoryBean crudHandlerMapping() {
- *    EnableRestHandlerMappingFactoryBean factoryBean = new EnableRestHandlerMappingFactoryBean();
+ * public CrudHandlerMappingFactoryBean crudHandlerMapping() {
+ *    CrudHandlerMappingFactoryBean factoryBean = new CrudHandlerMappingFactoryBean();
  *    factoryBean.setBasePackageClass(WebMvcConfig.class);
  *    return factoryBean;
  * }
@@ -46,9 +48,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class EnableRestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, InitializingBean, ApplicationContextAware {
+public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, InitializingBean, ApplicationContextAware {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(EnableRestHandlerMappingFactoryBean.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(CrudHandlerMappingFactoryBean.class);
 
     /**
      * Application context used for locating and creating beans dynamically.
@@ -69,6 +71,9 @@ public class EnableRestHandlerMappingFactoryBean implements FactoryBean<HandlerM
      * Creates the REST endpoint mappings.
      */
     private CrudHandlerMappingFactory handlerMappingFactory;
+    
+    @Autowired(required = false)
+    private RequestMappingHandlerMapping requestHandlerMapping;
 
     /**
      * {@inheritDoc}
@@ -76,14 +81,14 @@ public class EnableRestHandlerMappingFactoryBean implements FactoryBean<HandlerM
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public HandlerMapping getObject() throws Exception {
-        BasePathHandlerMappingDelegate delegate = new BasePathHandlerMappingDelegate();
+        RootCrudHandlerMapping delegate = new RootCrudHandlerMapping(requestHandlerMapping);
         CrudServiceRegistry services = serviceLocator.execute();
         for (Class<?> entityClass : services.getEntityClasses()) {
             EnableRest annotation = entityClass.getAnnotationsByType(EnableRest.class)[0];
             EntityInformation information = new EntityInformation(entityClass, annotation);
 
             CrudService<?, ?> service = services.getService(entityClass);
-            CrudHandlerMapping handlerMapping = handlerMappingFactory.build(service, information);
+            PublicHandlerMapping handlerMapping = handlerMappingFactory.build(service, information);
             delegate.register(information.getBasePath(), handlerMapping);
             
             LOGGER.info("Generated REST mapping for /{} [{}]", information.getBasePath(), entityClass.getName());

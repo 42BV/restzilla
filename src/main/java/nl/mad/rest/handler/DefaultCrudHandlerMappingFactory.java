@@ -141,7 +141,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
     /**
      * Handler mapping that delegates to the underlying controller.
      */
-    private class DefaultHandlerMapping extends CrudHandlerMapping {
+    private class DefaultHandlerMapping extends PublicHandlerMapping {
         
         private final CrudController controller;
         

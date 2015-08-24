@@ -18,6 +18,6 @@ public interface CrudHandlerMappingFactory {
      * @param information the entity information
      * @return the handler mapping
      */
-    CrudHandlerMapping build(CrudService<?, ?> service, EntityInformation information);
+    PublicHandlerMapping build(CrudService<?, ?> service, EntityInformation information);
     
 }

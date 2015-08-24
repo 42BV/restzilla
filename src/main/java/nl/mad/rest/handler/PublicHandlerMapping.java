@@ -10,12 +10,12 @@ import org.springframework.web.servlet.handler.AbstractHandlerMapping;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public abstract class CrudHandlerMapping extends AbstractHandlerMapping {
-    
+public abstract class PublicHandlerMapping extends AbstractHandlerMapping {
+
     /**
      * {@inheritDoc}
      */
     @Override
     public abstract Object getHandlerInternal(HttpServletRequest request) throws Exception;
-    
+
 }
