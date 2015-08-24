@@ -4,6 +4,7 @@
 package nl.mad.rest;
 
 import nl.mad.rest.builder.UserBuilder;
+import nl.mad.rest.model.Product;
 import nl.mad.rest.model.User;
 
 import org.junit.Assert;
@@ -111,6 +112,24 @@ public class EnableRestTest extends AbstractControllerTest {
         
         Assert.assertEquals(Long.valueOf(0), 
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user WHERE id = " + henk.getId(), Long.class));
+    }
+
+    // In the tests below we have overwritten our conventional beans
+
+    @Test
+    public void testCustomService() throws Exception {
+        Product product = new Product();
+        product.setName("Cheese");
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/product");
+        request.setMethod(RequestMethod.POST.name());
+        setContentAsJson(request, product);
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        // In the product service we append an '!' to the name 
+        Assert.assertEquals("{\"id\":1,\"name\":\"Cheese!\"}", response.getContentAsString());
     }
 
 }

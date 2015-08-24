@@ -12,15 +12,15 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 /**
- * 
+ * Base for Spring dependent tests.
  *
- * @author jeroen
+ * @author Jeroen van Schagen
  * @since Aug 24, 2015
  */
 @WebAppConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(classes = { ApplicationConfig.class })
-public class AbstractSpringTest {
+public abstract class AbstractSpringTest {
     
     private JdbcTemplate jdbcTemplate;
 

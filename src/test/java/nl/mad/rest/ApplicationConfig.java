@@ -73,7 +73,7 @@ public class ApplicationConfig {
         jpaVendorAdapter.setDatabasePlatform(hibernateDialect);
         entityManagerFactoryBean.setJpaVendorAdapter(jpaVendorAdapter);
         
-        Map<String, Object> jpaProperties = new HashMap<>();
+        Map<String, Object> jpaProperties = new HashMap<String, Object>();
         jpaProperties.put("hibernate.ejb.naming_strategy", ImprovedNamingStrategy.class.getName());
         jpaProperties.put("hibernate.dialect", hibernateDialect);
         jpaProperties.put("hibernate.hbm2ddl.auto", "create-drop");

@@ -27,10 +27,11 @@ public class TransactionalCrudService<T, ID extends Serializable> extends Abstra
 
     /**
      * Create a new transactional CRUD service.
+     * 
      * @param repository the repository
      */
-    public TransactionalCrudService(CrudRepository<T, ID> repository) {
-        super(repository);
+    public TransactionalCrudService(CrudRepository<T, ID> repository, Class<T> entityClass) {
+        super(entityClass, repository);
     }
     
     /**
@@ -48,6 +49,7 @@ public class TransactionalCrudService<T, ID extends Serializable> extends Abstra
         });
     }
     
+    // Defined in separate method because cannot call super in annonymous inner class
     private <S extends T> S performSave(S entity) {
         return super.save(entity);
     }
@@ -68,6 +70,7 @@ public class TransactionalCrudService<T, ID extends Serializable> extends Abstra
         });
     }
     
+    // Defined in separate method because cannot call super in annonymous inner class
     private void performDelete(ID id) {
         super.delete(id);
     }

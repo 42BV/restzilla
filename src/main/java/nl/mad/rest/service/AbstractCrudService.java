@@ -17,9 +17,12 @@ import org.springframework.data.repository.CrudRepository;
 public abstract class AbstractCrudService<T, ID extends Serializable> implements CrudService<T, ID> {
 
     private final CrudRepository<T, ID> repository;
+    
+    private final Class<T> entityClass;
 
-    public AbstractCrudService(CrudRepository<T, ID> repository) {
+    public AbstractCrudService(Class<T> entityClass, CrudRepository<T, ID> repository) {
         this.repository = repository;
+        this.entityClass = entityClass;
     }
 
     /**
@@ -52,6 +55,14 @@ public abstract class AbstractCrudService<T, ID extends Serializable> implements
     @Override
     public void delete(ID id) {
         repository.delete(id);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<T> getEntityClass() {
+        return entityClass;
     }
 
 }

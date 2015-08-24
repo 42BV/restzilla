@@ -15,7 +15,6 @@ import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
-import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.support.Repositories;
@@ -75,7 +74,7 @@ public class CrudServiceLocator {
             if (!(repository instanceof CrudRepository)) {
                 repository = buildNewRepository(entityClass, beanFactory);
             }
-            service = buildNewService((CrudRepository) repository, beanFactory);
+            service = buildNewService(entityClass, (CrudRepository) repository, beanFactory);
         }
         return service;
     }
@@ -93,13 +92,13 @@ public class CrudServiceLocator {
     
     /**
      * Build a new CrudService for the entity.
-     * 
+     * @param entityClass the entity class
      * @param repository the delegate repository
      * @param beanFactory the bean factory, used for injecting dependencies
      * @return the service bean
      */
-    protected <T, ID extends Serializable> CrudService<T, ID> buildNewService(CrudRepository<T, ID> repository, AutowireCapableBeanFactory beanFactory) {
-        CrudService<T, ID> service = new TransactionalCrudService<T, ID>(repository);
+    protected <T, ID extends Serializable> CrudService<T, ID> buildNewService(Class<T> entityClass, CrudRepository<T, ID> repository, AutowireCapableBeanFactory beanFactory) {
+        CrudService<T, ID> service = new TransactionalCrudService<T, ID>(repository, entityClass);
         beanFactory.autowireBean(service);
         return service;
     }
@@ -115,8 +114,7 @@ public class CrudServiceLocator {
         public Services(ApplicationContext applicationContext) {
             Map<String, CrudService> services = applicationContext.getBeansOfType(CrudService.class);
             for (CrudService<?, ?> service : services.values()) {
-                Class<?> entityClass = GenericTypeResolver.resolveTypeArguments(service.getClass(), CrudService.class)[0];
-                instances.put(entityClass, service);
+                instances.put(service.getEntityClass(), service);
             }
         }
         

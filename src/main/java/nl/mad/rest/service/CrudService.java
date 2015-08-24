@@ -46,5 +46,12 @@ public interface CrudService<T, ID extends Serializable> {
      * @throws IllegalArgumentException in case the given {@code id} is {@literal null}
      */
     void delete(ID id);
+    
+    /**
+     * Retrieve the entity class.
+     * 
+     * @return the entity class
+     */
+    Class<T> getEntityClass();
 
 }
