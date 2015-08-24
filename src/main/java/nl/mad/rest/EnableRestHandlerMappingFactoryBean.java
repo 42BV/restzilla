@@ -81,11 +81,12 @@ public class EnableRestHandlerMappingFactoryBean implements FactoryBean<HandlerM
         for (Class<?> entityClass : services.getEntityClasses()) {
             EnableRest annotation = entityClass.getAnnotationsByType(EnableRest.class)[0];
             EntityInformation information = new EntityInformation(entityClass, annotation);
-            LOGGER.info("Generating REST mapping for /{} [{}]", information.getBasePath(), entityClass.getName());
 
             CrudService<?, ?> service = services.getService(entityClass);
             CrudHandlerMapping handlerMapping = handlerMappingFactory.build(service, information);
             delegate.register(information.getBasePath(), handlerMapping);
+            
+            LOGGER.info("Generated REST mapping for /{} [{}]", information.getBasePath(), entityClass.getName());
         }
         return delegate;
     }
