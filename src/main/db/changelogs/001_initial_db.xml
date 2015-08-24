@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="1" author="jeroen.van.schagen@42.nl">
+        <comment>Create initial tables.</comment>
+        
+        <createTable tableName="user">
+            <column name="id" type="bigint" autoIncrement="true">
+                <constraints nullable="false" primaryKey="true" primaryKeyName="pk_user_id"/>
+            </column>
+            <column name="name" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="password" type="varchar(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="birth_day" type="date"/>
+            <column name="active" type="boolean"/>
+            <column name="weight" type="double"/>
+            <column name="belt" type="varchar(50)"/>
+        </createTable>
+    </changeSet>
+
+</databaseChangeLog>
