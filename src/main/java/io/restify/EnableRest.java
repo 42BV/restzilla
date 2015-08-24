@@ -11,8 +11,21 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Annotating an entity with this will cause automatic
- * REST CRUD functionality to be registered.
+ * Automatically generates a REST entpoint for this entity,
+ * providing the following functionality:
+ * 
+ * <br>
+ * <ul>
+ * <li><b>GET /</b> returns all entities</li>
+ * <li><b>GET /{id}</b> returns entity with id</li>
+ * <li><b>POST /</b> creates a new entity</li>
+ * <li><b>PUT /</b> updates an existing entity</li>
+ * <li><b>DELETE /{id}</b> deletes an entity with id</li>
+ * </ul>
+ * <br>
+ * 
+ * Functionality can be overwritten on each of the architectural
+ * layers: repository, service and controller.
  *
  * @author Jeroen van Schagen
  * @since Aug 21, 2015

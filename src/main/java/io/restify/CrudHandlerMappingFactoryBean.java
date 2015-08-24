@@ -26,24 +26,16 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Create a REST endpoint for all entities marked with @EnableRest.
+ * Create a REST endpoint for all entities annotated with {@link EnableRest}.
  * This endpoint will provide full CRUD functionality on the entity,
  * following the conventional layered architecture: controller, service,
  * repository. At each layer in the architecture you are able to overwrite
  * the behaviour with a custom implementation. Otherwise, the default
  * implementation is injected.
  * 
- * <br/><br/>
- * <b>For usage, just inject this factory bean to the application context</b>:
- * <br/><br/>
+ * <br><br>
  * 
- * <code>
- * public CrudHandlerMappingFactoryBean crudHandlerMapping() {
- *    CrudHandlerMappingFactoryBean factoryBean = new CrudHandlerMappingFactoryBean();
- *    factoryBean.setBasePackageClass(WebMvcConfig.class);
- *    return factoryBean;
- * }
- * </code>
+ * <b>For usage, just inject this factory bean to the application context.</b>
  *
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
