@@ -159,4 +159,11 @@
         </plugins>
     </build>
     
+    <distributionManagement>
+        <repository>
+            <id>repository.42.nl</id>
+            <url>https://repository.42.nl/content/repositories/releases</url>
+        </repository>
+    </distributionManagement>
+    
 </project>
