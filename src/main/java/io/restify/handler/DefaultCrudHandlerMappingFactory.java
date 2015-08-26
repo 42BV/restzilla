@@ -34,7 +34,16 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
     
     private final ConversionService conversionService;
     
-    public DefaultCrudHandlerMappingFactory(ObjectMapper objectMapper, ConversionService conversionService) {
+    /**
+     * Instantiate a new {@link DefaultCrudHandlerMappingFactory}.
+     * 
+     * @param objectMapper
+     *              the {@link ObjectMapper} for JSON parsing and formatting
+     * @param conversionService
+     *              the {@link ConversionService} for converting between types
+     */
+    public DefaultCrudHandlerMappingFactory(ObjectMapper objectMapper,
+                                       ConversionService conversionService) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
     }
@@ -44,30 +53,23 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
      */
     @Override
     public DefaultHandlerMapping build(CrudService<?, ?> service, EntityInformation information) {
-        return new DefaultHandlerMapping(new CrudController(service, information));
+        return new DefaultHandlerMapping(new DefaultCrudController(service, information));
     }
 
-    /**
-     * Controller implementation, delegated from handler mapping.
-     *
-     * @author Jeroen van Schagen
-     * @since Aug 21, 2015
-     */
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private class CrudController {
+    private class DefaultCrudController {
         
         private final CrudService service;
         
         private final EntityInformation information;
         
-        public CrudController(CrudService service, EntityInformation information) {
+        public DefaultCrudController(CrudService service, EntityInformation information) {
             this.service = service;
             this.information = information;
         }
         
         /**
          * Retrieve all entities.
-         * 
          * @return the entities, in result type
          */
         @ResponseBody
@@ -85,8 +87,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         }
         
         /**
-         * Retrieve an entity.
-         * 
+         * Retrieve a single entity by identifier: /{id}
          * @param id the identifier
          * @return the entity, in result type
          */
@@ -99,13 +100,12 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         
         private Serializable extractId(HttpServletRequest request) {
             String path = UrlUtils.getPath(request);
-            String raw = StringUtils.substringAfterLast(path, "/");
+            String raw = StringUtils.substringAfterLast(path, UrlUtils.SLASH);
             return (Serializable) conversionService.convert(raw, information.getIdentifierClass());
         }
         
         /**
-         * Create a new entity.
-         * 
+         * Creates a new entity. Any content is retrieved from the request body.
          * @return the entity
          */
         @ResponseBody
@@ -117,8 +117,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         }
         
         /**
-         * Update an entity.
-         * 
+         * Updates an entity. Any content is retrieved from the request body.
          * @return the updated entity
          */
         @ResponseBody
@@ -130,7 +129,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         }
         
         /**
-         * Deletes an entity.
+         * Deletes an entity based on an identifier: /{id}
          */
         @ResponseBody
         public void delete(HttpServletRequest request) {
@@ -140,14 +139,11 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
 
     }
     
-    /**
-     * Handler mapping that delegates to the underlying controller.
-     */
-    private class DefaultHandlerMapping extends PublicHandlerMapping {
+    private static class DefaultHandlerMapping extends PublicHandlerMapping {
         
-        private final CrudController controller;
+        private final DefaultCrudController controller;
         
-        public DefaultHandlerMapping(CrudController controller) {
+        public DefaultHandlerMapping(DefaultCrudController controller) {
             this.controller = controller;
         }
         
@@ -174,22 +170,22 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         private Method findMethod(HttpServletRequest request) throws NoSuchMethodException {
             Method method = null;
             
-            int fragments = UrlUtils.getPath(request).split("/").length;
+            int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
             if (fragments == 2) {
                 // Request URI only consists of base path
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
-                    method = CrudController.class.getMethod("findAll");
+                    method = DefaultCrudController.class.getMethod("findAll");
                 } else if (RequestMethod.POST.name().equals(request.getMethod())) {
-                    method = CrudController.class.getMethod("create", HttpServletRequest.class);
+                    method = DefaultCrudController.class.getMethod("create", HttpServletRequest.class);
                 } else if (RequestMethod.PUT.name().equals(request.getMethod())) {
-                    method = CrudController.class.getMethod("update", HttpServletRequest.class);
+                    method = DefaultCrudController.class.getMethod("update", HttpServletRequest.class);
                 }
             } else if (fragments == 3) {
-                // Request URI has an additional path element (ID)
+                // Request URI has an additional path element /{id}
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
-                    method = CrudController.class.getMethod("findOne", HttpServletRequest.class);
+                    method = DefaultCrudController.class.getMethod("findOne", HttpServletRequest.class);
                 } else if (RequestMethod.DELETE.name().equals(request.getMethod())) {
-                    method = CrudController.class.getMethod("delete", HttpServletRequest.class);
+                    method = DefaultCrudController.class.getMethod("delete", HttpServletRequest.class);
                 }
             }
             

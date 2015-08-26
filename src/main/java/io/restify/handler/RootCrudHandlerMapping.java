@@ -21,14 +21,21 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  */
 public class RootCrudHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
     
-    private Map<String, PublicHandlerMapping> handlerMappings = new HashMap<String, PublicHandlerMapping>();
+    /**
+     * CRUD handler mappings.
+     */
+    private final Map<String, PublicHandlerMapping> handlerMappings = new HashMap<String, PublicHandlerMapping>();
 
+    /**
+     * Custom handlers for @RequestMapping methods.
+     */
     private final RequestMappingHandlerMapping requestHandlerMapping;
 
     /**
      * Create a new handler mapping.
      * 
-     * @param requestHandlerMapping the default request handler mapping
+     * @param requestHandlerMapping
+     *            the {@link RequestMappingHandlerMapping} handler mapping
      */
     public RootCrudHandlerMapping(RequestMappingHandlerMapping requestHandlerMapping) {
         this.requestHandlerMapping = requestHandlerMapping;
@@ -43,7 +50,7 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
         if (requestMappingHandler != null) {
             return requestMappingHandler;
         }
-        return findCustomHandler(request);
+        return findCrudHandler(request); // When no custom mapping exists
     }
 
     private Object findRequestMappingHandler(HttpServletRequest request) throws Exception {
@@ -60,7 +67,7 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
         return null;
     }
     
-    private Object findCustomHandler(HttpServletRequest request) throws Exception {
+    private Object findCrudHandler(HttpServletRequest request) throws Exception {
         String basePath = UrlUtils.getRootPath(request);
         PublicHandlerMapping delegateHandler = handlerMappings.get(basePath);
         if (delegateHandler != null) {

@@ -15,6 +15,8 @@ import org.apache.commons.lang3.StringUtils;
  */
 public class UrlUtils {
     
+    public static final String SLASH = "/";
+
     public static String getPath(HttpServletRequest request) {
         String contextPath = request.getContextPath();
         return request.getRequestURI().substring(contextPath.length());
@@ -22,7 +24,7 @@ public class UrlUtils {
     
     public static String getRootPath(HttpServletRequest request) {
         String path = getPath(request);
-        return StringUtils.substringBetween(path + "/", "/", "/");
+        return StringUtils.substringBetween(path + SLASH, SLASH, SLASH);
     }
     
 }
