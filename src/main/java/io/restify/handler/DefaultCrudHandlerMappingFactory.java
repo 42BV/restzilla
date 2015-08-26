@@ -4,6 +4,7 @@
 package io.restify.handler;
 
 import io.restify.EntityInformation;
+import io.restify.UrlUtils;
 import io.restify.service.CrudService;
 
 import java.io.Serializable;
@@ -97,7 +98,8 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         }
         
         private Serializable extractId(HttpServletRequest request) {
-            String raw = StringUtils.substringAfterLast(request.getRequestURI(), "/");
+            String path = UrlUtils.getPath(request);
+            String raw = StringUtils.substringAfterLast(path, "/");
             return (Serializable) conversionService.convert(raw, information.getIdentifierClass());
         }
         
@@ -172,7 +174,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         private Method findMethod(HttpServletRequest request) throws NoSuchMethodException {
             Method method = null;
             
-            int fragments = request.getRequestURI().split("/").length;
+            int fragments = UrlUtils.getPath(request).split("/").length;
             if (fragments == 2) {
                 // Request URI only consists of base path
                 if (RequestMethod.GET.name().equals(request.getMethod())) {

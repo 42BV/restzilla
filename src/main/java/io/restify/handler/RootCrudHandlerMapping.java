@@ -1,11 +1,12 @@
 package io.restify.handler;
 
+import io.restify.UrlUtils;
+
 import java.util.HashMap;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.servlet.HandlerExecutionChain;
@@ -39,7 +40,6 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
     @Override
     protected Object getHandlerInternal(HttpServletRequest request) throws Exception {
         Object requestMappingHandler = findRequestMappingHandler(request);
-        // Prefer the @RequestMapping mapped endpoints
         if (requestMappingHandler != null) {
             return requestMappingHandler;
         }
@@ -61,7 +61,7 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
     }
     
     private Object findCustomHandler(HttpServletRequest request) throws Exception {
-        String basePath = StringUtils.substringBetween(request.getRequestURI() + "/", "/", "/");
+        String basePath = UrlUtils.getRootPath(request);
         PublicHandlerMapping delegateHandler = handlerMappings.get(basePath);
         if (delegateHandler != null) {
             return delegateHandler.getHandlerInternal(request);
