@@ -91,8 +91,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
          */
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
-            Serializable id = extractId(request);
-            Object entity = service.findOne(id);
+            Object entity = getEntityById(request);
             return beanMapper.map(entity, information.getResultType());
         }
         
@@ -120,12 +119,19 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
+            Object entity = getEntityById(request);
+            Object input = objectMapper.readValue(request.getReader(), information.getUpdateType());
+            Object output = service.save(beanMapper.map(input, entity));
+            return beanMapper.map(output, information.getResultType());
+        }
+
+        private Object getEntityById(HttpServletRequest request) {
             Serializable id = extractId(request);
             Object entity = service.findOne(id);
-            Object input = objectMapper.readValue(request.getReader(), information.getUpdateType());
-            entity = beanMapper.map(input, entity);
-            Object output = service.save(entity);
-            return beanMapper.map(output, information.getResultType());
+            if (entity == null) {
+                throw new IllegalArgumentException("Could not find entity '" + information.getEntityClass().getSimpleName() + "' with id: " + id);
+            }
+            return entity;
         }
         
         /**
@@ -172,14 +178,12 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
             
             int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
             if (fragments == 2) {
-                // Request URI only consists of base path
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
                     method = DefaultCrudController.class.getMethod("findAll");
                 } else if (RequestMethod.POST.name().equals(request.getMethod())) {
                     method = DefaultCrudController.class.getMethod("create", HttpServletRequest.class);
                 }
             } else if (fragments == 3) {
-                // Request URI has an additional path element /{id}
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
                     method = DefaultCrudController.class.getMethod("findOne", HttpServletRequest.class);
                 } else if (RequestMethod.PUT.name().equals(request.getMethod())) {

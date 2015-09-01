@@ -96,19 +96,19 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public HandlerMapping getObject() throws Exception {
-        RootCrudHandlerMapping delegate = new RootCrudHandlerMapping(requestHandlerMapping);
+        RootCrudHandlerMapping rootHandler = new RootCrudHandlerMapping(requestHandlerMapping);
         CrudServiceRegistry services = serviceLocator.execute();
         for (Class<?> entityClass : services.getEntityClasses()) {
             EnableRest annotation = entityClass.getAnnotationsByType(EnableRest.class)[0];
             EntityInformation information = new EntityInformation(entityClass, annotation);
 
             CrudService<?, ?> service = services.getService(entityClass);
-            PublicHandlerMapping handlerMapping = handlerMappingFactory.build(service, information);
-            delegate.register(information.getBasePath(), handlerMapping);
+            PublicHandlerMapping handler = handlerMappingFactory.build(service, information);
+            rootHandler.registerHandler(information.getBasePath(), handler);
             
             LOGGER.info("Generated REST mapping for /{} [{}]", information.getBasePath(), entityClass.getName());
         }
-        return delegate;
+        return rootHandler;
     }
     
     /**

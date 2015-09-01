@@ -3,12 +3,15 @@ package io.restify.handler;
 import io.restify.UrlUtils;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.core.PriorityOrdered;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
+import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.handler.AbstractHandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
@@ -22,9 +25,14 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 public class RootCrudHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
     
     /**
-     * CRUD handler mappings.
+     * Handlers mapped per entity type.
      */
     private final Map<String, PublicHandlerMapping> handlerMappings = new HashMap<String, PublicHandlerMapping>();
+    
+    /**
+     * Exceptions that should be skipped.
+     */
+    private final Set<Class<?>> skippedExceptions = new HashSet<Class<?>>();
 
     /**
      * Custom handlers for @RequestMapping methods.
@@ -39,6 +47,10 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
      */
     public RootCrudHandlerMapping(RequestMappingHandlerMapping requestHandlerMapping) {
         this.requestHandlerMapping = requestHandlerMapping;
+        
+        // Register the exceptions from our request handler to skip
+        this.skippedExceptions.add(HttpRequestMethodNotSupportedException.class);
+        this.skippedExceptions.add(UnsatisfiedServletRequestParameterException.class);
     }
 
     /**
@@ -60,8 +72,11 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
                 if (result != null) {
                     return result.getHandler();
                 }
-            } catch (HttpRequestMethodNotSupportedException hrmnse) {
-                // Whenever the request method is not supported, return our convention
+            } catch (Exception exception) {
+                // Break the exception when allowed, delegating the request handling to our defaults
+                if (!skippedExceptions.contains(exception.getClass())) {
+                    throw exception;
+                }
             }
         }
         return null;
@@ -82,8 +97,17 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
      * @param basePath the base path
      * @param handlerMapping the handler mapping
      */
-    public void register(String basePath, PublicHandlerMapping handlerMapping) {
+    public void registerHandler(String basePath, PublicHandlerMapping handlerMapping) {
         handlerMappings.put(basePath, handlerMapping);
+    }
+    
+    /**
+     * Register an exception that should be skipped.
+     * 
+     * @param exceptionClass the exception class
+     */
+    public void registerSkippedException(Class<?> exceptionClass) {
+        skippedExceptions.add(exceptionClass);
     }
 
 }
