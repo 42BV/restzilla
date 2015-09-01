@@ -13,7 +13,7 @@
         <timestamp>${maven.build.timestamp}</timestamp>
     
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <java.version>1.8</java.version>
+        <java.version>1.6</java.version>
         
         <!-- Dependency versions -->
         <spring.version>4.2.0.RELEASE</spring.version>
@@ -31,7 +31,7 @@
             <groupId>io.beanmapper</groupId>
             <artifactId>beanmapper</artifactId>
             <version>0.2.13</version>
-            <scope>provided</scope>
+            <scope>test</scope>
         </dependency>
         
         <!-- Web -->
@@ -156,6 +156,20 @@
 			    <artifactId>jgitflow-maven-plugin</artifactId>
 			    <version>1.0-m4.3</version>
 			</plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.4</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.3</version>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
     
