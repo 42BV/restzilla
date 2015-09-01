@@ -4,7 +4,7 @@ The purpose of [Restify](https://github.com/42BV/restify) is to dynamically gene
 
 ## Features ##
 
-* REST endpoints for entities, for one line of code
+* REST endpoints for entities, with only one line of code
 * Dynamic CRUD service- and repository implementations
 * Overwrite posibilities on each layer: Controller, Service, Repository
 
@@ -69,7 +69,7 @@ That's it! Restify will now automatically generate a repository, service and con
 
 ## Customize body ##
 
-Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create- or update request varies from the entity. Restify allows you to specify certain types:
+Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create- or update request varies from the entity. Restify allows you to specify custom types:
 
 ```java
 @Entity
@@ -87,9 +87,9 @@ public class User {
 }
 ```
 
-Requests will now be unmarshalled to their custom type. Then custom types are mapped back on our entity and we perform the logic.
+Requests will now be unmarshalled to their custom type. The custom types are then mapped back on our entity as we perform our logic.
 
-When using custom types, you will need the [Beanmapper](https://github.com/42BV/beanmapper) dependency:
+When using custom types, you will need the [Bean mapper](https://github.com/42BV/beanmapper) dependency:
 
 ```xml
 <dependency>
@@ -114,7 +114,7 @@ Logic can be overwritten on each of the architecural layers: Repository, Service
 
 ### Repository ###
 
-Restify relies heavily on Spring Data JPA. Spring Data repositories will automatically be discovered and used:
+Restify relies heavily on Spring Data JPA. Spring Data repositories will automatically be used:
 
 ```java
 public interface UserRepository extends CrudRepository<User, Long> {
@@ -123,7 +123,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
 ### Service ###
 
-It is also possible to use a custom service, by implementing our CrudService interface. Or you could overwrite the AbstractCrudService template class:
+It is also possible to create a custom service, just implement the CrudService interface. Or you could overwrite the AbstractCrudService template class:
 
 ```java
 @Service
