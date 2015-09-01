@@ -69,7 +69,7 @@ That's it! Restify will now automatically generate a repository, service and con
 
 ## Customize body ##
 
-Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create- or update request varies from the entity. Restify allows you to specify certain custom types:
+Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create- or update request varies from the entity. Restify allows you to specify certain types:
 
 ```java
 @Entity
@@ -87,9 +87,9 @@ public class User {
 }
 ```
 
-Requests will now be unmarshalled to our custom type. Restify then maps the custom type back on our entity and performs the action.
+Requests will now be unmarshalled to their custom type. Then custom types are mapped back on our entity and we perform the logic.
 
-When using custom types, you will need the following dependency:
+When using custom types, you will need the [Beanmapper](https://github.com/42BV/beanmapper) dependency:
 
 ```xml
 <dependency>
@@ -110,11 +110,11 @@ public void addFormatters(FormatterRegistry registry) {
 
 ## Customize functionality ##
 
-Logic can be overwritten on each architecural layer. This is particulary handy when domain specific logic is needed.
+Logic can be overwritten on each of the architecural layers: Repository, Service, Controller. This is particulary handy when domain specific functionality is required.
 
 ### Repository ###
 
-Restify relies heavily on Spring Data JPA. Whenever a Spring Data repository is created, that repository bean will automatically be used:
+Restify relies heavily on Spring Data JPA. Spring Data repositories will automatically be discovered and used:
 
 ```java
 public interface UserRepository extends CrudRepository<User, Long> {
@@ -123,7 +123,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
 ### Service ###
 
-It is also possible to create a custom service implementation by implementing the CrudService interface. Or you could simply overwrite the AbstractCrudService class:
+It is also possible to use a custom service, by implementing our CrudService interface. Or you could overwrite the AbstractCrudService template class:
 
 ```java
 @Service
@@ -141,7 +141,7 @@ public interface UserService extends AbstractCrudService<User, Long> {
 
 ### Controller ###
 
-To create a custom REST endpoint, just define the regular Spring MVC request mapping:
+To create a custom REST endpoint, just define a regular Spring MVC request mapping:
 
 ```java
 @RestController
