@@ -31,7 +31,6 @@
             <groupId>io.beanmapper</groupId>
             <artifactId>beanmapper</artifactId>
             <version>0.2.13</version>
-            <scope>test</scope>
         </dependency>
         
         <!-- Web -->

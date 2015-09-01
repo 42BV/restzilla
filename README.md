@@ -87,26 +87,7 @@ public class User {
 }
 ```
 
-Requests will now be unmarshalled to their custom type. The custom types are then mapped back on our entity as we perform our logic.
-
-When using custom types, you will need the [Bean mapper](https://github.com/42BV/beanmapper) dependency:
-
-```xml
-<dependency>
-  <groupId>io.beanmapper</groupId>
-  <artifactId>beanmapper</artifactId>
-  <version>0.2.14</version>
-</dependency>
-```
-
-And register a custom converter in your web configuration:
-
-```java
-@Override
-public void addFormatters(FormatterRegistry registry) {
- registry.addConverter(new BeanMapperConverterAdapter(new BeanMapper()));
-}
-```
+Requests will now be unmarshalled to their custom type. The custom types are then mapped back on our entity as we perform our logic. Mapping between beans is automatically handled by the [BeanMapper](https://github.com/42BV/beanmapper) dependency.
 
 ## Customize functionality ##
 

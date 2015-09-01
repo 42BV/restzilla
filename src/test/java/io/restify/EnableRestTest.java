@@ -85,7 +85,7 @@ public class EnableRestTest extends AbstractControllerTest {
         User henk = userBuilder.createUser("Henk");
 
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user");
+        request.setRequestURI("/user/" + henk.getId());
         request.setMethod(RequestMethod.PUT.name());
         
         henk.setName("Piet");

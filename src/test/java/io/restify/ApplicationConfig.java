@@ -4,10 +4,6 @@
 package io.restify;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
-import io.beanmapper.BeanMapper;
-import io.beanmapper.BeanMapperConverterAdapter;
-import io.restify.CrudHandlerMappingFactoryBean;
-import io.restify.handler.DefaultCrudHandlerMappingFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,8 +19,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -91,11 +85,6 @@ public class ApplicationConfig {
         transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
         return transactionManager;
     }
-    
-    @Bean
-    public BeanMapper beanMapper() {
-        return new BeanMapper();
-    }
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -106,16 +95,9 @@ public class ApplicationConfig {
     
     @Bean
     public CrudHandlerMappingFactoryBean enableRestHandlerMapping() {
-        CrudHandlerMappingFactoryBean enableRestFactoryBean = new CrudHandlerMappingFactoryBean();
-        enableRestFactoryBean.setBasePackageClass(ApplicationConfig.class);
-        enableRestFactoryBean.setHandlerMappingFactory(new DefaultCrudHandlerMappingFactory(objectMapper(), conversionService()));
-        return enableRestFactoryBean;
-    }
-    
-    private ConversionService conversionService() {
-        DefaultConversionService conversionService = new DefaultConversionService();
-        conversionService.addConverter(new BeanMapperConverterAdapter(beanMapper()));
-        return conversionService;
+        CrudHandlerMappingFactoryBean factoryBean = new CrudHandlerMappingFactoryBean();
+        factoryBean.setBasePackageClass(ApplicationConfig.class);
+        return factoryBean;
     }
 
     @Bean

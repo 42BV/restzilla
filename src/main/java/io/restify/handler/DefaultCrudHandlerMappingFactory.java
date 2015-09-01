@@ -3,13 +3,13 @@
  */
 package io.restify.handler;
 
+import io.beanmapper.BeanMapper;
 import io.restify.EntityInformation;
 import io.restify.UrlUtils;
 import io.restify.service.CrudService;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
 
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +34,8 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
     
     private final ConversionService conversionService;
     
+    private final BeanMapper beanMapper;
+    
     /**
      * Instantiate a new {@link DefaultCrudHandlerMappingFactory}.
      * 
@@ -41,11 +43,15 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
      *              the {@link ObjectMapper} for JSON parsing and formatting
      * @param conversionService
      *              the {@link ConversionService} for converting between types
+     * @param beanMapper
+     *              the {@link BeanMapper} for mapping between beans
      */
     public DefaultCrudHandlerMappingFactory(ObjectMapper objectMapper,
-                                       ConversionService conversionService) {
+                                       ConversionService conversionService,
+                                              BeanMapper beanMapper) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
+        this.beanMapper = beanMapper;
     }
 
     /**
@@ -74,18 +80,10 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
          */
         @ResponseBody
         public Object findAll() {
-            Collection<?> output = service.findAll();
-            return convertAll(output, information.getResultType());
+            Collection<?> entities = service.findAll();
+            return beanMapper.map(entities, information.getResultType());
         }
-        
-        private Collection<Object> convertAll(Collection<?> inputs, Class<?> resultType) {
-            Collection<Object> converted = new ArrayList<Object>();
-            for (Object input : inputs) {
-                converted.add(conversionService.convert(input, resultType));
-            }
-            return converted;
-        }
-        
+
         /**
          * Retrieve a single entity by identifier: /{id}
          * @param id the identifier
@@ -94,14 +92,14 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
             Serializable id = extractId(request);
-            Object output = service.findOne(id);
-            return conversionService.convert(output, information.getResultType());
+            Object entity = service.findOne(id);
+            return beanMapper.map(entity, information.getResultType());
         }
         
         private Serializable extractId(HttpServletRequest request) {
             String path = UrlUtils.getPath(request);
             String raw = StringUtils.substringAfterLast(path, UrlUtils.SLASH);
-            return (Serializable) conversionService.convert(raw, information.getIdentifierClass());
+            return conversionService.convert(raw, information.getIdentifierClass().asSubclass(Serializable.class));
         }
         
         /**
@@ -111,9 +109,9 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
             Object input = objectMapper.readValue(request.getReader(), information.getCreateType());
-            Object entity = conversionService.convert(input, information.getEntityClass());
+            Object entity = beanMapper.map(input, information.getEntityClass());
             Object output = service.save(entity);
-            return conversionService.convert(output, information.getResultType());
+            return beanMapper.map(output, information.getResultType());
         }
         
         /**
@@ -122,10 +120,12 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
+            Serializable id = extractId(request);
+            Object entity = service.findOne(id);
             Object input = objectMapper.readValue(request.getReader(), information.getUpdateType());
-            Object entity = conversionService.convert(input, information.getEntityClass());
+            entity = beanMapper.map(input, entity);
             Object output = service.save(entity);
-            return conversionService.convert(output, information.getResultType());
+            return beanMapper.map(output, information.getResultType());
         }
         
         /**
@@ -177,13 +177,13 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
                     method = DefaultCrudController.class.getMethod("findAll");
                 } else if (RequestMethod.POST.name().equals(request.getMethod())) {
                     method = DefaultCrudController.class.getMethod("create", HttpServletRequest.class);
-                } else if (RequestMethod.PUT.name().equals(request.getMethod())) {
-                    method = DefaultCrudController.class.getMethod("update", HttpServletRequest.class);
                 }
             } else if (fragments == 3) {
                 // Request URI has an additional path element /{id}
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
                     method = DefaultCrudController.class.getMethod("findOne", HttpServletRequest.class);
+                } else if (RequestMethod.PUT.name().equals(request.getMethod())) {
+                    method = DefaultCrudController.class.getMethod("update", HttpServletRequest.class);
                 } else if (RequestMethod.DELETE.name().equals(request.getMethod())) {
                     method = DefaultCrudController.class.getMethod("delete", HttpServletRequest.class);
                 }

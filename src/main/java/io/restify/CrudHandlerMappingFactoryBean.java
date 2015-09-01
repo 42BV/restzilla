@@ -3,6 +3,7 @@
  */
 package io.restify;
 
+import io.beanmapper.BeanMapper;
 import io.restify.handler.CrudHandlerMappingFactory;
 import io.restify.handler.DefaultCrudHandlerMappingFactory;
 import io.restify.handler.PublicHandlerMapping;
@@ -20,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -45,6 +47,18 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     private static final Logger LOGGER = LoggerFactory.getLogger(CrudHandlerMappingFactoryBean.class);
 
     /**
+     * Request handler mapping.
+     */
+    private RequestMappingHandlerMapping requestHandlerMapping;
+    
+    // Service locator
+    
+    /**
+     * Locates or creates CRUD services and repositories.
+     */
+    private CrudServiceLocator serviceLocator;
+    
+    /**
      * Application context used for locating and creating beans dynamically.
      */
     private ApplicationContext applicationContext;
@@ -53,19 +67,28 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * Base package of the entities to scan.
      */
     private String basePackage;
-    
-    /**
-     * Locates or creates CRUD services and repositories.
-     */
-    private CrudServiceLocator serviceLocator;
+
+    // Handler mapping
 
     /**
      * Creates the REST endpoint mappings.
      */
     private CrudHandlerMappingFactory handlerMappingFactory;
     
-    @Autowired(required = false)
-    private RequestMappingHandlerMapping requestHandlerMapping;
+    /**
+     * Maps between entities.
+     */
+    private BeanMapper beanMapper = new BeanMapper();
+    
+    /**
+     * Converts the standard types.
+     */
+    private ConversionService conversionService = new DefaultConversionService();
+
+    /**
+     * Performs JSON marshall and unmarshalling.
+     */
+    private ObjectMapper objectMapper = new ObjectMapper();
 
     /**
      * {@inheritDoc}
@@ -114,12 +137,25 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
             serviceLocator = new CrudServiceLocator(applicationContext, basePackage);
         }
         if (handlerMappingFactory == null) {
-            ObjectMapper objectMapper = applicationContext.getBean(ObjectMapper.class);
-            ConversionService conversionService = applicationContext.getBean(ConversionService.class);
-            handlerMappingFactory = new DefaultCrudHandlerMappingFactory(objectMapper, conversionService);
+            handlerMappingFactory = new DefaultCrudHandlerMappingFactory(objectMapper, conversionService, beanMapper);
         }
     }
+
+    @Autowired(required = false)
+    public void setRequestHandlerMapping(RequestMappingHandlerMapping requestHandlerMapping) {
+        this.requestHandlerMapping = requestHandlerMapping;
+    }
     
+    // Service locator
+    
+    /**
+     * <i>Optionally</i> set a custom service locator.
+     * @param serviceLocator the service locator
+     */
+    public void setServiceLocator(CrudServiceLocator serviceLocator) {
+        this.serviceLocator = serviceLocator;
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -144,13 +180,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         setBasePackage(basePackageClass.getPackage().getName());
     }
 
-    /**
-     * <i>Optionally</i> set a custom service locator.
-     * @param serviceLocator the service locator
-     */
-    public void setServiceLocator(CrudServiceLocator serviceLocator) {
-        this.serviceLocator = serviceLocator;
-    }
+    // Handler mapping
     
     /**
      * <i>Optionally</i> set a custom handler mapping factory.
@@ -158,6 +188,21 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     public void setHandlerMappingFactory(CrudHandlerMappingFactory handlerMappingFactory) {
         this.handlerMappingFactory = handlerMappingFactory;
+    }
+    
+    @Autowired(required = false)
+    public void setBeanMapper(BeanMapper beanMapper) {
+        this.beanMapper = beanMapper;
+    }
+    
+    @Autowired(required = false)
+    public void setConversionService(ConversionService conversionService) {
+        this.conversionService = conversionService;
+    }
+    
+    @Autowired(required = false)
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 
 }
