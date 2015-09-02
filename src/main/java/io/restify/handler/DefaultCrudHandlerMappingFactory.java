@@ -3,6 +3,7 @@
  */
 package io.restify.handler;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.beanmapper.BeanMapper;
 import io.restify.EntityInformation;
 import io.restify.UrlUtils;
@@ -10,12 +11,18 @@ import io.restify.service.CrudService;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
@@ -65,6 +72,9 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private class DefaultCrudController {
         
+        private static final String PAGE_PARAMETER = "page";
+        private static final String SIZE_PARAMETER = "size";
+
         private final CrudService service;
         
         private final EntityInformation information;
@@ -76,16 +86,37 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         
         /**
          * Retrieve all entities.
+         * 
          * @return the entities, in result type
          */
         @ResponseBody
-        public Object findAll() {
-            Collection<?> entities = service.findAll();
-            return beanMapper.map(entities, information.getResultType());
+        public Object findAll(HttpServletRequest request) {
+            String page = request.getParameter(PAGE_PARAMETER);
+            if (isBlank(page)) {
+                Collection<?> entities = service.findAll();
+                return beanMapper.map(entities, information.getResultType());
+            } else {
+                return findAllByPage(request);
+            }
+        }
+
+        private Page findAllByPage(HttpServletRequest request) {
+            Pageable pageable = getPageable(request);
+            Page<?> result = service.findAll(pageable);
+            List entities = new ArrayList(beanMapper.map(result.getContent(), information.getResultType()));
+            return new PageImpl(entities, pageable, result.getTotalElements());
+        }
+        
+        private Pageable getPageable(HttpServletRequest request) {
+            String page = request.getParameter(PAGE_PARAMETER);
+            String size = request.getParameter(SIZE_PARAMETER);
+            // TODO: Add sorting and defaults
+            return new PageRequest(Integer.parseInt(page), Integer.parseInt(size));
         }
 
         /**
          * Retrieve a single entity by identifier: /{id}
+         * 
          * @param id the identifier
          * @return the entity, in result type
          */
@@ -103,6 +134,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         
         /**
          * Creates a new entity. Any content is retrieved from the request body.
+         * 
          * @return the entity
          */
         @ResponseBody
@@ -115,6 +147,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
         
         /**
          * Updates an entity. Any content is retrieved from the request body.
+         * 
          * @return the updated entity
          */
         @ResponseBody
@@ -182,7 +215,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
             int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
             if (fragments == 2) {
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
-                    method = DefaultCrudController.class.getMethod("findAll");
+                    method = DefaultCrudController.class.getMethod("findAll", HttpServletRequest.class);
                 } else if (RequestMethod.POST.name().equals(request.getMethod())) {
                     method = DefaultCrudController.class.getMethod("create", HttpServletRequest.class);
                 }
