@@ -4,7 +4,10 @@
 package io.restify.service;
 
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.List;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 /**
  * CRUD service.
@@ -15,11 +18,19 @@ import java.util.Collection;
 public interface CrudService<T, ID extends Serializable> {
     
     /**
-     * Returns all instances of the type.
+     * Returns all entities.
      * 
      * @return all entities
      */
-    Collection<T> findAll();
+    List<T> findAll();
+    
+    /**
+     * Returns a page of entities.
+     * 
+     * @param pageable the pageable
+     * @return the entities in that page
+     */
+    Page<T> findAll(Pageable pageable);
     
     /**
      * Retrieves an entity by its id.

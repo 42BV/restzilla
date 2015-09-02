@@ -6,7 +6,7 @@ package io.restify.service;
 import java.io.Serializable;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
@@ -30,7 +30,7 @@ public class TransactionalCrudService<T, ID extends Serializable> extends Abstra
      * 
      * @param repository the repository
      */
-    public TransactionalCrudService(CrudRepository<T, ID> repository, Class<T> entityClass) {
+    public TransactionalCrudService(PagingAndSortingRepository<T, ID> repository, Class<T> entityClass) {
         super(entityClass, repository);
     }
     

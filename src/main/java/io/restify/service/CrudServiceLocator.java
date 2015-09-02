@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.support.Repositories;
 
 /**
@@ -71,10 +72,10 @@ public class CrudServiceLocator {
         if (service == null) {
             AutowireCapableBeanFactory beanFactory = applicationContext.getAutowireCapableBeanFactory();
             Object repository = repositories.getRepositoryFor(entityClass);
-            if (!(repository instanceof CrudRepository)) {
+            if (!(repository instanceof PagingAndSortingRepository)) {
                 repository = buildNewRepository(entityClass, beanFactory);
             }
-            service = buildNewService(entityClass, (CrudRepository) repository, beanFactory);
+            service = buildNewService(entityClass, (PagingAndSortingRepository) repository, beanFactory);
         }
         return service;
     }
@@ -97,7 +98,7 @@ public class CrudServiceLocator {
      * @param beanFactory the bean factory, used for injecting dependencies
      * @return the service bean
      */
-    protected <T, ID extends Serializable> CrudService<T, ID> buildNewService(Class<T> entityClass, CrudRepository<T, ID> repository, AutowireCapableBeanFactory beanFactory) {
+    protected <T, ID extends Serializable> CrudService<T, ID> buildNewService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository, AutowireCapableBeanFactory beanFactory) {
         CrudService<T, ID> service = new TransactionalCrudService<T, ID>(repository, entityClass);
         beanFactory.autowireBean(service);
         return service;

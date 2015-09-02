@@ -4,9 +4,11 @@
 package io.restify.service;
 
 import java.io.Serializable;
-import java.util.Collection;
+import java.util.List;
 
-import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
  * Template implementation of the CrudService, delegates all to the repository.
@@ -16,11 +18,11 @@ import org.springframework.data.repository.CrudRepository;
  */
 public abstract class AbstractCrudService<T, ID extends Serializable> implements CrudService<T, ID> {
 
-    private final CrudRepository<T, ID> repository;
+    private final PagingAndSortingRepository<T, ID> repository;
     
     private final Class<T> entityClass;
 
-    public AbstractCrudService(Class<T> entityClass, CrudRepository<T, ID> repository) {
+    public AbstractCrudService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
         this.repository = repository;
         this.entityClass = entityClass;
     }
@@ -29,8 +31,16 @@ public abstract class AbstractCrudService<T, ID extends Serializable> implements
      * {@inheritDoc}
      */
     @Override
-    public Collection<T> findAll() {
-        return (Collection<T>) repository.findAll();
+    public List<T> findAll() {
+        return (List<T>) repository.findAll();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Page<T> findAll(Pageable pageable) {
+        return repository.findAll(pageable);
     }
     
     /**
