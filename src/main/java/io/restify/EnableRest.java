@@ -40,6 +40,12 @@ public @interface EnableRest {
      * @return the base path
      */
     String basePath() default "";
+    
+    /**
+     * Determines if we should only handle {@code GET} requests.
+     * @return the read only
+     */
+    boolean readOnly() default false;
 
     /**
      * (Optional) the result type, when left empty we return the full entity.

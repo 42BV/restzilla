@@ -14,42 +14,27 @@ import org.springframework.data.domain.Persistable;
  * @since Aug 21, 2015
  */
 public class EntityInformation {
-    
-    private final String basePath;
-    
+
     private final Class<?> entityClass;
     
     private final Class<?> identifierClass;
     
-    private final Class<?> resultType;
-    
-    private final Class<?> createType;
-    
-    private final Class<?> updateType;
+    private final EnableRest annotation;
     
     public EntityInformation(Class<?> entityClass, EnableRest annotation) throws NoSuchMethodException {
-        String basePath = annotation.basePath();
-        if (isBlank(basePath)) {
-            basePath = entityClass.getSimpleName().toLowerCase();
-        }
-        this.basePath = basePath;
-
         this.entityClass = entityClass;
         if (!(Persistable.class.isAssignableFrom(entityClass))) {
             throw new IllegalStateException("Entity does not extend from Persistable");
         }
         this.identifierClass = entityClass.getMethod("getId").getReturnType();
-
-        this.resultType = isCustom(annotation.resultType()) ? annotation.resultType() : entityClass;
-        this.createType = isCustom(annotation.createType()) ? annotation.createType() : entityClass;
-        this.updateType = isCustom(annotation.updateType()) ? annotation.updateType() : entityClass;
-    }
-
-    private boolean isCustom(Class<?> clazz) {
-        return !Object.class.equals(clazz);
+        this.annotation = annotation;
     }
 
     public String getBasePath() {
+        String basePath = annotation.basePath();
+        if (isBlank(basePath)) {
+            basePath = entityClass.getSimpleName().toLowerCase();
+        }
         return basePath;
     }
     
@@ -62,15 +47,23 @@ public class EntityInformation {
     }
     
     public Class<?> getResultType() {
-        return resultType;
+        return isCustom(annotation.resultType()) ? annotation.resultType() : entityClass;
     }
     
     public Class<?> getCreateType() {
-        return createType;
+        return isCustom(annotation.createType()) ? annotation.createType() : entityClass;
     }
     
     public Class<?> getUpdateType() {
-        return updateType;
+        return isCustom(annotation.updateType()) ? annotation.updateType() : entityClass;
+    }
+    
+    private static boolean isCustom(Class<?> clazz) {
+        return !Object.class.equals(clazz);
+    }
+
+    public boolean isReadonly() {
+        return annotation.readOnly();
     }
 
 }

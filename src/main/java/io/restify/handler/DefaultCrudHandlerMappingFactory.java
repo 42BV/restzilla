@@ -174,8 +174,11 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
          * @return the matching method, if any
          */
         private Method findMethod(HttpServletRequest request) throws NoSuchMethodException {
+            if (controller.information.isReadonly() && !RequestMethod.GET.name().equals(request.getMethod())) {
+                return null; // Skip anything but GET requests when read only
+            }
+
             Method method = null;
-            
             int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
             if (fragments == 2) {
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
@@ -192,7 +195,6 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
                     method = DefaultCrudController.class.getMethod("delete", HttpServletRequest.class);
                 }
             }
-            
             return method;
         }
         

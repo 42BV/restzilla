@@ -5,7 +5,7 @@ import io.restify.EnableRest;
 import javax.persistence.Entity;
 
 @Entity
-@EnableRest
+@EnableRest(readOnly = true)
 public class WithRepository extends BaseEntity {
     
     private String name;

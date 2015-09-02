@@ -3,6 +3,7 @@ package io.restify;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
@@ -27,12 +28,14 @@ public abstract class AbstractControllerTest extends AbstractSpringTest {
     
     protected MockHttpServletResponse call(MockHttpServletRequest request) throws Exception {
         MockHttpServletResponse response = new MockHttpServletResponse();
-        
-        Object handler = handlerMapping.getHandler(request).getHandler();
-        handlerAdapter.handle(request, response, handler);
+        handlerAdapter.handle(request, response, getHandlerChain(request).getHandler());
         return response;
     }
     
+    protected HandlerExecutionChain getHandlerChain(MockHttpServletRequest request) throws Exception {
+        return handlerMapping.getHandler(request);
+    }
+
     protected void setContentAsJson(MockHttpServletRequest request, Object value) throws Exception {
         request.setContentType("application/json");
         String json = objectMapper.writeValueAsString(value);
