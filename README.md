@@ -155,7 +155,7 @@ It is also possible to create a custom service. Services must implement the Crud
 @Service
 @Transactional
 @Scope(proxyMode = TARGET_CLASS)
-public interface UserService extends AbstractCrudService<User, Long> {
+public class UserService extends AbstractCrudService<User, Long> {
  
  @Autowired
  public UserService(UserRepository userRepository) {
@@ -172,7 +172,7 @@ To create a custom REST endpoint, just define a regular Spring MVC request mappi
 ```java
 @RestController
 @RequestMapping("/user")
-public interface UserController {
+public class UserController {
 
  @RequestMapping(method = POST)
  public UserModel create(CreateUserModel model) {
