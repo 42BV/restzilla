@@ -149,7 +149,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
 ### Service ###
 
-It is also possible to create a custom service, just implement the CrudService interface. Or you could overwrite the AbstractCrudService template class:
+It is also possible to create a custom service. Services must implement the CrudService interface, but we also provide an AbstractCrudService template class:
 
 ```java
 @Service
