@@ -67,6 +67,50 @@ That's it! Restify will now automatically generate a repository, service and con
 * PUT    /user/{id}
 * DELETE /user/{id}
 
+## Pagination and sorting ##
+
+The GET requests by default return a collection of entities. But it is also possible to retrieve the entities as page:
+
+* GET     /user?page=0&size=10
+
+Also, the entities can be retrieved with a specific order:
+
+* GET     /user?page=0&size=10&sort=id,[asc|desc]
+* GET     /user?sort=id,[asc|desc]
+
+And it is also possible to specify default orders on your entities, as fallback when no orders are specified in the request:
+
+```java
+@Entity
+@EnableRest
+@SortingDefault("name")
+public class User {
+
+ @Id
+ private Long id;
+ private String name;
+
+}
+```
+
+More complicated orders are also possible:
+
+```java
+@Entity
+@EnableRest
+@SortingDefaults({
+ @SortingDefault("name"),
+ @SortingDefault(value = "id", direction = Direction.DESC)
+})
+public class User {
+
+ @Id
+ private Long id;
+ private String name;
+
+}
+```
+
 ## Customize body ##
 
 Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create- or update request varies from the entity. Restify allows you to specify custom types:
