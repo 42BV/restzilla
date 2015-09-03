@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
@@ -33,6 +34,14 @@ public abstract class AbstractCrudService<T, ID extends Serializable> implements
     @Override
     public List<T> findAll() {
         return (List<T>) repository.findAll();
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<T> findAll(Sort sort) {
+        return (List<T>) repository.findAll(sort);
     }
     
     /**

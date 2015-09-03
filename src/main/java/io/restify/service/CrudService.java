@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 
 /**
  * CRUD service.
@@ -23,6 +24,14 @@ public interface CrudService<T, ID extends Serializable> {
      * @return all entities
      */
     List<T> findAll();
+    
+    /**
+     * Returns all entities, sorted.
+     * 
+     * @param sort the sort
+     * @return all entities
+     */
+    List<T> findAll(Sort sort);
     
     /**
      * Returns a page of entities.

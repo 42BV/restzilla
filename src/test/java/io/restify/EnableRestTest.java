@@ -7,6 +7,7 @@ import io.restify.builder.UserBuilder;
 import io.restify.model.User;
 import io.restify.model.WithRepository;
 import io.restify.model.WithService;
+import io.restify.util.PageableResolver;
 
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,7 +29,19 @@ public class EnableRestTest extends AbstractControllerTest {
     private UserBuilder userBuilder;
 
     @Test
-    public void testFindAllNoData() throws Exception {
+    public void testFindAllAsArray() throws Exception {
+        userBuilder.createUser("Jan");
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/user");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals("[{\"name\":\"Jan\"}]", response.getContentAsString());
+    }
+    
+    @Test
+    public void testFindAllAsArrayNoData() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/user");
         request.setMethod(RequestMethod.GET.name());
@@ -38,15 +51,35 @@ public class EnableRestTest extends AbstractControllerTest {
     }
     
     @Test
-    public void testFindAll() throws Exception {
+    public void testFindAllAsPage() throws Exception {
         userBuilder.createUser("Jan");
         
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/user");
+        request.setParameter(PageableResolver.PAGE_PARAMETER, "0");
         request.setMethod(RequestMethod.GET.name());
         
         MockHttpServletResponse response = call(request);
-        Assert.assertEquals("[{\"name\":\"Jan\"}]", response.getContentAsString());
+        String contents = response.getContentAsString();
+        Assert.assertTrue(contents.contains("\"content\":[{\"name\":\"Jan\"}]"));
+        Assert.assertTrue(contents.contains("\"number\":0"));
+        Assert.assertTrue(contents.contains("\"size\":10"));
+    }
+    
+    @Test
+    public void testFindAllAsPageNoData() throws Exception {
+        userBuilder.createUser("Jan");
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/user");
+        request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        String contents = response.getContentAsString();
+        Assert.assertTrue(contents.contains("\"content\":[]"));
+        Assert.assertTrue(contents.contains("\"number\":1"));
+        Assert.assertTrue(contents.contains("\"size\":10"));
     }
     
     @Test

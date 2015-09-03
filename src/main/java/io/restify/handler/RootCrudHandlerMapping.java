@@ -1,6 +1,6 @@
 package io.restify.handler;
 
-import io.restify.UrlUtils;
+import io.restify.util.UrlUtils;
 
 import java.util.HashMap;
 import java.util.HashSet;

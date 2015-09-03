@@ -3,11 +3,11 @@
  */
 package io.restify.handler;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.beanmapper.BeanMapper;
 import io.restify.EntityInformation;
-import io.restify.UrlUtils;
 import io.restify.service.CrudService;
+import io.restify.util.PageableResolver;
+import io.restify.util.UrlUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -21,8 +21,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
@@ -71,9 +71,6 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private class DefaultCrudController {
-        
-        private static final String PAGE_PARAMETER = "page";
-        private static final String SIZE_PARAMETER = "size";
 
         private final CrudService service;
         
@@ -91,27 +88,39 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
          */
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
-            String page = request.getParameter(PAGE_PARAMETER);
-            if (isBlank(page)) {
-                Collection<?> entities = service.findAll();
-                return beanMapper.map(entities, information.getResultType());
+            if (PageableResolver.isSupported(request)) {
+                return findAllAsPage(request);
             } else {
-                return findAllByPage(request);
+                return findAllAsCollection(request);
             }
         }
 
-        private Page findAllByPage(HttpServletRequest request) {
-            Pageable pageable = getPageable(request);
+        /**
+         * Retrieve all entities in a page.
+         * 
+         * @param request the request
+         * @return the page of entities, in result type
+         */
+        private Page findAllAsPage(HttpServletRequest request) {
+            Pageable pageable = PageableResolver.getPageable(request, information.getEntityClass());
             Page<?> result = service.findAll(pageable);
-            List entities = new ArrayList(beanMapper.map(result.getContent(), information.getResultType()));
-            return new PageImpl(entities, pageable, result.getTotalElements());
+            if (result.hasContent()) {
+                List<?> content = new ArrayList(result.getContent());
+                List<?> transformed = new ArrayList(beanMapper.map(content, information.getResultType()));
+                result = new PageImpl(transformed, pageable, result.getTotalElements());
+            }
+            return result;
         }
-        
-        private Pageable getPageable(HttpServletRequest request) {
-            String page = request.getParameter(PAGE_PARAMETER);
-            String size = request.getParameter(SIZE_PARAMETER);
-            // TODO: Add sorting and defaults
-            return new PageRequest(Integer.parseInt(page), Integer.parseInt(size));
+
+        /**
+         * Retrieve all entities in a collection.
+         * 
+         * @return the collection of entities, in result type
+         */
+        private Collection findAllAsCollection(HttpServletRequest request) {
+            Sort sort = PageableResolver.getSort(request, information.getEntityClass());
+            List<?> entities = service.findAll(sort);
+            return beanMapper.map(entities, information.getResultType());
         }
 
         /**

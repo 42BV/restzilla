@@ -47,6 +47,8 @@ public @interface EnableRest {
      */
     boolean readOnly() default false;
 
+    // Types
+
     /**
      * (Optional) the result type, when left empty we return the full entity.
      * @return the result type
