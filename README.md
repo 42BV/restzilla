@@ -4,8 +4,9 @@ The purpose of [Restify](https://github.com/42BV/restify) is to dynamically gene
 
 ## Features ##
 
-* REST endpoints for entities, with only one line of code
-* Dynamic CRUD service- and repository implementations
+* REST endpoints for entities
+* Full pagination capabilities
+* Automatic repository and service implementations
 * Overwrite posibilities on each layer: Controller, Service, Repository
 
 ## Quick Start ##
