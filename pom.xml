@@ -27,6 +27,11 @@
 			<version>3.3.2</version>
 		</dependency>
 		<dependency>
+		    <groupId>com.google.guava</groupId>
+		    <artifactId>guava</artifactId>
+		    <version>19.0-rc1</version>
+		</dependency>
+		<dependency>
 			<groupId>io.beanmapper</groupId>
 			<artifactId>beanmapper</artifactId>
 			<version>0.2.13</version>

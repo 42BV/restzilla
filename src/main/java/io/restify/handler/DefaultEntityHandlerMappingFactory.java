@@ -6,12 +6,14 @@ package io.restify.handler;
 import io.beanmapper.BeanMapper;
 import io.restify.EntityInformation;
 import io.restify.service.CrudService;
+import io.restify.swagger.SwaggerApiDescriptor;
 import io.restify.util.PageableResolver;
 import io.restify.util.UrlUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -187,7 +189,13 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
 
     }
     
-    private static class DefaultHandlerMapping extends EntityHandlerMapping {
+    /**
+     * Maps our requests to controller handle methods.
+     *
+     * @author Jeroen van Schagen
+     * @since Sep 3, 2015
+     */
+    private static class DefaultHandlerMapping extends EntityHandlerMapping implements SwaggerApiDescriptor {
         
         private final DefaultCrudController controller;
         
@@ -217,7 +225,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          * @return the matching method, if any
          */
         private Method findMethod(HttpServletRequest request) throws NoSuchMethodException {
-            if (controller.information.isReadonly() && !RequestMethod.GET.name().equals(request.getMethod())) {
+            if (getInformation().isReadonly() && !RequestMethod.GET.name().equals(request.getMethod())) {
                 return null; // Skip anything but GET requests when read only
             }
 
@@ -239,6 +247,147 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
                 }
             }
             return method;
+        }
+        
+        /**
+         * {@inheritDoc}
+         * <br><br>
+         * <b>All swagger dependencies are specified with their full name to prevent
+         * class loading errors for users without swagger.</b>
+         */
+        @Override
+        public void addApiDescriptions(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
+            new DefaultSwaggerDescriber(getInformation()).addAll(apiListing);
+        }
+        
+    }
+    
+    /**
+     * Describes our dynamically generated controller handle methods.
+     *
+     * @author Jeroen van Schagen
+     * @since Sep 3, 2015
+     */
+    private static class DefaultSwaggerDescriber {
+        
+        private final EntityInformation information;
+
+        public DefaultSwaggerDescriber(EntityInformation information) {
+            this.information = information;
+        }
+        
+        void addAll(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
+            addModels(apiListing);
+            addApiDescriptions(apiListing);
+        }
+        
+        // Models
+
+        private void addModels(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
+            // TODO Auto-generated method stub
+        }
+
+        // API descriptions
+
+        private void addApiDescriptions(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
+            addApiDescriptionIfNotExists(apiListing, getAll());
+            addApiDescriptionIfNotExists(apiListing, getOne());
+            addApiDescriptionIfNotExists(apiListing, create());
+            addApiDescriptionIfNotExists(apiListing, update());
+            addApiDescriptionIfNotExists(apiListing, delete());
+        }
+        
+        void addApiDescriptionIfNotExists(com.mangofactory.swagger.models.dto.ApiListing apiListing, com.mangofactory.swagger.models.dto.ApiDescription apiDescription) {
+            if (!exists(apiListing, apiDescription)) {
+                apiListing.getApis().add(apiDescription);
+            }
+        }
+        
+        private boolean exists(com.mangofactory.swagger.models.dto.ApiListing apiListing, com.mangofactory.swagger.models.dto.ApiDescription apiDescription) {
+            // TODO Auto-generated method stub
+            return false;
+        }
+
+        private com.mangofactory.swagger.models.dto.ApiDescription getAll() {
+            com.mangofactory.swagger.models.dto.Operation operation = 
+                    newOperation().method(RequestMethod.GET.name())
+                                  .responseClass("Iterable«" + information.getResultType().getSimpleName() + "»")
+                                  .build();
+            
+            return buildApi(information.getBasePath(), "Get all entities", operation);
+        }
+        
+        private com.mangofactory.swagger.models.dto.ApiDescription getOne() {
+            com.mangofactory.swagger.models.dto.Operation operation = 
+                    newOperation().method(RequestMethod.GET.name())
+                                  .responseClass(information.getResultType().getSimpleName())
+                                  .parameters(Arrays.asList(newIdParameter()))
+                                  .build();
+            
+            return buildApi(information.getBasePath() + "/{id}", "Get one entity", operation);
+        }
+        
+        private com.mangofactory.swagger.models.dto.ApiDescription create() {            
+            com.mangofactory.swagger.models.dto.Operation operation = 
+                    newOperation().method(RequestMethod.POST.name())
+                                  .responseClass(information.getResultType().getSimpleName())
+                                  .parameters(Arrays.asList(newBodyParameter(information.getCreateType())))
+                                  .build();
+            
+            return buildApi(information.getBasePath(), "Create an entity", operation);
+        }
+
+        private com.mangofactory.swagger.models.dto.ApiDescription update() {
+            com.mangofactory.swagger.models.dto.Operation operation = 
+                    newOperation().method(RequestMethod.PUT.name())
+                                  .responseClass(information.getResultType().getSimpleName())
+                                  .parameters(Arrays.asList(newIdParameter(), newBodyParameter(information.getUpdateType())))
+                                  .build();
+            
+            return buildApi(information.getBasePath() + "/{id}", "Updates an entity", operation);
+        }
+        
+        private com.mangofactory.swagger.models.dto.ApiDescription delete() {
+            com.mangofactory.swagger.models.dto.Operation operation = 
+                    newOperation().method(RequestMethod.DELETE.name())
+                                  .responseClass(Void.class.getSimpleName().toLowerCase())
+                                  .parameters(Arrays.asList(newIdParameter()))
+                                  .build();
+            
+            return buildApi(information.getBasePath() + "/{id}", "Deletes an entity", operation);
+        }
+        
+        private com.mangofactory.swagger.models.dto.ApiDescription buildApi(String path, String description, com.mangofactory.swagger.models.dto.Operation operation) {
+            return new com.mangofactory.swagger.models.dto.builder.ApiDescriptionBuilder()
+                          .path(path)
+                          .description(description)
+                          .operations(Arrays.asList(operation))
+                          .build();
+        }
+        
+        private com.mangofactory.swagger.models.dto.builder.OperationBuilder newOperation() {
+            return new com.mangofactory.swagger.models.dto.builder.OperationBuilder()
+                          .authorizations(new ArrayList<com.mangofactory.swagger.models.dto.Authorization>());
+        }
+
+        private com.mangofactory.swagger.models.dto.builder.ParameterBuilder newParameter() {
+            return new com.mangofactory.swagger.models.dto.builder.ParameterBuilder();
+        }
+
+        private com.mangofactory.swagger.models.dto.Parameter newIdParameter() {
+            return newParameter()
+                    .dataType(information.getIdentifierClass().getSimpleName().toLowerCase())
+                    .name("id")
+                    .parameterType("path")
+                    .build();
+        }
+
+        private com.mangofactory.swagger.models.dto.Parameter newBodyParameter(Class<?> bodyClass) {
+            return newParameter()
+                    .dataType(bodyClass.getSimpleName())
+                    .name("body")
+                    .parameterType("body")
+                    .build();
         }
         
     }
