@@ -4,6 +4,7 @@
 package io.restify.util;
 
 import io.restify.SortingDefault;
+import io.restify.SortingDefault.SortingDefaults;
 import io.restify.model.User;
 
 import org.junit.Assert;
@@ -41,6 +42,20 @@ public class PageableResolverTest {
         Assert.assertEquals(Direction.ASC, pageable.getSort().getOrderFor("name").getDirection());
         Assert.assertNull(pageable.getSort().getOrderFor("other"));
     }
+    
+    @Test
+    public void testResolveEntityMultipleDefaults() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
+        
+        Pageable pageable = PageableResolver.getPageable(request, EntityWithMultiplePageableDefaults.class);
+        Assert.assertEquals(1, pageable.getPageNumber());
+        Assert.assertEquals(10, pageable.getPageSize());
+        Assert.assertEquals(Direction.ASC, pageable.getSort().getOrderFor("name").getDirection());
+        Assert.assertEquals(Direction.DESC, pageable.getSort().getOrderFor("age").getDirection());
+        Assert.assertEquals(Direction.DESC, pageable.getSort().getOrderFor("id").getDirection());
+        Assert.assertNull(pageable.getSort().getOrderFor("other"));
+    }
 
     @Test
     public void testResolveEntityDefaults() {
@@ -50,9 +65,8 @@ public class PageableResolverTest {
         Pageable pageable = PageableResolver.getPageable(request, EntityWithPageableDefaults.class);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(10, pageable.getPageSize());
-        Assert.assertEquals(Direction.DESC, pageable.getSort().getOrderFor("id").getDirection());
-        Assert.assertEquals(Direction.DESC, pageable.getSort().getOrderFor("name").getDirection());
-        Assert.assertNull(pageable.getSort().getOrderFor("other"));
+        Assert.assertEquals(Direction.ASC, pageable.getSort().getOrderFor("name").getDirection());
+        Assert.assertNull(pageable.getSort().getOrderFor("id"));
     }
     
     @Test
@@ -64,9 +78,18 @@ public class PageableResolverTest {
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(10, pageable.getPageSize());
         Assert.assertEquals(Direction.ASC, pageable.getSort().getOrderFor("id").getDirection());
+        Assert.assertNull(pageable.getSort().getOrderFor("name"));
     }
     
-    @SortingDefault(direction = Direction.DESC, value = { "id", "name" })
+    @SortingDefaults({
+        @SortingDefault("name"),
+        @SortingDefault(value = { "age", "id" }, direction = Direction.DESC)
+    })
+    public static class EntityWithMultiplePageableDefaults {
+        
+    }
+    
+    @SortingDefault("name")
     public static class EntityWithPageableDefaults {
         
     }

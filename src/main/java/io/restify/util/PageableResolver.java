@@ -5,6 +5,11 @@ package io.restify.util;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.restify.SortingDefault;
+import io.restify.SortingDefault.SortingDefaults;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -15,6 +20,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 
 /**
  * Resolves {@link Pageable} instances from HTTP requests.
@@ -85,9 +91,37 @@ public class PageableResolver {
             
             return new Sort(direction, properties);
         } else {
-            SortingDefault defaults = AnnotationUtils.findAnnotation(entityClass, SortingDefault.class);
-            return defaults != null ? new Sort(defaults.direction(), defaults.value()) : FALLBACK_DEFAULT_SORT;
+            return getDefaultSort(entityClass);
         }
+    }
+
+    private static Sort getDefaultSort(Class<?> entityClass) {
+        List<SortingDefault> defaults = findSortAnnotations(entityClass);
+        if (defaults.isEmpty()) {
+            return FALLBACK_DEFAULT_SORT;
+        } else {
+            List<Order> orders = new ArrayList<Order>();
+            for (SortingDefault fragment : defaults) {
+                for (String property : fragment.value()) {
+                    orders.add(new Order(fragment.direction(), property));
+                }
+            }
+            return new Sort(orders);
+        }
+    }
+    
+    private static List<SortingDefault> findSortAnnotations(Class<?> entityClass) {
+        List<SortingDefault> result = new ArrayList<SortingDefault>();
+        SortingDefaults multiple = AnnotationUtils.findAnnotation(entityClass, SortingDefaults.class);
+        if (multiple != null) {
+            result.addAll(Arrays.asList(multiple.value()));
+        } else {
+            SortingDefault single = AnnotationUtils.findAnnotation(entityClass, SortingDefault.class);
+            if (single != null) {
+                result.add(single);
+            }
+        }
+        return result;
     }
 
 }

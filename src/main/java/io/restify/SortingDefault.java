@@ -26,15 +26,35 @@ public @interface SortingDefault {
     /**
      * The properties to sort by by default.
      * 
-     * @return
+     * @return the properties
      */
     String[] value() default {};
     
     /**
      * The direction to sort by. Defaults to {@link Direction#ASC}.
      * 
-     * @return
+     * @return the direction
      */
     Direction direction() default Direction.ASC;
+
+    /**
+     * Define multiple sorting defaults for an entity.
+     * 
+     * @author Jeroen van Schagen
+     * @since Sep 3, 2015
+     */
+    @Documented
+    @Target(TYPE)
+    @Retention(RUNTIME)
+    public @interface SortingDefaults {
+        
+        /**
+         * The sorting defaults.
+         * 
+         * @return the defaults
+         */
+        SortingDefault[] value() default {};
+        
+    }
 
 }
