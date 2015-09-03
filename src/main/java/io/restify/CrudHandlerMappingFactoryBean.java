@@ -4,10 +4,10 @@
 package io.restify;
 
 import io.beanmapper.BeanMapper;
-import io.restify.handler.CrudHandlerMappingFactory;
-import io.restify.handler.DefaultCrudHandlerMappingFactory;
-import io.restify.handler.PublicHandlerMapping;
-import io.restify.handler.RootCrudHandlerMapping;
+import io.restify.handler.CrudHandlerMapping;
+import io.restify.handler.DefaultEntityHandlerMappingFactory;
+import io.restify.handler.EntityHandlerMapping;
+import io.restify.handler.EntityHandlerMappingFactory;
 import io.restify.service.CrudService;
 import io.restify.service.CrudServiceLocator;
 import io.restify.service.CrudServiceRegistry;
@@ -73,7 +73,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     /**
      * Creates the REST endpoint mappings.
      */
-    private CrudHandlerMappingFactory handlerMappingFactory;
+    private EntityHandlerMappingFactory handlerMappingFactory;
     
     /**
      * Maps between entities.
@@ -95,20 +95,20 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public HandlerMapping getObject() throws Exception {
-        RootCrudHandlerMapping rootHandler = new RootCrudHandlerMapping(requestHandlerMapping);
+    public CrudHandlerMapping getObject() throws Exception {
+        CrudHandlerMapping handlerMapping = new CrudHandlerMapping(requestHandlerMapping);
         CrudServiceRegistry services = serviceLocator.execute();
         for (Class<?> entityClass : services.getEntityClasses()) {
             EnableRest annotation = entityClass.getAnnotationsByType(EnableRest.class)[0];
             EntityInformation information = new EntityInformation(entityClass, annotation);
 
             CrudService<?, ?> service = services.getService(entityClass);
-            PublicHandlerMapping handler = handlerMappingFactory.build(service, information);
-            rootHandler.registerHandler(information.getBasePath(), handler);
+            EntityHandlerMapping entityHandlerMapping = handlerMappingFactory.build(service, information);
+            handlerMapping.registerHandler(information.getBasePath(), entityHandlerMapping);
             
             LOGGER.info("Generated REST mapping for /{} [{}]", information.getBasePath(), entityClass.getName());
         }
-        return rootHandler;
+        return handlerMapping;
     }
     
     /**
@@ -137,7 +137,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
             serviceLocator = new CrudServiceLocator(applicationContext, basePackage);
         }
         if (handlerMappingFactory == null) {
-            handlerMappingFactory = new DefaultCrudHandlerMappingFactory(objectMapper, conversionService, beanMapper);
+            handlerMappingFactory = new DefaultEntityHandlerMappingFactory(objectMapper, conversionService, beanMapper);
         }
     }
 
@@ -186,7 +186,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * <i>Optionally</i> set a custom handler mapping factory.
      * @param handlerMappingFactory the handler mapping factory
      */
-    public void setHandlerMappingFactory(CrudHandlerMappingFactory handlerMappingFactory) {
+    public void setHandlerMappingFactory(EntityHandlerMappingFactory handlerMappingFactory) {
         this.handlerMappingFactory = handlerMappingFactory;
     }
     

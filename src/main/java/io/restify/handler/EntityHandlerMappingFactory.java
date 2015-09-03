@@ -9,7 +9,7 @@ import io.restify.service.CrudService;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public interface CrudHandlerMappingFactory {
+public interface EntityHandlerMappingFactory {
     
     /**
      * Build a new handler mapping.
@@ -18,6 +18,6 @@ public interface CrudHandlerMappingFactory {
      * @param information the entity information
      * @return the handler mapping
      */
-    PublicHandlerMapping build(CrudService<?, ?> service, EntityInformation information);
+    EntityHandlerMapping build(CrudService<?, ?> service, EntityInformation information);
     
 }

@@ -30,12 +30,12 @@ import org.springframework.web.method.HandlerMethod;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Default implementation of the {@link CrudHandlerMappingFactory}.
+ * Default implementation of the {@link EntityHandlerMappingFactory}.
  *
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFactory {
+public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingFactory {
     
     private final ObjectMapper objectMapper;
     
@@ -44,7 +44,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
     private final BeanMapper beanMapper;
     
     /**
-     * Instantiate a new {@link DefaultCrudHandlerMappingFactory}.
+     * Instantiate a new {@link DefaultEntityHandlerMappingFactory}.
      * 
      * @param objectMapper
      *              the {@link ObjectMapper} for JSON parsing and formatting
@@ -53,7 +53,7 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
      * @param beanMapper
      *              the {@link BeanMapper} for mapping between beans
      */
-    public DefaultCrudHandlerMappingFactory(ObjectMapper objectMapper,
+    public DefaultEntityHandlerMappingFactory(ObjectMapper objectMapper,
                                        ConversionService conversionService,
                                               BeanMapper beanMapper) {
         this.objectMapper = objectMapper;
@@ -187,11 +187,12 @@ public class DefaultCrudHandlerMappingFactory implements CrudHandlerMappingFacto
 
     }
     
-    private static class DefaultHandlerMapping extends PublicHandlerMapping {
+    private static class DefaultHandlerMapping extends EntityHandlerMapping {
         
         private final DefaultCrudController controller;
         
         public DefaultHandlerMapping(DefaultCrudController controller) {
+            super(controller.information);
             this.controller = controller;
         }
         

@@ -2,6 +2,7 @@ package io.restify.handler;
 
 import io.restify.util.UrlUtils;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -22,12 +23,12 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class RootCrudHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
+public class CrudHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
     
     /**
      * Handlers mapped per entity type.
      */
-    private final Map<String, PublicHandlerMapping> handlerMappings = new HashMap<String, PublicHandlerMapping>();
+    private final Map<String, EntityHandlerMapping> handlerMappings = new HashMap<String, EntityHandlerMapping>();
     
     /**
      * Exceptions that should be skipped.
@@ -45,7 +46,7 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
      * @param requestHandlerMapping
      *            the {@link RequestMappingHandlerMapping} handler mapping
      */
-    public RootCrudHandlerMapping(RequestMappingHandlerMapping requestHandlerMapping) {
+    public CrudHandlerMapping(RequestMappingHandlerMapping requestHandlerMapping) {
         this.requestHandlerMapping = requestHandlerMapping;
         
         // Register the exceptions from our request handler to skip
@@ -84,7 +85,7 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
     
     private Object findCrudHandler(HttpServletRequest request) throws Exception {
         String basePath = UrlUtils.getRootPath(request);
-        PublicHandlerMapping delegateHandler = handlerMappings.get(basePath);
+        EntityHandlerMapping delegateHandler = handlerMappings.get(basePath);
         if (delegateHandler != null) {
             return delegateHandler.getHandlerInternal(request);
         }
@@ -97,7 +98,7 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
      * @param basePath the base path
      * @param handlerMapping the handler mapping
      */
-    public void registerHandler(String basePath, PublicHandlerMapping handlerMapping) {
+    public void registerHandler(String basePath, EntityHandlerMapping handlerMapping) {
         handlerMappings.put(basePath, handlerMapping);
     }
     
@@ -108,6 +109,15 @@ public class RootCrudHandlerMapping extends AbstractHandlerMapping implements Pr
      */
     public void registerSkippedException(Class<?> exceptionClass) {
         skippedExceptions.add(exceptionClass);
+    }
+    
+    /**
+     * Retrieve all handler mappings.
+     * 
+     * @return the handler mappings
+     */
+    public Collection<EntityHandlerMapping> getHandlerMappings() {
+        return handlerMappings.values();
     }
 
 }
