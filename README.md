@@ -1,11 +1,10 @@
 # Restify
 
-The purpose of [Restify](https://github.com/42BV/restify) is to dynamically generate REST endpoints for entity CRUD. In contrast to Spring DATA REST, Restify follows the Controller-Service-Repository  architectural pattern. Restify is build on convention over configuration, resulting in very minimal amounts of code with optimal functionality. But we are also very flexible, enabling simple overwrites in each architural layer.
+The purpose of [Restify](https://github.com/42BV/restify) is to dynamically generate REST endpoints for entity CRUD. In contrast to Spring DATA REST, Restify follows the Controller-Service-Repository architectural pattern. Restify is build on convention over configuration, resulting in very minimal amounts of code with optimal functionality. But we are also very flexible, enabling simple overwrites in each architural layer.
 
 ## Features ##
 
-* REST endpoints for entities (CRUD and pagination)
-* Automatic repository and service implementations
+* Generates (CRUD) REST endpoints, requiring only a JPA entity class
 * Overwrite posibilities on each layer: Controller, Service, Repository
 
 ## Quick Start ##
@@ -59,7 +58,7 @@ public class User {
 }
 ```
 
-That's it! Restify will now automatically generate a repository, service and controller. Where the controller will handle the following requests:
+That's it! Restify will now automatically inject a repository, service and controller. Where the controller will handle the following requests:
 
 * GET    /user
 * GET    /user/{id}
