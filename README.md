@@ -130,7 +130,9 @@ public class User {
 }
 ```
 
-Requests will now be unmarshalled to their custom type. The custom types are then mapped back on our entity as we perform our logic. Mapping between beans is automatically handled by the [BeanMapper](https://github.com/42BV/beanmapper) dependency.
+Requests will now be unmarshalled to their custom type. The custom types are then mapped back on our entity as we perform our logic.
+
+Mapping between beans is automatically handled by the [BeanMapper](https://github.com/42BV/beanmapper) dependency.
 
 ## Customize functionality ##
 
