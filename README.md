@@ -77,7 +77,7 @@ Also, the entities can be retrieved with a specific order:
 * GET     /user?page=0&size=10&sort=id,[asc|desc]
 * GET     /user?sort=id,[asc|desc]
 
-And it is also possible to specify default orders on your entities, as fallback when no orders are specified in the request:
+You can also specify default orders on your entities, as fallback when no orders are specified in the request:
 
 ```java
 @Entity
