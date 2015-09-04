@@ -257,7 +257,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @Override
         public void addApiDescriptions(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
-            new DefaultSwaggerDescriber(getInformation()).addAll(apiListing);
+            new DefaultSwaggerDescriber(getInformation()).enhance(apiListing);
         }
         
     }
@@ -271,23 +271,27 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
     private static class DefaultSwaggerDescriber {
         
         private final EntityInformation information;
+        
+        private final String basePath;
 
         public DefaultSwaggerDescriber(EntityInformation information) {
             this.information = information;
+            
+            String basePath = information.getBasePath();
+            if (!basePath.startsWith("/")) {
+                basePath = "/" + basePath;
+            }
+            this.basePath = basePath;
         }
         
-        void addAll(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
+        void enhance(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
             addModels(apiListing);
             addApiDescriptions(apiListing);
         }
         
-        // Models
-
         private void addModels(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
             // TODO Auto-generated method stub
         }
-
-        // API descriptions
 
         private void addApiDescriptions(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
             addApiDescriptionIfNotExists(apiListing, getAll());
@@ -314,7 +318,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
                       .responseClass("Iterable«" + information.getResultType().getSimpleName() + "»")
                       .build();
             
-            return buildApi(information.getBasePath(), "findAll", operation);
+            return buildApi(basePath, "findAll", operation);
         }
         
         private com.mangofactory.swagger.models.dto.ApiDescription getOne() {
@@ -324,7 +328,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
                       .parameters(Arrays.asList(newIdParameter()))
                       .build();
             
-            return buildApi(information.getBasePath() + "/{id}", "findOne", operation);
+            return buildApi(basePath + "/{id}", "findOne", operation);
         }
         
         private com.mangofactory.swagger.models.dto.ApiDescription create() {            
@@ -334,7 +338,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
                       .parameters(Arrays.asList(newBodyParameter(information.getCreateType())))
                       .build();
             
-            return buildApi(information.getBasePath(), "create", operation);
+            return buildApi(basePath, "create", operation);
         }
 
         private com.mangofactory.swagger.models.dto.ApiDescription update() {
@@ -344,7 +348,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
                       .parameters(Arrays.asList(newIdParameter(), newBodyParameter(information.getUpdateType())))
                       .build();
             
-            return buildApi(information.getBasePath() + "/{id}", "update", operation);
+            return buildApi(basePath + "/{id}", "update", operation);
         }
         
         private com.mangofactory.swagger.models.dto.ApiDescription delete() {
@@ -354,7 +358,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
                       .parameters(Arrays.asList(newIdParameter()))
                       .build();
             
-            return buildApi(information.getBasePath() + "/{id}", "delete", operation);
+            return buildApi(basePath + "/{id}", "delete", operation);
         }
         
         private com.mangofactory.swagger.models.dto.ApiDescription buildApi(String path, String description, com.mangofactory.swagger.models.dto.Operation operation) {
