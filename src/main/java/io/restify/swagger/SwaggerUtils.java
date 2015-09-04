@@ -11,6 +11,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.springframework.web.bind.annotation.RequestMethod;
+
 import com.google.common.base.Optional;
 import com.mangofactory.swagger.models.ModelContext;
 import com.mangofactory.swagger.models.ModelProvider;
@@ -31,30 +33,102 @@ import com.mangofactory.swagger.models.dto.builder.ParameterBuilder;
  * @since Sep 4, 2015
  */
 public class SwaggerUtils {
-    
-    // Models
-    
+
     /**
-     * Add a model to the listings, whenever a similar model
-     * does not exist yet.
-     * 
-     * @param listing the API listing
-     * @param modelClass the model class
-     * @param modelProvider the model provider
+     * Start building a new API description.
+     *
+     * @param name the name of the API call
+     * @param path the path to call
+     * @param method the request method
      */
-    public static void addIfNotExists(ApiListing listing, Class<?> modelClass, ModelProvider modelProvider) {
-        final String name = modelClass.getSimpleName();
-        if (!listing.getModels().containsKey(name)) {
-            ModelContext context = ModelContext.inputParam(modelClass);
-            Optional<Model> model = modelProvider.modelFor(context);
-            if (model.isPresent()) {
-                listing.getModels().put(name, model.get());
-            }
-        }
+    public static DescriptionBuilder newDescription(String name, String path, RequestMethod method) {
+        return new DescriptionBuilder(name, path, method);
     }
     
-    // API descriptions
+    /**
+     * Builder that creates an API description. This is an enhanced
+     * wrapper over the default Swagger builders.
+     */
+    public static class DescriptionBuilder {
 
+        private final ApiDescriptionBuilder descriptionBuilder;
+        
+        private final OperationBuilder operationBuilder;
+        
+        private final List<Parameter> parameters = new ArrayList<Parameter>();
+
+        private DescriptionBuilder(String description, String path, RequestMethod method) {
+            descriptionBuilder = new ApiDescriptionBuilder().description(description).path(path);
+            operationBuilder = newOperation(description).method(method.name());
+        }
+        
+        public DescriptionBuilder noResponseClass() {
+            operationBuilder.responseClass(Void.class.getSimpleName().toLowerCase());
+            return this;
+        }
+
+        public DescriptionBuilder responseClass(Class<?> responseClass) {
+            operationBuilder.responseClass(responseClass.getSimpleName());
+            return this;
+        }
+        
+        public DescriptionBuilder responseClassIterable(Class<?> responseClass) {
+            operationBuilder.responseClass("Iterable«" + responseClass.getSimpleName() + "»");
+            return this;
+        }
+        
+        public DescriptionBuilder addPathParameter(String name, Class<?> parameterType) {
+            parameters.add(newPathParameter(name, parameterType));
+            return this;
+        }
+        
+        public DescriptionBuilder addBodyParameter(Class<?> parameterType) {
+            parameters.add(newBodyParameter(parameterType));
+            return this;
+        }
+
+        private ApiDescription build() {
+            operationBuilder.parameters(parameters);
+            descriptionBuilder.operations(Arrays.asList(operationBuilder.build()));
+            return descriptionBuilder.build();
+        }
+        
+        public void register(ApiListing listing) {
+            addIfNotExists(listing, build());
+        }
+        
+    }
+
+    private static OperationBuilder newOperation(String name) {
+        return new OperationBuilder()
+                      .authorizations(new ArrayList<Authorization>())
+                      .produces(Arrays.asList("*/*"))
+                      .consumes(Arrays.asList("application/json"))
+                      .parameters(new ArrayList<Parameter>())
+                      .nickname(name)
+                      .notes(name)
+                      .summary(name)
+                      .deprecated("false");
+    }
+
+    private static Parameter newPathParameter(String name, Class<?> parameterType) {
+        return new ParameterBuilder()
+                      .dataType(parameterType.getSimpleName().toLowerCase())
+                      .name(name)
+                      .parameterType("path")
+                      .build();
+    }
+
+    private static Parameter newBodyParameter(Class<?> parameterType) {
+        return new ParameterBuilder()
+                      .dataType(parameterType.getSimpleName())
+                      .name("body")
+                      .parameterType("body")
+                      .build();
+    }
+
+    // Registration
+    
     /**
      * Add an API description to the listings, whenever a similar
      * mapping does not exist yet.
@@ -62,7 +136,7 @@ public class SwaggerUtils {
      * @param listing the API listing
      * @param description the description
      */
-    public static void addIfNotExists(ApiListing listing, ApiDescription description) {
+    private static void addIfNotExists(ApiListing listing, ApiDescription description) {
         if (!hasDescription(listing, description)) {
             listing.getApis().add(description);
         }
@@ -104,66 +178,23 @@ public class SwaggerUtils {
         return parameterNames;
     }
     
-    // Builders
-    
     /**
-     * Build a new API description.
+     * Add a model to the listings, whenever a similar model
+     * does not exist yet.
      * 
-     * @param path the path
-     * @param description the description
-     * @param operation the operation
+     * @param listing the API listing
+     * @param modelClass the model class
+     * @param modelProvider the model provider
      */
-    public static ApiDescription buildDescription(String path, String description, Operation operation) {
-        return new ApiDescriptionBuilder()
-                      .path(path)
-                      .description(description)
-                      .operations(Arrays.asList(operation))
-                      .build();
-    }
-    
-    /**
-     * Start building a new operation, all values are given an
-     * expected value to make the configuration as minimal as possible.
-     * 
-     * @param name the operation name
-     */
-    public static OperationBuilder newOperation(String name) {
-        return new OperationBuilder()
-                      .authorizations(new ArrayList<Authorization>())
-                      .produces(Arrays.asList("*/*"))
-                      .consumes(Arrays.asList("application/json"))
-                      .parameters(new ArrayList<Parameter>())
-                      .nickname(name)
-                      .notes(name)
-                      .summary(name)
-                      .deprecated("false");
-    }
-
-    /**
-     * Build a path parameter.
-     * 
-     * @param name the path name
-     * @param type the parameter type
-     */
-    public static Parameter newPathParameter(String name, Class<?> type) {
-        return new ParameterBuilder()
-                      .dataType(type.getSimpleName().toLowerCase())
-                      .name(name)
-                      .parameterType("path")
-                      .build();
-    }
-
-    /**
-     * Build a body parameter.
-     * 
-     * @param type the body type
-     */
-    public static Parameter newBodyParameter(Class<?> type) {
-        return new ParameterBuilder()
-                      .dataType(type.getSimpleName())
-                      .name("body")
-                      .parameterType("body")
-                      .build();
+    public static void addIfNotExists(ApiListing listing, Class<?> modelClass, ModelProvider modelProvider) {
+        final String name = modelClass.getSimpleName();
+        if (!listing.getModels().containsKey(name)) {
+            ModelContext context = ModelContext.inputParam(modelClass);
+            Optional<Model> model = modelProvider.modelFor(context);
+            if (model.isPresent()) {
+                listing.getModels().put(name, model.get());
+            }
+        }
     }
     
 }

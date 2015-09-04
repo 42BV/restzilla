@@ -13,7 +13,6 @@ import io.restify.util.UrlUtils;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
@@ -292,87 +291,48 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          * Enhances the swagger API listings with new models and descriptions.
          */
         void enhance(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            registerModels(listing);
+            registerModel(listing, information.getResultType());
+            registerModel(listing, information.getCreateType());
+            registerModel(listing, information.getUpdateType());
+            
             registerDescriptions(listing);
         }
 
-        private void registerModels(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, information.getResultType(), modelProvider);
-            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, information.getCreateType(), modelProvider);
-            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, information.getUpdateType(), modelProvider);
-        }
-
         private void registerDescriptions(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, findAll());
-            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, findOne());
-            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, create());
-            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, update());
-            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, delete());
+            newDescription("findAll", basePath, RequestMethod.GET)
+                    .responseClassIterable(information.getResultType())
+                    .register(listing);
+            
+            newDescription("findOne", basePath + "/{id}", RequestMethod.GET)
+                    .responseClass(information.getResultType())
+                    .addPathParameter("id", information.getIdentifierClass())
+                    .register(listing);
+            
+            newDescription("create", basePath, RequestMethod.POST)
+                    .responseClass(information.getResultType())
+                    .addBodyParameter(information.getCreateType())
+                    .register(listing);
+            
+            newDescription("update", basePath + "/{id}", RequestMethod.PUT)
+                    .responseClass(information.getResultType())
+                    .addPathParameter("id", information.getIdentifierClass())
+                    .addBodyParameter(information.getUpdateType())
+                    .register(listing);
+            
+            newDescription("delete", basePath + "/{id}", RequestMethod.DELETE)
+                    .noResponseClass()
+                    .addPathParameter("id", information.getIdentifierClass())
+                    .register(listing);
         }
         
-        // Description templates
-
-        private com.mangofactory.swagger.models.dto.ApiDescription findAll() {
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation("findAll", RequestMethod.GET)
-                      .responseClass("Iterable«" + information.getResultType().getSimpleName() + "»")
-                      .build();
-            
-            return io.restify.swagger.SwaggerUtils.buildDescription(basePath, "findAll", operation);
+        private void registerModel(com.mangofactory.swagger.models.dto.ApiListing listing, Class<?> modelType) {
+            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, modelType, modelProvider);
         }
         
-        private com.mangofactory.swagger.models.dto.ApiDescription findOne() {
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation("getOne", RequestMethod.GET)
-                      .responseClass(information.getResultType().getSimpleName())
-                      .parameters(Arrays.asList(newIdParameter()))
-                      .build();
-            
-            return io.restify.swagger.SwaggerUtils.buildDescription(basePath + "/{id}", "findOne", operation);
-        }
-        
-        private com.mangofactory.swagger.models.dto.ApiDescription create() {            
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation("create", RequestMethod.POST)
-                      .responseClass(information.getResultType().getSimpleName())
-                      .parameters(Arrays.asList(newBodyParameter(information.getCreateType())))
-                      .build();
-            
-            return io.restify.swagger.SwaggerUtils.buildDescription(basePath, "create", operation);
+        private io.restify.swagger.SwaggerUtils.DescriptionBuilder newDescription(String description, String path, RequestMethod method) {
+            return io.restify.swagger.SwaggerUtils.newDescription(description, path, method);
         }
 
-        private com.mangofactory.swagger.models.dto.ApiDescription update() {
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation("update", RequestMethod.PUT)
-                      .responseClass(information.getResultType().getSimpleName())
-                      .parameters(Arrays.asList(newIdParameter(), newBodyParameter(information.getUpdateType())))
-                      .build();
-            
-            return io.restify.swagger.SwaggerUtils.buildDescription(basePath + "/{id}", "update", operation);
-        }
-
-        private com.mangofactory.swagger.models.dto.ApiDescription delete() {
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation("delete", RequestMethod.DELETE)
-                      .responseClass(Void.class.getSimpleName().toLowerCase())
-                      .parameters(Arrays.asList(newIdParameter()))
-                      .build();
-            
-            return io.restify.swagger.SwaggerUtils.buildDescription(basePath + "/{id}", "delete", operation);
-        }
-        
-        private com.mangofactory.swagger.models.dto.Parameter newIdParameter() {
-            return io.restify.swagger.SwaggerUtils.newPathParameter("id", information.getIdentifierClass());
-        }
-
-        private com.mangofactory.swagger.models.dto.Parameter newBodyParameter(Class<?> parameterType) {
-            return io.restify.swagger.SwaggerUtils.newBodyParameter(parameterType);
-        }
-
-        private com.mangofactory.swagger.models.dto.builder.OperationBuilder newOperation(String name, RequestMethod method) {
-            return io.restify.swagger.SwaggerUtils.newOperation(name).method(method.name());
-        }
-        
     }
-
+    
 }
