@@ -23,7 +23,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.web.servlet.HandlerMapping;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -46,11 +45,6 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CrudHandlerMappingFactoryBean.class);
 
-    /**
-     * Request handler mapping.
-     */
-    private RequestMappingHandlerMapping requestHandlerMapping;
-    
     // Service locator
     
     /**
@@ -96,7 +90,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public CrudHandlerMapping getObject() throws Exception {
-        CrudHandlerMapping handlerMapping = new CrudHandlerMapping(requestHandlerMapping);
+        CrudHandlerMapping handlerMapping = new CrudHandlerMapping(applicationContext);
         CrudServiceRegistry services = serviceLocator.execute();
         for (Class<?> entityClass : services.getEntityClasses()) {
             EnableRest annotation = entityClass.getAnnotationsByType(EnableRest.class)[0];
@@ -141,11 +135,6 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         }
     }
 
-    @Autowired(required = false)
-    public void setRequestHandlerMapping(RequestMappingHandlerMapping requestHandlerMapping) {
-        this.requestHandlerMapping = requestHandlerMapping;
-    }
-    
     // Service locator
     
     /**

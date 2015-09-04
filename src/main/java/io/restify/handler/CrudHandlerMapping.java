@@ -7,9 +7,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
@@ -36,18 +38,24 @@ public class CrudHandlerMapping extends AbstractHandlerMapping implements Priori
     private final Set<Class<?>> skippedExceptions = new HashSet<Class<?>>();
 
     /**
-     * Custom handlers for @RequestMapping methods.
+     * The application context.
      */
-    private final RequestMappingHandlerMapping requestHandlerMapping;
+    private final ApplicationContext applicationContext;
+    
+    // Lazy attributes
+    
+    private AtomicBoolean initialized = new AtomicBoolean(false);
+
+    private RequestMappingHandlerMapping requestHandlerMapping;
 
     /**
      * Create a new handler mapping.
      * 
-     * @param requestHandlerMapping
-     *            the {@link RequestMappingHandlerMapping} handler mapping
+     * @param applicationContext
+     *            the initialized {@link ApplicationContext}
      */
-    public CrudHandlerMapping(RequestMappingHandlerMapping requestHandlerMapping) {
-        this.requestHandlerMapping = requestHandlerMapping;
+    public CrudHandlerMapping(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
         
         // Register the exceptions from our request handler to skip
         this.skippedExceptions.add(HttpRequestMethodNotSupportedException.class);
@@ -59,11 +67,22 @@ public class CrudHandlerMapping extends AbstractHandlerMapping implements Priori
      */
     @Override
     protected Object getHandlerInternal(HttpServletRequest request) throws Exception {
+        init();
+
         Object requestMappingHandler = findRequestMappingHandler(request);
         if (requestMappingHandler != null) {
             return requestMappingHandler;
         }
         return findCrudHandler(request); // When no custom mapping exists
+    }
+
+    private void init() {
+        if (!initialized.getAndSet(true)) {
+            String[] beanNames = applicationContext.getBeanNamesForType(RequestMappingHandlerMapping.class);
+            if (beanNames.length > 0) {
+                requestHandlerMapping = applicationContext.getBean(RequestMappingHandlerMapping.class);
+            }
+        }
     }
 
     private Object findRequestMappingHandler(HttpServletRequest request) throws Exception {
