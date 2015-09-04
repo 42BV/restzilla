@@ -17,7 +17,7 @@ public class WithServiceService extends AbstractCrudService<WithService, Long> {
     
     @Autowired
     public WithServiceService(WithServiceRepository repository) {
-        super(WithService.class, repository);
+        super(repository, WithService.class);
     }
     
     @Override

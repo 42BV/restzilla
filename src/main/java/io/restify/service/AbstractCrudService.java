@@ -6,6 +6,7 @@ package io.restify.service;
 import java.io.Serializable;
 import java.util.List;
 
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -23,7 +24,25 @@ public abstract class AbstractCrudService<T, ID extends Serializable> implements
     
     private final Class<T> entityClass;
 
-    public AbstractCrudService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
+    /**
+     * Construct a new CRUD service.
+     * <br><br>
+     * <b>This constructor dynamically resolves the entity from our type argument.</b>
+     * 
+     * @param repository the repository
+     */
+    @SuppressWarnings("unchecked")
+    public AbstractCrudService(PagingAndSortingRepository<T, ID> repository) {
+        this.repository = repository;
+        this.entityClass = (Class<T>) GenericTypeResolver.resolveTypeArguments(getClass(), CrudService.class)[0];
+    }
+
+    /**
+     * Construct a new CRUD service.
+     * @param repository the repository
+     * @param entityClass the entity class
+     */
+    public AbstractCrudService(PagingAndSortingRepository<T, ID> repository, Class<T> entityClass) {
         this.repository = repository;
         this.entityClass = entityClass;
     }

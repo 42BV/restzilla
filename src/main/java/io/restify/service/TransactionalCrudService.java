@@ -29,9 +29,10 @@ public class TransactionalCrudService<T, ID extends Serializable> extends Abstra
      * Create a new transactional CRUD service.
      * 
      * @param repository the repository
+     * @param entityClass the entity class
      */
     public TransactionalCrudService(PagingAndSortingRepository<T, ID> repository, Class<T> entityClass) {
-        super(entityClass, repository);
+        super(repository, entityClass);
     }
     
     /**
