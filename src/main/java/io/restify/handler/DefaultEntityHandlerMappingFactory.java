@@ -284,30 +284,51 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
             this.basePath = basePath;
         }
         
-        void enhance(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
-            addModels(apiListing);
-            addApiDescriptions(apiListing);
+        /**
+         * Enhances the swagger API listings with new models and descriptions.
+         */
+        void enhance(com.mangofactory.swagger.models.dto.ApiListing listing) {
+            addModels(listing);
+            addApiDescriptions(listing);
         }
         
-        private void addModels(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
-            // TODO Auto-generated method stub
+        // Models
+
+        private void addModels(com.mangofactory.swagger.models.dto.ApiListing listing) {
+            addModelIfNotExists(listing, information.getResultType());
+            addModelIfNotExists(listing, information.getCreateType());
+            addModelIfNotExists(listing, information.getUpdateType());
         }
 
-        private void addApiDescriptions(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
-            addApiDescriptionIfNotExists(apiListing, getAll());
-            addApiDescriptionIfNotExists(apiListing, getOne());
-            addApiDescriptionIfNotExists(apiListing, create());
-            addApiDescriptionIfNotExists(apiListing, update());
-            addApiDescriptionIfNotExists(apiListing, delete());
-        }
-        
-        void addApiDescriptionIfNotExists(com.mangofactory.swagger.models.dto.ApiListing apiListing, com.mangofactory.swagger.models.dto.ApiDescription apiDescription) {
-            if (!exists(apiListing, apiDescription)) {
-                apiListing.getApis().add(apiDescription);
+        private void addModelIfNotExists(com.mangofactory.swagger.models.dto.ApiListing listing, Class<?> type) {
+            if (!listing.getModels().containsKey(type.getSimpleName())) {
+                listing.getModels().put(type.getSimpleName(), buildModel(type));
             }
         }
         
-        private boolean exists(com.mangofactory.swagger.models.dto.ApiListing apiListing, com.mangofactory.swagger.models.dto.ApiDescription apiDescription) {
+        private com.mangofactory.swagger.models.dto.Model buildModel(Class<?> type) {
+            return new com.mangofactory.swagger.models.dto.builder.ModelBuilder()
+                        .name(type.getSimpleName())
+                        .build();
+        }
+
+        // Descriptions
+
+        private void addApiDescriptions(com.mangofactory.swagger.models.dto.ApiListing listing) {
+            addApiDescriptionIfNotExists(listing, getAll());
+            addApiDescriptionIfNotExists(listing, getOne());
+            addApiDescriptionIfNotExists(listing, create());
+            addApiDescriptionIfNotExists(listing, update());
+            addApiDescriptionIfNotExists(listing, delete());
+        }
+        
+        void addApiDescriptionIfNotExists(com.mangofactory.swagger.models.dto.ApiListing listing, com.mangofactory.swagger.models.dto.ApiDescription description) {
+            if (!exists(listing, description)) {
+                listing.getApis().add(description);
+            }
+        }
+        
+        private boolean exists(com.mangofactory.swagger.models.dto.ApiListing apiListing, com.mangofactory.swagger.models.dto.ApiDescription description) {
             // TODO Auto-generated method stub
             return false;
         }
