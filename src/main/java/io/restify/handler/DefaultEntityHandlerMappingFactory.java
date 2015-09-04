@@ -301,6 +301,9 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         private void registerDescriptions(com.mangofactory.swagger.models.dto.ApiListing listing) {
             newDescription("findAll", basePath, RequestMethod.GET)
                     .responseClassIterable(information.getResultType())
+                    .addQueryParameter("page", Long.class, false)
+                    .addQueryParameter("size", Long.class, false)
+                    .addQueryParameter("sort", String.class, false)
                     .register(listing);
             
             newDescription("findOne", basePath + "/{id}", RequestMethod.GET)

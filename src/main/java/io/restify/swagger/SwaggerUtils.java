@@ -77,6 +77,11 @@ public class SwaggerUtils {
             return this;
         }
         
+        public DescriptionBuilder addQueryParameter(String name, Class<?> parameterType, boolean required) {
+            parameters.add(newQueryParameter(name, parameterType, required));
+            return this;
+        }
+
         public DescriptionBuilder addPathParameter(String name, Class<?> parameterType) {
             parameters.add(newPathParameter(name, parameterType));
             return this;
@@ -109,6 +114,10 @@ public class SwaggerUtils {
                       .notes(name)
                       .summary(name)
                       .deprecated("false");
+    }
+    
+    private static Parameter newQueryParameter(String name, Class<?> parameterType, boolean required) {
+        return new ParameterBuilder().dataType(parameterType.getSimpleName().toLowerCase()).name(name).parameterType("query").required(required).build();
     }
 
     private static Parameter newPathParameter(String name, Class<?> parameterType) {
