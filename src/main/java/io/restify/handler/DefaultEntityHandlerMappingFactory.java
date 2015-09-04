@@ -309,52 +309,52 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         }
 
         private com.mangofactory.swagger.models.dto.ApiDescription getAll() {
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation().method(RequestMethod.GET.name())
-                                  .responseClass("Iterable«" + information.getResultType().getSimpleName() + "»")
-                                  .build();
+            com.mangofactory.swagger.models.dto.Operation operation = newOperation("findAll")
+                      .method(RequestMethod.GET.name())
+                      .responseClass("Iterable«" + information.getResultType().getSimpleName() + "»")
+                      .build();
             
-            return buildApi(information.getBasePath(), "Get all entities", operation);
+            return buildApi(information.getBasePath(), "findAll", operation);
         }
         
         private com.mangofactory.swagger.models.dto.ApiDescription getOne() {
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation().method(RequestMethod.GET.name())
-                                  .responseClass(information.getResultType().getSimpleName())
-                                  .parameters(Arrays.asList(newIdParameter()))
-                                  .build();
+            com.mangofactory.swagger.models.dto.Operation operation = newOperation("getOne")
+                      .method(RequestMethod.GET.name())
+                      .responseClass(information.getResultType().getSimpleName())
+                      .parameters(Arrays.asList(newIdParameter()))
+                      .build();
             
-            return buildApi(information.getBasePath() + "/{id}", "Get one entity", operation);
+            return buildApi(information.getBasePath() + "/{id}", "findOne", operation);
         }
         
         private com.mangofactory.swagger.models.dto.ApiDescription create() {            
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation().method(RequestMethod.POST.name())
-                                  .responseClass(information.getResultType().getSimpleName())
-                                  .parameters(Arrays.asList(newBodyParameter(information.getCreateType())))
-                                  .build();
+            com.mangofactory.swagger.models.dto.Operation operation = newOperation("create")
+                      .method(RequestMethod.POST.name())
+                      .responseClass(information.getResultType().getSimpleName())
+                      .parameters(Arrays.asList(newBodyParameter(information.getCreateType())))
+                      .build();
             
-            return buildApi(information.getBasePath(), "Create an entity", operation);
+            return buildApi(information.getBasePath(), "create", operation);
         }
 
         private com.mangofactory.swagger.models.dto.ApiDescription update() {
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation().method(RequestMethod.PUT.name())
-                                  .responseClass(information.getResultType().getSimpleName())
-                                  .parameters(Arrays.asList(newIdParameter(), newBodyParameter(information.getUpdateType())))
-                                  .build();
+            com.mangofactory.swagger.models.dto.Operation operation = newOperation("update")
+                      .method(RequestMethod.PUT.name())
+                      .responseClass(information.getResultType().getSimpleName())
+                      .parameters(Arrays.asList(newIdParameter(), newBodyParameter(information.getUpdateType())))
+                      .build();
             
-            return buildApi(information.getBasePath() + "/{id}", "Updates an entity", operation);
+            return buildApi(information.getBasePath() + "/{id}", "update", operation);
         }
         
         private com.mangofactory.swagger.models.dto.ApiDescription delete() {
-            com.mangofactory.swagger.models.dto.Operation operation = 
-                    newOperation().method(RequestMethod.DELETE.name())
-                                  .responseClass(Void.class.getSimpleName().toLowerCase())
-                                  .parameters(Arrays.asList(newIdParameter()))
-                                  .build();
+            com.mangofactory.swagger.models.dto.Operation operation = newOperation("delete")
+                      .method(RequestMethod.DELETE.name())
+                      .responseClass(Void.class.getSimpleName().toLowerCase())
+                      .parameters(Arrays.asList(newIdParameter()))
+                      .build();
             
-            return buildApi(information.getBasePath() + "/{id}", "Deletes an entity", operation);
+            return buildApi(information.getBasePath() + "/{id}", "delete", operation);
         }
         
         private com.mangofactory.swagger.models.dto.ApiDescription buildApi(String path, String description, com.mangofactory.swagger.models.dto.Operation operation) {
@@ -365,9 +365,15 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
                           .build();
         }
         
-        private com.mangofactory.swagger.models.dto.builder.OperationBuilder newOperation() {
+        private com.mangofactory.swagger.models.dto.builder.OperationBuilder newOperation(String name) {
             return new com.mangofactory.swagger.models.dto.builder.OperationBuilder()
-                          .authorizations(new ArrayList<com.mangofactory.swagger.models.dto.Authorization>());
+                          .authorizations(new ArrayList<com.mangofactory.swagger.models.dto.Authorization>())
+                          .produces(Arrays.asList("**/**"))
+                          .consumes(Arrays.asList("application/json"))
+                          .nickname(name)
+                          .notes(name)
+                          .summary(name)
+                          .deprecated("false");
         }
 
         private com.mangofactory.swagger.models.dto.builder.ParameterBuilder newParameter() {
