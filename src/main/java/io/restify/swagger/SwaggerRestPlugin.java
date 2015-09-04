@@ -9,6 +9,7 @@ import io.restify.handler.EntityHandlerMapping;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 import com.google.common.base.CaseFormat;
@@ -17,8 +18,10 @@ import com.mangofactory.swagger.core.SwaggerCache;
 import com.mangofactory.swagger.models.dto.ApiDescription;
 import com.mangofactory.swagger.models.dto.ApiListing;
 import com.mangofactory.swagger.models.dto.ApiListingReference;
+import com.mangofactory.swagger.models.dto.Model;
 import com.mangofactory.swagger.models.dto.ResourceListing;
 import com.mangofactory.swagger.models.dto.builder.ApiListingBuilder;
+import com.mangofactory.swagger.paths.SwaggerPathProvider;
 import com.mangofactory.swagger.plugin.SwaggerSpringMvcPlugin;
 
 /**
@@ -31,8 +34,10 @@ import com.mangofactory.swagger.plugin.SwaggerSpringMvcPlugin;
 public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
     
     private final SpringSwaggerConfig springSwaggerConfig;
-    
+        
     private final CrudHandlerMapping crudHandlerMapping;
+    
+    private SwaggerPathProvider swaggerPathProvider;
     
     private String swaggerGroup = "default";
 
@@ -40,6 +45,7 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
         super(springSwaggerConfig);
         this.springSwaggerConfig = springSwaggerConfig;
         this.crudHandlerMapping = crudHandlerMapping;
+        this.swaggerPathProvider = springSwaggerConfig.defaultSwaggerPathProvider();
     }
     
     /**
@@ -49,6 +55,15 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
     public SwaggerSpringMvcPlugin swaggerGroup(String swaggerGroup) {
         this.swaggerGroup = swaggerGroup;
         return super.swaggerGroup(swaggerGroup);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public SwaggerSpringMvcPlugin pathProvider(SwaggerPathProvider swaggerPathProvider) {
+        this.swaggerPathProvider = swaggerPathProvider;
+        return super.pathProvider(swaggerPathProvider);
     }
     
     /**
@@ -105,9 +120,10 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
 
     private ApiListing buildApiListing(String resourceName, EntityInformation information) {
         return new ApiListingBuilder()
-                    .basePath(information.getBasePath())
+                    .basePath(swaggerPathProvider.getApplicationBasePath())
                     .description(information.getEntityClass().getSimpleName())
                     .apis(new ArrayList<ApiDescription>())
+                    .models(new HashMap<String, Model>())
                     .consumes(Arrays.asList("*/*"))
                     .produces(Arrays.asList("*/*"))
                     .build();
