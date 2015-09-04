@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.Optional;
+import com.mangofactory.swagger.models.ModelContext;
 
 /**
  * Default implementation of the {@link EntityHandlerMappingFactory}.
@@ -256,8 +258,9 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          * class loading errors for users without swagger.</b>
          */
         @Override
-        public void addApiDescriptions(com.mangofactory.swagger.models.dto.ApiListing apiListing) {
-            new DefaultSwaggerDescriber(getInformation()).enhance(apiListing);
+        public void enhance(com.mangofactory.swagger.models.dto.ApiListing listing,
+                            com.mangofactory.swagger.models.ModelProvider modelProvider) {
+            new DefaultSwaggerDescriber(modelProvider, getInformation()).enhance(listing);
         }
         
     }
@@ -270,11 +273,14 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
      */
     private static class DefaultSwaggerDescriber {
         
+        private final com.mangofactory.swagger.models.ModelProvider modelProvider;
+        
         private final EntityInformation information;
         
         private final String basePath;
 
-        public DefaultSwaggerDescriber(EntityInformation information) {
+        public DefaultSwaggerDescriber(com.mangofactory.swagger.models.ModelProvider modelProvider, EntityInformation information) {
+            this.modelProvider = modelProvider;
             this.information = information;
             
             String basePath = information.getBasePath();
@@ -301,15 +307,13 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         }
 
         private void addModelIfNotExists(com.mangofactory.swagger.models.dto.ApiListing listing, Class<?> type) {
-            if (!listing.getModels().containsKey(type.getSimpleName())) {
-                listing.getModels().put(type.getSimpleName(), buildModel(type));
+            final String name = type.getSimpleName();
+            if (!listing.getModels().containsKey(name)) {
+                Optional<com.mangofactory.swagger.models.dto.Model> model = modelProvider.modelFor(ModelContext.inputParam(type));
+                if (model.isPresent()) {
+                    listing.getModels().put(name, model.get());
+                }
             }
-        }
-        
-        private com.mangofactory.swagger.models.dto.Model buildModel(Class<?> type) {
-            return new com.mangofactory.swagger.models.dto.builder.ModelBuilder()
-                        .name(type.getSimpleName())
-                        .build();
         }
 
         // Descriptions
@@ -393,7 +397,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         private com.mangofactory.swagger.models.dto.builder.OperationBuilder newOperation(String name) {
             return new com.mangofactory.swagger.models.dto.builder.OperationBuilder()
                           .authorizations(new ArrayList<com.mangofactory.swagger.models.dto.Authorization>())
-                          .produces(Arrays.asList("**/**"))
+                          .produces(Arrays.asList("*/*"))
                           .consumes(Arrays.asList("application/json"))
                           .nickname(name)
                           .notes(name)

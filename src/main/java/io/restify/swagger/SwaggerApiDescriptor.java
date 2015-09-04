@@ -12,10 +12,12 @@ package io.restify.swagger;
 public interface SwaggerApiDescriptor {
     
     /**
-     * Add any API descriptions.
+     * Enhance our API listing with new mappings.
      * 
-     * @param apiListing the API listing
+     * @param listing the API listing
+     * @param modelProvider describes our models
      */
-    void addApiDescriptions(com.mangofactory.swagger.models.dto.ApiListing apiListing);
+    void enhance(com.mangofactory.swagger.models.dto.ApiListing listing, 
+                 com.mangofactory.swagger.models.ModelProvider modelProvider);
 
 }

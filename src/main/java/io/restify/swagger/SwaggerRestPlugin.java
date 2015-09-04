@@ -89,7 +89,7 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
     private void addApiListings(SwaggerCache swaggerCache, String resourceName, EntityHandlerMapping handlerMapping) {
         ApiListing apiListing = getApiListing(swaggerCache, resourceName, handlerMapping.getInformation());
         if (handlerMapping instanceof SwaggerApiDescriptor) {
-            ((SwaggerApiDescriptor) handlerMapping).addApiDescriptions(apiListing);
+            ((SwaggerApiDescriptor) handlerMapping).enhance(apiListing, springSwaggerConfig.defaultModelProvider());
         }
     }
 
