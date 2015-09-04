@@ -6,6 +6,7 @@ The purpose of [Restify](https://github.com/42BV/restify) is to dynamically gene
 
 * Generates (CRUD) REST endpoints, requiring only a JPA entity class
 * Overwrite posibilities on each layer: Controller, Service, Repository
+* Swagger support
 
 ## Quick Start ##
 
@@ -178,5 +179,30 @@ public class UserController {
  public UserModel create(CreateUserModel model) {
  }
  
+}
+```
+
+## Swagger ##
+
+Restify also provides support for Swagger, automatically generating an API documentation. To activate Swagger, just configure the provided plugin:
+
+```java
+@Bean
+public CrudHandlerMapping crudHandlerMapping(ApplicationContext applicationContext) throws Exception {
+ CrudHandlerMappingFactoryBean crudHandlerMapping = new CrudHandlerMappingFactoryBean();
+ crudHandlerMapping.setBasePackageClass(WebMvcConfig.class);
+ crudHandlerMapping.setApplicationContext(applicationContext);
+ crudHandlerMapping.afterPropertiesSet();
+ return crudHandlerMapping.getObject();
+}
+
+@Bean
+public SwaggerRestPlugin swaggerRestPlugin(CrudHandlerMapping crudHandlerMapping) {
+ return new SwaggerRestPlugin(springSwaggerConfig, crudHandlerMapping);
+}
+
+@Autowired
+public void setSpringSwaggerConfig(SpringSwaggerConfig springSwaggerConfig) {
+ this.springSwaggerConfig = springSwaggerConfig;
 }
 ```
