@@ -178,7 +178,7 @@ public class UserService extends AbstractCrudService<User, Long> {
  
  @Autowired
  public UserService(UserRepository userRepository) {
-  super(User.class, userRepository);
+  super(userRepository);
  }
  
 }
