@@ -6,9 +6,9 @@ package io.restify.handler;
 import io.beanmapper.BeanMapper;
 import io.restify.CrudConfig;
 import io.restify.EntityInformation;
-import io.restify.security.SecurityProvider;
+import io.restify.handler.security.SecurityProvider;
+import io.restify.handler.swagger.SwaggerApiDescriptor;
 import io.restify.service.CrudService;
-import io.restify.swagger.SwaggerApiDescriptor;
 import io.restify.util.PageableResolver;
 import io.restify.util.UrlUtils;
 
@@ -387,11 +387,11 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         }
 
         private void registerModel(com.mangofactory.swagger.models.dto.ApiListing listing, Class<?> modelType) {
-            io.restify.swagger.SwaggerUtils.addIfNotExists(listing, modelType, modelProvider);
+            io.restify.handler.swagger.SwaggerUtils.addIfNotExists(listing, modelType, modelProvider);
         }
         
-        private io.restify.swagger.SwaggerUtils.DescriptionBuilder newDescription(String description, String path, RequestMethod method) {
-            return io.restify.swagger.SwaggerUtils.newDescription(description, path, method);
+        private io.restify.handler.swagger.SwaggerUtils.DescriptionBuilder newDescription(String description, String path, RequestMethod method) {
+            return io.restify.handler.swagger.SwaggerUtils.newDescription(description, path, method);
         }
 
     }

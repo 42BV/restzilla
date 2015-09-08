@@ -8,8 +8,8 @@ import io.restify.handler.CrudHandlerMapping;
 import io.restify.handler.DefaultEntityHandlerMappingFactory;
 import io.restify.handler.EntityHandlerMapping;
 import io.restify.handler.EntityHandlerMappingFactory;
-import io.restify.security.DefaultSecurityProvider;
-import io.restify.security.SecurityProvider;
+import io.restify.handler.security.DefaultSecurityProvider;
+import io.restify.handler.security.SecurityProvider;
 import io.restify.service.CrudService;
 import io.restify.service.CrudServiceLocator;
 import io.restify.service.CrudServiceRegistry;
@@ -151,7 +151,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     private void initSecurityProvider() {
         try {
             Class.forName("org.springframework.security.core.context.SecurityContext");
-            securityProvider = new io.restify.security.SpringSecurityProvider();
+            securityProvider = new io.restify.handler.security.SpringSecurityProvider();
         } catch (ClassNotFoundException cnfe) {
             LOGGER.info("Skipping roles in @CrudConfig because Spring Security is not on the classpath.");
             securityProvider = new DefaultSecurityProvider();
