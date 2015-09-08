@@ -118,9 +118,7 @@ Sometimes you want to return the entity in a different format. For example, retu
 ```java
 @Entity
 @EnableRest(
- resultType = UserModel.class,
- createType = CreateUserModel.class,
- updateType = UpdateUserModel.class
+ create = @CrudConfig(inputType = CreateUserModel.class, resultType = Long.class)
 )
 public class User {
 
@@ -135,7 +133,27 @@ Requests will now be unmarshalled to their custom type. The custom types are the
 
 Mapping between beans is automatically handled by the [BeanMapper](https://github.com/42BV/beanmapper) dependency.
 
-## Customize functionality ##
+## Security ##
+
+It's also possible to secure the endpoints, making them only accessable to certain roles:
+
+```java
+@Entity
+@EnableRest(
+ create = @CrudConfig(roles = "ROLE_ADMIN")
+)
+public class User {
+
+ @Id
+ private Long id;
+ private String name;
+
+}
+```
+
+When the user does not have any of the roles we will throw a SecurityException. Note that Spring Security must be on the classpath for this functionality to work.
+
+## Customize beans ##
 
 Logic can be overwritten on each of the architecural layers: Repository, Service, Controller. This is particulary handy when domain specific functionality is required.
 
@@ -184,7 +202,7 @@ public class UserController {
 
 ## Swagger ##
 
-Restify also provides support for Swagger, automatically generating an API documentation. To activate Swagger, just configure the provided plugin:
+Restify also provides native support for Swagger, automatically generating an API documentation. To activate Swagger, just configure the provided plugin:
 
 ```java
 @Bean
