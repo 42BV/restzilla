@@ -8,6 +8,7 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
 
 /**
@@ -16,7 +17,7 @@ import org.springframework.data.domain.Sort;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public interface CrudService<T, ID extends Serializable> {
+public interface CrudService<T extends Persistable<ID>, ID extends Serializable> {
     
     /**
      * Returns all entities.
@@ -66,6 +67,14 @@ public interface CrudService<T, ID extends Serializable> {
      * @throws IllegalArgumentException in case the given {@code id} is {@literal null}
      */
     void delete(ID id);
+    
+    /**
+     * Deletes the entity.
+     * 
+     * @param entity must not be {@literal null}.
+     * @throws IllegalArgumentException in case the given {@code id} is {@literal null}
+     */
+    void delete(T entity);
     
     /**
      * Retrieve the entity class.

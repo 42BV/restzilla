@@ -16,6 +16,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.support.Repositories;
@@ -67,7 +68,7 @@ public class CrudServiceLocator {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private CrudService<?, ?> getService(Class<?> entityClass, Services services, Repositories repositories) throws Exception {
+    private CrudService<?, ?> getService(Class entityClass, Services services, Repositories repositories) throws Exception {
         CrudService service = services.getByEntityClass(entityClass);
         if (service == null) {
             AutowireCapableBeanFactory beanFactory = applicationContext.getAutowireCapableBeanFactory();
@@ -87,7 +88,7 @@ public class CrudServiceLocator {
      * @param beanFactory the bean factory, used for injecting dependencies
      * @return the repository bean
      */
-    protected <T, ID extends Serializable> CrudRepository<T, ID> buildNewRepository(Class<T> entityClass, AutowireCapableBeanFactory beanFactory) {
+    protected <T extends Persistable<ID>, ID extends Serializable> CrudRepository<T, ID> buildNewRepository(Class<T> entityClass, AutowireCapableBeanFactory beanFactory) {
         return new SpringDataJpaRepositoryFactory<T, ID>(beanFactory, entityClass).build();
     }
     
@@ -98,7 +99,7 @@ public class CrudServiceLocator {
      * @param beanFactory the bean factory, used for injecting dependencies
      * @return the service bean
      */
-    protected <T, ID extends Serializable> CrudService<T, ID> buildNewService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository, AutowireCapableBeanFactory beanFactory) {
+    protected <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> buildNewService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository, AutowireCapableBeanFactory beanFactory) {
         CrudService<T, ID> service = new TransactionalCrudService<T, ID>(repository, entityClass);
         beanFactory.autowireBean(service);
         return service;

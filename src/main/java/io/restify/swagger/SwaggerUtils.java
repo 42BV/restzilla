@@ -68,6 +68,9 @@ public class SwaggerUtils {
         }
 
         public DescriptionBuilder responseClass(Class<?> responseClass) {
+            if (Void.class.equals(responseClass)) {
+                return noResponseClass();
+            }
             operationBuilder.responseClass(responseClass.getSimpleName());
             return this;
         }

@@ -6,6 +6,7 @@ package io.restify.service;
 import java.io.Serializable;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
@@ -18,7 +19,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Jeroen van Schagen
  * @since Aug 22, 2015
  */
-public class TransactionalCrudService<T, ID extends Serializable> extends AbstractCrudService<T, ID> {
+public class TransactionalCrudService<T extends Persistable<ID>, ID extends Serializable> extends AbstractCrudService<T, ID> {
     
     /**
      * Template that handles transactions.
@@ -39,41 +40,16 @@ public class TransactionalCrudService<T, ID extends Serializable> extends Abstra
      * {@inheritDoc}
      */
     @Override
-    public <S extends T> S save(final S entity) {
-        return transactionTemplate.execute(new TransactionCallback<S>() {
-            
-            @Override
-            public S doInTransaction(TransactionStatus status) {
-                return performSave(entity);
-            }
-            
-        });
-    }
-    
-    // Defined in separate method because cannot call super in annonymous inner class
-    private <S extends T> S performSave(S entity) {
-        return super.save(entity);
+    public <S extends T> S save(S entity) {
+        return transactionTemplate.execute(new SaveCallback<S>(entity));
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public void delete(final ID id) {
-        transactionTemplate.execute(new TransactionCallback<Void>() {
-            
-            @Override
-            public Void doInTransaction(TransactionStatus status) {
-                performDelete(id);
-                return null;
-            }
-            
-        });
-    }
-    
-    // Defined in separate method because cannot call super in annonymous inner class
-    private void performDelete(ID id) {
-        super.delete(id);
+    public void delete(ID id) {
+        transactionTemplate.execute(new DeleteCallback(id));
     }
 
     /**
@@ -93,6 +69,37 @@ public class TransactionalCrudService<T, ID extends Serializable> extends Abstra
     @Autowired
     public void setPlatformTransactionManager(PlatformTransactionManager transactionManager) {
         transactionTemplate = new TransactionTemplate(transactionManager);
+    }
+    
+    private class SaveCallback<S extends T> implements TransactionCallback<S> {
+        
+        private final S entity;
+        
+        public SaveCallback(S entity) {
+            this.entity = entity;
+        }
+        
+        @Override
+        public S doInTransaction(TransactionStatus status) {
+            return TransactionalCrudService.super.save(entity);
+        }
+        
+    }
+
+    private class DeleteCallback implements TransactionCallback<Void> {
+        
+        private final ID id;
+        
+        public DeleteCallback(ID id) {
+            this.id = id;
+        }
+        
+        @Override
+        public Void doInTransaction(TransactionStatus status) {
+            TransactionalCrudService.super.delete(id);
+            return null;
+        }
+        
     }
 
 }

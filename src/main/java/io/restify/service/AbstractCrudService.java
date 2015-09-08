@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
@@ -18,7 +19,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public abstract class AbstractCrudService<T, ID extends Serializable> implements CrudService<T, ID> {
+public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID> {
 
     private final PagingAndSortingRepository<T, ID> repository;
     
@@ -94,7 +95,15 @@ public abstract class AbstractCrudService<T, ID extends Serializable> implements
     public void delete(ID id) {
         repository.delete(id);
     }
-
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void delete(T entity) {
+        delete(entity.getId());
+    }
+    
     /**
      * {@inheritDoc}
      */

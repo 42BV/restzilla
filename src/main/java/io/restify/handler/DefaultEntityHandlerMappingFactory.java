@@ -4,6 +4,7 @@
 package io.restify.handler;
 
 import io.beanmapper.BeanMapper;
+import io.restify.CrudConfig;
 import io.restify.EntityInformation;
 import io.restify.service.CrudService;
 import io.restify.swagger.SwaggerApiDescriptor;
@@ -23,6 +24,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -107,7 +109,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
             Page<?> result = service.findAll(pageable);
             if (result.hasContent()) {
                 List<?> content = new ArrayList(result.getContent());
-                List<?> transformed = new ArrayList(beanMapper.map(content, information.getResultType()));
+                List<?> transformed = new ArrayList(beanMapper.map(content, information.getResultType(information.findAll())));
                 result = new PageImpl(transformed, pageable, result.getTotalElements());
             }
             return result;
@@ -121,7 +123,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         private Collection findAllAsCollection(HttpServletRequest request) {
             Sort sort = PageableResolver.getSort(request, information.getEntityClass());
             List<?> entities = service.findAll(sort);
-            return beanMapper.map(entities, information.getResultType());
+            return beanMapper.map(entities, information.getResultType(information.findAll()));
         }
 
         /**
@@ -133,7 +135,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
             Object entity = getEntityById(request);
-            return beanMapper.map(entity, information.getResultType());
+            return beanMapper.map(entity, information.getResultType(information.findOne()));
         }
         
         private Serializable extractId(HttpServletRequest request) {
@@ -149,10 +151,10 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
-            Object input = objectMapper.readValue(request.getReader(), information.getCreateType());
-            Object entity = beanMapper.map(input, information.getEntityClass());
-            Object output = service.save(entity);
-            return beanMapper.map(output, information.getResultType());
+            Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
+            Persistable<?> entity = beanMapper.map(input, information.getEntityClass());
+            Persistable<?> output = service.save(entity);
+            return convert(output, information.getResultType(information.create()));
         }
         
         /**
@@ -162,15 +164,15 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
-            Object entity = getEntityById(request);
-            Object input = objectMapper.readValue(request.getReader(), information.getUpdateType());
-            Object output = service.save(beanMapper.map(input, entity));
-            return beanMapper.map(output, information.getResultType());
+            Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.update()));
+            Persistable<?> entity = getEntityById(request);
+            Persistable<?> output = service.save(beanMapper.map(input, entity));
+            return convert(output, information.getResultType(information.update()));
         }
 
-        private Object getEntityById(HttpServletRequest request) {
+        private Persistable<?> getEntityById(HttpServletRequest request) {
             Serializable id = extractId(request);
-            Object entity = service.findOne(id);
+            Persistable<?> entity = service.findOne(id);
             if (entity == null) {
                 throw new IllegalArgumentException("Could not find entity '" + information.getEntityClass().getSimpleName() + "' with id: " + id);
             }
@@ -179,11 +181,31 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         
         /**
          * Deletes an entity based on an identifier: /{id}
+         * 
+         * @return the deleted entity
          */
         @ResponseBody
-        public void delete(HttpServletRequest request) {
-            Serializable id = extractId(request);
-            service.delete(id);
+        public Object delete(HttpServletRequest request) {
+            Persistable<?> entity = getEntityById(request);
+            service.delete(entity);
+            return convert(entity, information.getResultType(information.delete()));
+        }
+        
+        /**
+         * Enhances our bean mapper with some common non-bean types that can be returned. 
+         * 
+         * @param entity the entity
+         * @param targetType the target type
+         * @return the converted object
+         */
+        private Object convert(Persistable<?> entity, Class<?> targetType) {
+            if (Void.class.equals(targetType)) {
+                return null;
+            } else if (information.getIdentifierClass().equals(targetType)) {
+                return entity.getId();
+            } else {
+                return beanMapper.map(entity, targetType);
+            }
         }
 
     }
@@ -224,30 +246,34 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          * @return the matching method, if any
          */
         private Method findMethod(HttpServletRequest request) throws NoSuchMethodException {
-            if (getInformation().isReadonly() && !RequestMethod.GET.name().equals(request.getMethod())) {
-                return null; // Skip anything but GET requests when read only
-            }
-
             Method method = null;
             int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
             if (fragments == 2) {
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
-                    method = DefaultCrudController.class.getMethod("findAll", HttpServletRequest.class);
+                    method = findMethodIfEnabled("findAll", controller.information.findAll());
                 } else if (RequestMethod.POST.name().equals(request.getMethod())) {
-                    method = DefaultCrudController.class.getMethod("create", HttpServletRequest.class);
+                    method = findMethodIfEnabled("create", controller.information.create());
                 }
             } else if (fragments == 3) {
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
-                    method = DefaultCrudController.class.getMethod("findOne", HttpServletRequest.class);
+                    method = findMethodIfEnabled("findOne", controller.information.findOne());
                 } else if (RequestMethod.PUT.name().equals(request.getMethod())) {
-                    method = DefaultCrudController.class.getMethod("update", HttpServletRequest.class);
+                    method = findMethodIfEnabled("update", controller.information.update());
                 } else if (RequestMethod.DELETE.name().equals(request.getMethod())) {
-                    method = DefaultCrudController.class.getMethod("delete", HttpServletRequest.class);
+                    method = findMethodIfEnabled("delete", controller.information.delete());
                 }
             }
             return method;
         }
         
+        private Method findMethodIfEnabled(String methodName, CrudConfig config) throws NoSuchMethodException {
+            Method method = null;
+            if (config.enabled()) {
+                method = controller.getClass().getMethod(methodName, HttpServletRequest.class);
+            }
+            return method;
+        }
+
         /**
          * {@inheritDoc}
          * <br><br>
@@ -291,43 +317,52 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          * Enhances the swagger API listings with new models and descriptions.
          */
         void enhance(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            registerModel(listing, information.getResultType());
-            registerModel(listing, information.getCreateType());
-            registerModel(listing, information.getUpdateType());
-            
-            registerDescriptions(listing);
-        }
-
-        private void registerDescriptions(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            newDescription("findAll", basePath, RequestMethod.GET)
-                    .responseClassIterable(information.getResultType())
+            if (information.findAll().enabled()) {
+                registerModel(listing, information.getResultType(information.findAll()));
+                newDescription("findAll", basePath, RequestMethod.GET)
+                    .responseClassIterable(information.getResultType(information.findAll()))
                     .addQueryParameter("page", Long.class, false)
                     .addQueryParameter("size", Long.class, false)
                     .addQueryParameter("sort", String.class, false)
                     .register(listing);
+            }
             
-            newDescription("findOne", basePath + "/{id}", RequestMethod.GET)
-                    .responseClass(information.getResultType())
+            if (information.findOne().enabled()) {
+                registerModel(listing, information.getResultType(information.findOne()));
+                newDescription("findOne", basePath + "/{id}", RequestMethod.GET)
+                    .responseClass(information.getResultType(information.findOne()))
                     .addPathParameter("id", information.getIdentifierClass())
                     .register(listing);
+            }
             
-            newDescription("create", basePath, RequestMethod.POST)
-                    .responseClass(information.getResultType())
-                    .addBodyParameter(information.getCreateType())
+            if (information.create().enabled()) {
+                registerModel(listing, information.getInputType(information.create()));
+                registerModel(listing, information.getResultType(information.create()));
+                newDescription("create", basePath, RequestMethod.POST)
+                    .responseClass(information.getResultType(information.create()))
+                    .addBodyParameter(information.getInputType(information.create()))
                     .register(listing);
+            }
             
-            newDescription("update", basePath + "/{id}", RequestMethod.PUT)
-                    .responseClass(information.getResultType())
+            if (information.update().enabled()) {
+                registerModel(listing, information.getInputType(information.update()));
+                registerModel(listing, information.getResultType(information.update()));
+                newDescription("update", basePath + "/{id}", RequestMethod.PUT)
+                    .responseClass(information.getResultType(information.update()))
                     .addPathParameter("id", information.getIdentifierClass())
-                    .addBodyParameter(information.getUpdateType())
+                    .addBodyParameter(information.getInputType(information.update()))
                     .register(listing);
+            }
             
-            newDescription("delete", basePath + "/{id}", RequestMethod.DELETE)
-                    .noResponseClass()
+            if (information.delete().enabled()) {
+                registerModel(listing, information.getResultType(information.delete()));
+                newDescription("delete", basePath + "/{id}", RequestMethod.DELETE)
+                    .responseClass(information.getResultType(information.delete()))
                     .addPathParameter("id", information.getIdentifierClass())
                     .register(listing);
+            }
         }
-        
+
         private void registerModel(com.mangofactory.swagger.models.dto.ApiListing listing, Class<?> modelType) {
             io.restify.swagger.SwaggerUtils.addIfNotExists(listing, modelType, modelProvider);
         }

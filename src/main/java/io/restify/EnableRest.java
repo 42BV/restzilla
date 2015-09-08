@@ -42,29 +42,41 @@ public @interface EnableRest {
     String basePath() default "";
     
     /**
-     * Determines if we should only handle {@code GET} requests.
-     * @return the read only
-     */
-    boolean readOnly() default false;
-
-    // Types
-
-    /**
-     * (Optional) the result type, when left empty we return the full entity.
+     * (Optional) the result type, when left empty we return the entity
      * @return the result type
      */
     Class<?> resultType() default Object.class;
-    
-    /**
-     * (Optional) the input creation type
-     * @return the creation type
-     */
-    Class<?> createType() default Object.class;
+
+    // Specific configuration per function
 
     /**
-     * (Optional) the input update type 
-     * @return the update type
+     * (Optional) the configuration of our {@code findAll}
+     * @return the configuration
      */
-    Class<?> updateType() default Object.class;
+    CrudConfig findAll() default @CrudConfig;
+    
+    /**
+     * (Optional) the configuration of our {@code findOne}
+     * @return the configuration
+     */
+    CrudConfig findOne() default @CrudConfig;
+    
+    /**
+     * (Optional) the configuration of our {@code create}
+     * @return the configuration
+     */
+    CrudConfig create() default @CrudConfig;
+    
+    /**
+     * (Optional) the configuration of our {@code update}
+     * @return the configuration
+     */
+    CrudConfig update() default @CrudConfig;
+    
+    /**
+     * (Optional) the configuration of our {@code delete}
+     * @return the configuration
+     */
+    CrudConfig delete() default @CrudConfig;
 
 }

@@ -5,7 +5,6 @@ package io.restify;
 
 import io.restify.builder.UserBuilder;
 import io.restify.model.User;
-import io.restify.model.WithRepository;
 import io.restify.model.WithService;
 import io.restify.util.PageableResolver;
 
@@ -107,7 +106,7 @@ public class EnableRestTest extends AbstractControllerTest {
 
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"name\":\"Piet\"}", response.getContentAsString());
+        Assert.assertTrue(response.getContentAsString().matches("\\d+"));
         
         Assert.assertEquals(Long.valueOf(1), 
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
@@ -143,12 +142,13 @@ public class EnableRestTest extends AbstractControllerTest {
         
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        
+        Assert.assertEquals("", response.getContentAsString());
+
         Assert.assertEquals(Long.valueOf(0), 
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user WHERE id = " + henk.getId(), Long.class));
     }
 
-    // In the tests below we have overwritten our conventional beans
+    // Custom beans
 
     @Test
     public void testCustomRepository() throws Exception {
@@ -177,15 +177,13 @@ public class EnableRestTest extends AbstractControllerTest {
         Assert.assertEquals("{\"id\":1,\"name\":\"Test!\"}", response.getContentAsString());
     }
     
-    @Test
-    public void testReadOnly() throws Exception {
-        WithRepository entity = new WithRepository();
-        entity.setName("Test");
+    // Custom configuration
 
+    @Test
+    public void testDisabled() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withrepository");
-        request.setMethod(RequestMethod.POST.name());
-        setContentAsJson(request, entity);
+        request.setRequestURI("/withdisabled");
+        request.setMethod(RequestMethod.GET.name());
         
         Assert.assertNull(getHandlerChain(request));
     }

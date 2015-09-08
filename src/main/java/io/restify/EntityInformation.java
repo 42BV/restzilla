@@ -15,21 +15,27 @@ import org.springframework.data.domain.Persistable;
  */
 public class EntityInformation {
 
-    private final Class<?> entityClass;
+    private final Class<? extends Persistable<?>> entityClass;
     
     private final Class<?> identifierClass;
     
     private final EnableRest annotation;
     
+    @SuppressWarnings({ "unchecked", "rawtypes" })
     public EntityInformation(Class<?> entityClass, EnableRest annotation) throws NoSuchMethodException {
-        this.entityClass = entityClass;
         if (!(Persistable.class.isAssignableFrom(entityClass))) {
             throw new IllegalStateException("Entity does not extend from Persistable");
         }
+        this.entityClass = (Class) entityClass;
         this.identifierClass = entityClass.getMethod("getId").getReturnType();
         this.annotation = annotation;
     }
 
+    /**
+     * Retrieve the base path.
+     * 
+     * @return the base path
+     */
     public String getBasePath() {
         String basePath = annotation.basePath();
         if (isBlank(basePath)) {
@@ -38,32 +44,97 @@ public class EntityInformation {
         return basePath;
     }
     
-    public Class<?> getEntityClass() {
+    /**
+     * Retrieve the entity class.
+     * 
+     * @return the entity class
+     */
+    public Class<? extends Persistable<?>> getEntityClass() {
         return entityClass;
     }
     
+    /**
+     * Retrieve the identifier class.
+     * 
+     * @return the identifier class
+     */
     public Class<?> getIdentifierClass() {
         return identifierClass;
     }
+
+    /**
+     * Determine the input type.
+     * 
+     * @param config the configuration
+     * @return the input type
+     */
+    public Class<?> getInputType(CrudConfig config) {
+        return isCustom(config.inputType()) ? config.inputType() : entityClass;
+    }
+
+    /**
+     * Determine the result type.
+     * 
+     * @param config the configuration
+     * @return the result type
+     */
+    public Class<?> getResultType(CrudConfig config) {
+        return isCustom(config.resultType()) ? config.resultType() : getResultType();
+    }
     
-    public Class<?> getResultType() {
+    private Class<?> getResultType() {
         return isCustom(annotation.resultType()) ? annotation.resultType() : entityClass;
     }
-    
-    public Class<?> getCreateType() {
-        return isCustom(annotation.createType()) ? annotation.createType() : entityClass;
-    }
-    
-    public Class<?> getUpdateType() {
-        return isCustom(annotation.updateType()) ? annotation.updateType() : entityClass;
-    }
-    
+
     private static boolean isCustom(Class<?> clazz) {
         return !Object.class.equals(clazz);
     }
-
-    public boolean isReadonly() {
-        return annotation.readOnly();
+    
+    // Specific configurations
+    
+    /**
+     * Retrieve the {@code findAll} configuration.
+     * 
+     * @return the configuration
+     */
+    public CrudConfig findAll() {
+        return annotation.findAll();
+    }
+    
+    /**
+     * Retrieve the {@code findOne} configuration.
+     * 
+     * @return the configuration
+     */
+    public CrudConfig findOne() {
+        return annotation.findOne();
+    }
+    
+    /**
+     * Retrieve the {@code create} configuration.
+     * 
+     * @return the configuration
+     */
+    public CrudConfig create() {
+        return annotation.create();
+    }
+    
+    /**
+     * Retrieve the {@code update} configuration.
+     * 
+     * @return the configuration
+     */
+    public CrudConfig update() {
+        return annotation.update();
+    }
+    
+    /**
+     * Retrieve the {@code delete} configuration.
+     * 
+     * @return the configuration
+     */
+    public CrudConfig delete() {
+        return annotation.delete();
     }
 
 }
