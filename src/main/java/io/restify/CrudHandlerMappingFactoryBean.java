@@ -8,6 +8,8 @@ import io.restify.handler.CrudHandlerMapping;
 import io.restify.handler.DefaultEntityHandlerMappingFactory;
 import io.restify.handler.EntityHandlerMapping;
 import io.restify.handler.EntityHandlerMappingFactory;
+import io.restify.security.DefaultSecurityProvider;
+import io.restify.security.SecurityProvider;
 import io.restify.service.CrudService;
 import io.restify.service.CrudServiceLocator;
 import io.restify.service.CrudServiceRegistry;
@@ -83,6 +85,11 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * Performs JSON marshall and unmarshalling.
      */
     private ObjectMapper objectMapper = new ObjectMapper();
+    
+    /**
+     * Checks the authorization.
+     */
+    private SecurityProvider securityProvider;
 
     /**
      * {@inheritDoc}
@@ -127,11 +134,27 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     @Override
     public void afterPropertiesSet() throws Exception {
+        // Construct the service locator, when not overwritten
         if (serviceLocator == null) {
             serviceLocator = new CrudServiceLocator(applicationContext, basePackage);
         }
+
+        // Construct the handler mapping factory, when not overwritten
         if (handlerMappingFactory == null) {
-            handlerMappingFactory = new DefaultEntityHandlerMappingFactory(objectMapper, conversionService, beanMapper);
+            if (securityProvider == null) {
+                initSecurityProvider();
+            }
+            handlerMappingFactory = new DefaultEntityHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider);
+        }
+    }
+    
+    private void initSecurityProvider() {
+        try {
+            Class.forName("org.springframework.security.core.context.SecurityContext");
+            securityProvider = new io.restify.security.SpringSecurityProvider();
+        } catch (ClassNotFoundException cnfe) {
+            LOGGER.info("Skipping roles in @CrudConfig because Spring Security is not on the classpath.");
+            securityProvider = new DefaultSecurityProvider();
         }
     }
 
@@ -192,6 +215,14 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     @Autowired(required = false)
     public void setObjectMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
+    }
+
+    /**
+     * <i>Optionally</i> set a custom security provider on our mappings.
+     * @param securityProvider the security provider
+     */
+    public void setSecurityProvider(SecurityProvider securityProvider) {
+        this.securityProvider = securityProvider;
     }
 
 }

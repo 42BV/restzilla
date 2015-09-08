@@ -6,6 +6,7 @@ package io.restify.handler;
 import io.beanmapper.BeanMapper;
 import io.restify.CrudConfig;
 import io.restify.EntityInformation;
+import io.restify.security.SecurityProvider;
 import io.restify.service.CrudService;
 import io.restify.swagger.SwaggerApiDescriptor;
 import io.restify.util.PageableResolver;
@@ -46,6 +47,8 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
     
     private final BeanMapper beanMapper;
     
+    private final SecurityProvider securityProvider;
+    
     /**
      * Instantiate a new {@link DefaultEntityHandlerMappingFactory}.
      * 
@@ -55,13 +58,17 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
      *              the {@link ConversionService} for converting between types
      * @param beanMapper
      *              the {@link BeanMapper} for mapping between beans
+     * @param securityProvider
+     *              the {@link SecurityProvider} checking the authorization
      */
     public DefaultEntityHandlerMappingFactory(ObjectMapper objectMapper,
-                                       ConversionService conversionService,
-                                              BeanMapper beanMapper) {
+                                         ConversionService conversionService,
+                                                BeanMapper beanMapper,
+                                          SecurityProvider securityProvider) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
         this.beanMapper = beanMapper;
+        this.securityProvider = securityProvider;
     }
 
     /**
@@ -91,10 +98,18 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
+            checkIsAuthorized(information.findAll().roles());
+
             if (PageableResolver.isSupported(request)) {
                 return findAllAsPage(request);
             } else {
                 return findAllAsCollection(request);
+            }
+        }
+
+        private void checkIsAuthorized(String[] roles) {
+            if (!securityProvider.isAuthorized(roles)) {
+                throw new SecurityException("Not authorized, should be one of: " + StringUtils.join(roles, ", "));
             }
         }
 
@@ -134,6 +149,8 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
+            checkIsAuthorized(information.findOne().roles());
+
             Object entity = getEntityById(request);
             return beanMapper.map(entity, information.getResultType(information.findOne()));
         }
@@ -151,6 +168,8 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
+            checkIsAuthorized(information.create().roles());
+
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
             Persistable<?> entity = beanMapper.map(input, information.getEntityClass());
             Persistable<?> output = service.save(entity);
@@ -164,6 +183,8 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
+            checkIsAuthorized(information.update().roles());
+
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.update()));
             Persistable<?> entity = getEntityById(request);
             Persistable<?> output = service.save(beanMapper.map(input, entity));
@@ -186,6 +207,8 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object delete(HttpServletRequest request) {
+            checkIsAuthorized(information.delete().roles());
+
             Persistable<?> entity = getEntityById(request);
             service.delete(entity);
             return convert(entity, information.getResultType(information.delete()));

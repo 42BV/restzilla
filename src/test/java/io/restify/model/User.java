@@ -19,7 +19,7 @@ import javax.persistence.Entity;
 @Entity
 @EnableRest(
     resultType = UserModel.class,
-        create = @CrudConfig(inputType = CreateUserModel.class, resultType = Long.class, roles = "ADMIN"),
+        create = @CrudConfig(inputType = CreateUserModel.class, resultType = Long.class),
         update = @CrudConfig(inputType = UpdateUserModel.class),
         delete = @CrudConfig(resultType = Void.class)
 )

@@ -187,5 +187,14 @@ public class EnableRestTest extends AbstractControllerTest {
         
         Assert.assertNull(getHandlerChain(request));
     }
+    
+    @Test(expected = SecurityException.class)
+    public void testSecured() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withsecurity");
+        request.setMethod(RequestMethod.GET.name());
+        
+        call(request);
+    }
 
 }
