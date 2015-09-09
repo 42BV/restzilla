@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target(TYPE)
 @Retention(RUNTIME)
-public @interface EnableRest {
+public @interface RestEnable {
     
     /**
      * (Optional) the base path, when empty we use the entity name.
@@ -53,30 +53,30 @@ public @interface EnableRest {
      * (Optional) the configuration of our {@code findAll}
      * @return the configuration
      */
-    CrudConfig findAll() default @CrudConfig;
+    RestConfig findAll() default @RestConfig;
     
     /**
      * (Optional) the configuration of our {@code findOne}
      * @return the configuration
      */
-    CrudConfig findOne() default @CrudConfig;
+    RestConfig findOne() default @RestConfig;
     
     /**
      * (Optional) the configuration of our {@code create}
      * @return the configuration
      */
-    CrudConfig create() default @CrudConfig;
+    RestConfig create() default @RestConfig;
     
     /**
      * (Optional) the configuration of our {@code update}
      * @return the configuration
      */
-    CrudConfig update() default @CrudConfig;
+    RestConfig update() default @RestConfig;
     
     /**
      * (Optional) the configuration of our {@code delete}
      * @return the configuration
      */
-    CrudConfig delete() default @CrudConfig;
+    RestConfig delete() default @RestConfig;
 
 }

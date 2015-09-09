@@ -3,7 +3,7 @@
  */
 package io.restify.service;
 
-import io.restify.EnableRest;
+import io.restify.RestEnable;
 import io.restify.repository.SpringDataJpaRepositoryFactory;
 
 import java.io.Serializable;
@@ -56,7 +56,7 @@ public class CrudServiceLocator {
         Services services = new Services(applicationContext);
 
         ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
-        provider.addIncludeFilter(new AnnotationTypeFilter(EnableRest.class));
+        provider.addIncludeFilter(new AnnotationTypeFilter(RestEnable.class));
         Set<BeanDefinition> components = provider.findCandidateComponents(basePackage);
         for (BeanDefinition component : components) {
             Class<?> entityClass = Class.forName(component.getBeanClassName());

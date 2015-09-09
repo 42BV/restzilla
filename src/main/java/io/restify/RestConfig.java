@@ -19,7 +19,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target(TYPE)
 @Retention(RUNTIME)
-public @interface CrudConfig {
+public @interface RestConfig {
 
     /**
      * Determines if this function is enabled.

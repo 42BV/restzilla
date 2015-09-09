@@ -3,8 +3,8 @@
  */
 package io.restify.model;
 
-import io.restify.CrudConfig;
-import io.restify.EnableRest;
+import io.restify.RestConfig;
+import io.restify.RestEnable;
 import io.restify.model.dto.CreateUserModel;
 import io.restify.model.dto.UpdateUserModel;
 import io.restify.model.dto.UserModel;
@@ -17,11 +17,10 @@ import javax.persistence.Entity;
  * @since Mar 11, 2015
  */
 @Entity
-@EnableRest(
-    resultType = UserModel.class,
-        create = @CrudConfig(inputType = CreateUserModel.class, resultType = Long.class),
-        update = @CrudConfig(inputType = UpdateUserModel.class),
-        delete = @CrudConfig(resultType = Void.class)
+@RestEnable(resultType = UserModel.class,
+    create = @RestConfig(inputType = CreateUserModel.class, resultType = Long.class),
+    update = @RestConfig(inputType = UpdateUserModel.class),
+    delete = @RestConfig(resultType = Void.class)
 )
 public class User extends BaseEntity {
     

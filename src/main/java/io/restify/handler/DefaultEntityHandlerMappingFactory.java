@@ -4,8 +4,8 @@
 package io.restify.handler;
 
 import io.beanmapper.BeanMapper;
-import io.restify.CrudConfig;
-import io.restify.EntityInformation;
+import io.restify.RestConfig;
+import io.restify.RestInformation;
 import io.restify.handler.security.SecurityProvider;
 import io.restify.handler.swagger.SwaggerApiDescriptor;
 import io.restify.service.CrudService;
@@ -75,7 +75,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
      * {@inheritDoc}
      */
     @Override
-    public DefaultHandlerMapping build(CrudService<?, ?> service, EntityInformation information) {
+    public DefaultHandlerMapping build(CrudService<?, ?> service, RestInformation information) {
         return new DefaultHandlerMapping(new DefaultCrudController(service, information));
     }
 
@@ -84,9 +84,9 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
 
         private final CrudService service;
         
-        private final EntityInformation information;
+        private final RestInformation information;
         
-        public DefaultCrudController(CrudService service, EntityInformation information) {
+        public DefaultCrudController(CrudService service, RestInformation information) {
             this.service = service;
             this.information = information;
         }
@@ -99,7 +99,6 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
             checkIsAuthorized(information.findAll().roles());
-
             if (PageableResolver.isSupported(request)) {
                 return findAllAsPage(request);
             } else {
@@ -150,7 +149,6 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
             checkIsAuthorized(information.findOne().roles());
-
             Object entity = getEntityById(request);
             return beanMapper.map(entity, information.getResultType(information.findOne()));
         }
@@ -169,7 +167,6 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
             checkIsAuthorized(information.create().roles());
-
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
             Persistable<?> entity = beanMapper.map(input, information.getEntityClass());
             Persistable<?> output = service.save(entity);
@@ -184,7 +181,6 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
             checkIsAuthorized(information.update().roles());
-
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.update()));
             Persistable<?> entity = getEntityById(request);
             Persistable<?> output = service.save(beanMapper.map(input, entity));
@@ -208,7 +204,6 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         @ResponseBody
         public Object delete(HttpServletRequest request) {
             checkIsAuthorized(information.delete().roles());
-
             Persistable<?> entity = getEntityById(request);
             service.delete(entity);
             return convert(entity, information.getResultType(information.delete()));
@@ -273,29 +268,31 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
             int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
             if (fragments == 2) {
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
-                    method = findMethodIfEnabled("findAll", controller.information.findAll());
+                    method = toMethodIfEnabled("findAll", getInformation().findAll());
                 } else if (RequestMethod.POST.name().equals(request.getMethod())) {
-                    method = findMethodIfEnabled("create", controller.information.create());
+                    method = toMethodIfEnabled("create", getInformation().create());
                 }
             } else if (fragments == 3) {
                 if (RequestMethod.GET.name().equals(request.getMethod())) {
-                    method = findMethodIfEnabled("findOne", controller.information.findOne());
+                    method = toMethodIfEnabled("findOne", getInformation().findOne());
                 } else if (RequestMethod.PUT.name().equals(request.getMethod())) {
-                    method = findMethodIfEnabled("update", controller.information.update());
+                    method = toMethodIfEnabled("update", getInformation().update());
                 } else if (RequestMethod.DELETE.name().equals(request.getMethod())) {
-                    method = findMethodIfEnabled("delete", controller.information.delete());
+                    method = toMethodIfEnabled("delete", getInformation().delete());
                 }
             }
             return method;
         }
         
-        private Method findMethodIfEnabled(String methodName, CrudConfig config) throws NoSuchMethodException {
+        private Method toMethodIfEnabled(String methodName, RestConfig config) throws NoSuchMethodException {
             Method method = null;
             if (config.enabled()) {
                 method = controller.getClass().getMethod(methodName, HttpServletRequest.class);
             }
             return method;
         }
+        
+        // Swagger integration
 
         /**
          * {@inheritDoc}
@@ -319,13 +316,24 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
      */
     private static class DefaultSwaggerDescriber {
         
+        private static final String FIND_ALL_NAME = "findAll";
+        private static final String FIND_ONE_NAME = "findOne";
+        private static final String CREATE_NAME = "create";
+        private static final String UPDATE_NAME = "update";
+        private static final String DELETE_NAME = "delete";
+        
+        private static final String ID_PARAM = "id";
+        private static final String PAGE_PARAM = "page";
+        private static final String SIZE_PARAM = "size";
+        private static final String SORT_PARAM = "sort";
+        
         private final com.mangofactory.swagger.models.ModelProvider modelProvider;
         
-        private final EntityInformation information;
+        private final RestInformation information;
         
         private final String basePath;
 
-        public DefaultSwaggerDescriber(com.mangofactory.swagger.models.ModelProvider modelProvider, EntityInformation information) {
+        DefaultSwaggerDescriber(com.mangofactory.swagger.models.ModelProvider modelProvider, RestInformation information) {
             this.modelProvider = modelProvider;
             this.information = information;
             
@@ -338,50 +346,68 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         
         /**
          * Enhances the swagger API listings with new models and descriptions.
+         * 
+         * @param listing the API listings to enhance
          */
         void enhance(com.mangofactory.swagger.models.dto.ApiListing listing) {
+            registerFindAll(listing);
+            registerFindOne(listing);
+            registerCreate(listing);
+            registerUpdate(listing);
+            registerDelete(listing);
+        }
+        
+        private void registerFindAll(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.findAll().enabled()) {
                 registerModel(listing, information.getResultType(information.findAll()));
-                newDescription("findAll", basePath, RequestMethod.GET)
+                newDescription(FIND_ALL_NAME, basePath, RequestMethod.GET)
                     .responseClassIterable(information.getResultType(information.findAll()))
-                    .addQueryParameter("page", Long.class, false)
-                    .addQueryParameter("size", Long.class, false)
-                    .addQueryParameter("sort", String.class, false)
+                    .addQueryParameter(PAGE_PARAM, Long.class, false)
+                    .addQueryParameter(SIZE_PARAM, Long.class, false)
+                    .addQueryParameter(SORT_PARAM, String.class, false)
                     .register(listing);
             }
-            
+        }
+        
+        private void registerFindOne(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.findOne().enabled()) {
                 registerModel(listing, information.getResultType(information.findOne()));
-                newDescription("findOne", basePath + "/{id}", RequestMethod.GET)
+                newDescription(FIND_ONE_NAME, basePath + "/{id}", RequestMethod.GET)
                     .responseClass(information.getResultType(information.findOne()))
-                    .addPathParameter("id", information.getIdentifierClass())
+                    .addPathParameter(ID_PARAM, information.getIdentifierClass())
                     .register(listing);
             }
-            
+        }
+        
+        private void registerCreate(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.create().enabled()) {
                 registerModel(listing, information.getInputType(information.create()));
                 registerModel(listing, information.getResultType(information.create()));
-                newDescription("create", basePath, RequestMethod.POST)
+                newDescription(CREATE_NAME, basePath, RequestMethod.POST)
                     .responseClass(information.getResultType(information.create()))
                     .addBodyParameter(information.getInputType(information.create()))
                     .register(listing);
             }
-            
+        }
+
+        private void registerUpdate(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.update().enabled()) {
                 registerModel(listing, information.getInputType(information.update()));
                 registerModel(listing, information.getResultType(information.update()));
-                newDescription("update", basePath + "/{id}", RequestMethod.PUT)
+                newDescription(UPDATE_NAME, basePath + "/{id}", RequestMethod.PUT)
                     .responseClass(information.getResultType(information.update()))
-                    .addPathParameter("id", information.getIdentifierClass())
+                    .addPathParameter(ID_PARAM, information.getIdentifierClass())
                     .addBodyParameter(information.getInputType(information.update()))
                     .register(listing);
             }
-            
+        }
+
+        private void registerDelete(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.delete().enabled()) {
                 registerModel(listing, information.getResultType(information.delete()));
-                newDescription("delete", basePath + "/{id}", RequestMethod.DELETE)
+                newDescription(DELETE_NAME, basePath + "/{id}", RequestMethod.DELETE)
                     .responseClass(information.getResultType(information.delete()))
-                    .addPathParameter("id", information.getIdentifierClass())
+                    .addPathParameter(ID_PARAM, information.getIdentifierClass())
                     .register(listing);
             }
         }

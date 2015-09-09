@@ -49,7 +49,7 @@ Annotate your entities with one simple annotation:
 
 ```java
 @Entity
-@EnableRest
+@RestEnable
 public class User {
 
  @Id
@@ -82,7 +82,7 @@ You can also specify default orders per entity, as fallback when no orders are s
 
 ```java
 @Entity
-@EnableRest
+@RestEnable
 @SortingDefault("name")
 public class User {
 
@@ -97,7 +97,7 @@ More complicated orders are also possible:
 
 ```java
 @Entity
-@EnableRest
+@RestEnable
 @SortingDefaults({
  @SortingDefault("name"),
  @SortingDefault(value = "id", direction = Direction.DESC)
@@ -117,8 +117,8 @@ Sometimes you want to return the entity in a different format. For example, retu
 
 ```java
 @Entity
-@EnableRest(
- create = @CrudConfig(inputType = CreateUserModel.class, resultType = Long.class)
+@RestEnable(
+ create = @RestConfig(inputType = CreateUserModel.class, resultType = Long.class)
 )
 public class User {
 
@@ -139,8 +139,8 @@ It's also possible to secure the endpoints, making them only accessable to certa
 
 ```java
 @Entity
-@EnableRest(
- create = @CrudConfig(roles = "ROLE_ADMIN")
+@RestEnable(
+ create = @RestConfig(roles = "ROLE_ADMIN")
 )
 public class User {
 

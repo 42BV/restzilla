@@ -3,12 +3,12 @@
  */
 package io.restify.model;
 
-import io.restify.EnableRest;
+import io.restify.RestEnable;
 
 import javax.persistence.Entity;
 
 @Entity
-@EnableRest
+@RestEnable
 public class WithService extends BaseEntity {
     
     private String name;

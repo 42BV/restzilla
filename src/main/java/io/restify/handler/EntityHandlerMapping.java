@@ -1,6 +1,6 @@
 package io.restify.handler;
 
-import io.restify.EntityInformation;
+import io.restify.RestInformation;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -14,9 +14,9 @@ import org.springframework.web.servlet.handler.AbstractHandlerMapping;
  */
 public abstract class EntityHandlerMapping extends AbstractHandlerMapping {
     
-    private final EntityInformation information;
+    private final RestInformation information;
     
-    public EntityHandlerMapping(EntityInformation information) {
+    public EntityHandlerMapping(RestInformation information) {
         this.information = information;
     }
 
@@ -31,7 +31,7 @@ public abstract class EntityHandlerMapping extends AbstractHandlerMapping {
      * 
      * @return the information
      */
-    public EntityInformation getInformation() {
+    public RestInformation getInformation() {
         return information;
     }
 

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
  * @author Jeroen van Schagen
  * @since Aug 24, 2015
  */
-public class EnableRestTest extends AbstractControllerTest {
+public class RestTest extends AbstractControllerTest {
 
     @Autowired
     private UserBuilder userBuilder;

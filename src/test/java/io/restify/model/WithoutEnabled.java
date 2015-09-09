@@ -3,18 +3,18 @@
  */
 package io.restify.model;
 
-import io.restify.CrudConfig;
-import io.restify.EnableRest;
+import io.restify.RestConfig;
+import io.restify.RestEnable;
 
 import javax.persistence.Entity;
 
 @Entity
-@EnableRest(
-    findAll = @CrudConfig(enabled = false),
-    findOne = @CrudConfig(enabled = false),
-     create = @CrudConfig(enabled = false),
-     update = @CrudConfig(enabled = false),
-     delete = @CrudConfig(enabled = false)
+@RestEnable(
+    findAll = @RestConfig(enabled = false),
+    findOne = @RestConfig(enabled = false),
+     create = @RestConfig(enabled = false),
+     update = @RestConfig(enabled = false),
+     delete = @RestConfig(enabled = false)
 )
 public class WithoutEnabled extends BaseEntity {
     

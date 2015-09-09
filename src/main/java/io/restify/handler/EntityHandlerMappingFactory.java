@@ -1,6 +1,6 @@
 package io.restify.handler;
 
-import io.restify.EntityInformation;
+import io.restify.RestInformation;
 import io.restify.service.CrudService;
 
 /**
@@ -18,6 +18,6 @@ public interface EntityHandlerMappingFactory {
      * @param information the entity information
      * @return the handler mapping
      */
-    EntityHandlerMapping build(CrudService<?, ?> service, EntityInformation information);
+    EntityHandlerMapping build(CrudService<?, ?> service, RestInformation information);
     
 }

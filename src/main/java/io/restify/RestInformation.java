@@ -13,16 +13,16 @@ import org.springframework.data.domain.Persistable;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class EntityInformation {
+public class RestInformation {
 
     private final Class<? extends Persistable<?>> entityClass;
     
     private final Class<?> identifierClass;
     
-    private final EnableRest annotation;
+    private final RestEnable annotation;
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public EntityInformation(Class<?> entityClass, EnableRest annotation) throws NoSuchMethodException {
+    public RestInformation(Class<?> entityClass, RestEnable annotation) throws NoSuchMethodException {
         if (!(Persistable.class.isAssignableFrom(entityClass))) {
             throw new IllegalStateException("Entity does not extend from Persistable");
         }
@@ -68,7 +68,7 @@ public class EntityInformation {
      * @param config the configuration
      * @return the input type
      */
-    public Class<?> getInputType(CrudConfig config) {
+    public Class<?> getInputType(RestConfig config) {
         return isCustom(config.inputType()) ? config.inputType() : entityClass;
     }
 
@@ -78,7 +78,7 @@ public class EntityInformation {
      * @param config the configuration
      * @return the result type
      */
-    public Class<?> getResultType(CrudConfig config) {
+    public Class<?> getResultType(RestConfig config) {
         return isCustom(config.resultType()) ? config.resultType() : getResultType();
     }
     
@@ -97,7 +97,7 @@ public class EntityInformation {
      * 
      * @return the configuration
      */
-    public CrudConfig findAll() {
+    public RestConfig findAll() {
         return annotation.findAll();
     }
     
@@ -106,7 +106,7 @@ public class EntityInformation {
      * 
      * @return the configuration
      */
-    public CrudConfig findOne() {
+    public RestConfig findOne() {
         return annotation.findOne();
     }
     
@@ -115,7 +115,7 @@ public class EntityInformation {
      * 
      * @return the configuration
      */
-    public CrudConfig create() {
+    public RestConfig create() {
         return annotation.create();
     }
     
@@ -124,7 +124,7 @@ public class EntityInformation {
      * 
      * @return the configuration
      */
-    public CrudConfig update() {
+    public RestConfig update() {
         return annotation.update();
     }
     
@@ -133,7 +133,7 @@ public class EntityInformation {
      * 
      * @return the configuration
      */
-    public CrudConfig delete() {
+    public RestConfig delete() {
         return annotation.delete();
     }
 

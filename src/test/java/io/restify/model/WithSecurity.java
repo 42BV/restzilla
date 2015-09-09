@@ -3,13 +3,13 @@
  */
 package io.restify.model;
 
-import io.restify.CrudConfig;
-import io.restify.EnableRest;
+import io.restify.RestConfig;
+import io.restify.RestEnable;
 
 import javax.persistence.Entity;
 
 @Entity
-@EnableRest(findAll = @CrudConfig(roles = "ADMIN"))
+@RestEnable(findAll = @RestConfig(roles = "ADMIN"))
 public class WithSecurity extends BaseEntity {
     
     private String name;

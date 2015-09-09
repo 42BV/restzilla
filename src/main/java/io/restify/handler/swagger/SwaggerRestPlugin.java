@@ -3,7 +3,7 @@
  */
 package io.restify.handler.swagger;
 
-import io.restify.EntityInformation;
+import io.restify.RestInformation;
 import io.restify.handler.CrudHandlerMapping;
 import io.restify.handler.EntityHandlerMapping;
 
@@ -80,7 +80,7 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
         }
     }
     
-    private String addResourceListings(SwaggerCache swaggerCache, EntityInformation information) {
+    private String addResourceListings(SwaggerCache swaggerCache, RestInformation information) {
         final String resourceName = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, information.getEntityClass().getSimpleName() + "Controller");
         final String path = "/" + swaggerGroup + "/" + resourceName;
         
@@ -108,7 +108,7 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
         }
     }
 
-    private ApiListing getApiListing(SwaggerCache swaggerCache, String resourceName, EntityInformation information) {
+    private ApiListing getApiListing(SwaggerCache swaggerCache, String resourceName, RestInformation information) {
         Map<String, ApiListing> apiListings = swaggerCache.getSwaggerApiListingMap().get(swaggerGroup);
         ApiListing apiListing = apiListings.get(resourceName);
         if (apiListing == null) {
@@ -118,7 +118,7 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
         return apiListing;
     }
 
-    private ApiListing buildApiListing(String resourceName, EntityInformation information) {
+    private ApiListing buildApiListing(String resourceName, RestInformation information) {
         return new ApiListingBuilder()
                     .basePath(swaggerPathProvider.getApplicationBasePath())
                     .description(information.getEntityClass().getSimpleName())

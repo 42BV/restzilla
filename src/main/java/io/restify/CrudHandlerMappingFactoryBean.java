@@ -29,7 +29,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Create a REST endpoint for all entities annotated with {@link EnableRest}.
+ * Create a REST endpoint for all entities annotated with {@link RestEnable}.
  * This endpoint will provide full CRUD functionality on the entity,
  * following the conventional layered architecture: controller, service,
  * repository. At each layer in the architecture you are able to overwrite
@@ -100,8 +100,8 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         CrudHandlerMapping handlerMapping = new CrudHandlerMapping(applicationContext);
         CrudServiceRegistry services = serviceLocator.execute();
         for (Class<?> entityClass : services.getEntityClasses()) {
-            EnableRest annotation = entityClass.getAnnotationsByType(EnableRest.class)[0];
-            EntityInformation information = new EntityInformation(entityClass, annotation);
+            RestEnable annotation = entityClass.getAnnotationsByType(RestEnable.class)[0];
+            RestInformation information = new RestInformation(entityClass, annotation);
 
             CrudService<?, ?> service = services.getService(entityClass);
             EntityHandlerMapping entityHandlerMapping = handlerMappingFactory.build(service, information);
