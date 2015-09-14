@@ -196,5 +196,18 @@ public class RestTest extends AbstractControllerTest {
         
         call(request);
     }
+    
+    @Test
+    public void testPagedOnly() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withpagedonly");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        String contents = response.getContentAsString();
+        Assert.assertTrue(contents.contains("\"content\":[]"));
+        Assert.assertTrue(contents.contains("\"number\":0"));
+        Assert.assertTrue(contents.contains("\"size\":10"));
+    }
 
 }

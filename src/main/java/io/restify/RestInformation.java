@@ -45,6 +45,15 @@ public class RestInformation {
     }
     
     /**
+     * Retrieve if paged only.
+     * 
+     * @return the paged only
+     */
+    public boolean isPagedOnly() {
+        return annotation.pagedOnly();
+    }
+    
+    /**
      * Retrieve the entity class.
      * 
      * @return the entity class

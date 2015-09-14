@@ -46,6 +46,12 @@ public @interface RestEnable {
      * @return the result type
      */
     Class<?> resultType() default Object.class;
+    
+    /**
+     * Enable this if the GET should only return pages.
+     * @return if paged only
+     */
+    boolean pagedOnly() default false;
 
     // Specific configuration per function
 

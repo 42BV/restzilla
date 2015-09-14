@@ -35,8 +35,9 @@ public class PageableResolver {
     public static final String SORT_PARAMETER = "sort";
     public static final String SORT_DELIMITER = ",";
     
-    private static final Sort FALLBACK_DEFAULT_SORT = new Sort(Direction.ASC, "id");
+    private static final int FALLBACK_DEFAULT_PAGE = 0;
     private static final int FALLBACK_DEFAULT_SIZE = 10;
+    private static final Sort FALLBACK_DEFAULT_SORT = new Sort(Direction.ASC, "id");
 
     /**
      * Determine if this request has pagination information.
@@ -56,18 +57,18 @@ public class PageableResolver {
      * @return the resolved pageable
      */
     public static Pageable getPageable(HttpServletRequest request, Class<?> entityClass) {
-        int page = Integer.parseInt(request.getParameter(PAGE_PARAMETER));
-        int size = getSize(request);
+        int page = getParameterAsInteger(request, PAGE_PARAMETER, FALLBACK_DEFAULT_PAGE);
+        int size = getParameterAsInteger(request, SIZE_PARAMETER, FALLBACK_DEFAULT_SIZE);
         Sort sort = getSort(request, entityClass);
         return new PageRequest(page, size, sort);
     }
 
-    private static int getSize(HttpServletRequest request) {
-        String size = request.getParameter(SIZE_PARAMETER);
+    private static int getParameterAsInteger(HttpServletRequest request, String name, int defaultValue) {
+        String size = request.getParameter(name);
         if (isNotBlank(size)) {
             return Integer.parseInt(size);
         } else {
-            return FALLBACK_DEFAULT_SIZE;
+            return defaultValue;
         }
     }
     

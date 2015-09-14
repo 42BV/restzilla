@@ -99,7 +99,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
             checkIsAuthorized(information.findAll().roles());
-            if (PageableResolver.isSupported(request)) {
+            if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
                 return findAllAsPage(request);
             } else {
                 return findAllAsCollection(request);
@@ -360,12 +360,9 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         private void registerFindAll(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.findAll().enabled()) {
                 registerModel(listing, information.getResultType(information.findAll()));
-                newDescription(FIND_ALL_NAME, basePath, RequestMethod.GET)
-                    .responseClassIterable(information.getResultType(information.findAll()))
-                    .addQueryParameter(PAGE_PARAM, Long.class, false)
-                    .addQueryParameter(SIZE_PARAM, Long.class, false)
-                    .addQueryParameter(SORT_PARAM, String.class, false)
-                    .register(listing);
+                newDescription(FIND_ALL_NAME, basePath, RequestMethod.GET).responseClassIterable(information.getResultType(information.findAll())).addQueryParameter(
+                        PAGE_PARAM, Long.class, false).addQueryParameter(SIZE_PARAM, Long.class, false).addQueryParameter(SORT_PARAM, String.class, false).register(
+                        listing);
             }
         }
         
