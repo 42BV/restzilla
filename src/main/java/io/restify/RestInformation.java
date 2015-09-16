@@ -45,6 +45,15 @@ public class RestInformation {
     }
     
     /**
+     * Retrieve if read only.
+     * 
+     * @return the read only
+     */
+    public boolean isReadOnly() {
+        return annotation.readOnly();
+    }
+    
+    /**
      * Retrieve if paged only.
      * 
      * @return the paged only

@@ -5,6 +5,7 @@ package io.restify;
 
 import io.restify.builder.UserBuilder;
 import io.restify.model.User;
+import io.restify.model.WithReadOnly;
 import io.restify.model.WithService;
 import io.restify.util.PageableResolver;
 
@@ -195,6 +196,19 @@ public class RestTest extends AbstractControllerTest {
         request.setMethod(RequestMethod.GET.name());
         
         call(request);
+    }
+    
+    @Test
+    public void testReadOnly() throws Exception {
+        WithReadOnly entity = new WithReadOnly();
+        entity.setName("Test");
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withreadonly");
+        request.setMethod(RequestMethod.POST.name());
+        setContentAsJson(request, entity);
+        
+        Assert.assertNull(getHandlerChain(request));
     }
     
     @Test

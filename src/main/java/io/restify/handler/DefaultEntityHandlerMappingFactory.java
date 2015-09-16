@@ -3,6 +3,10 @@
  */
 package io.restify.handler;
 
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 import io.beanmapper.BeanMapper;
 import io.restify.RestConfig;
 import io.restify.RestInformation;
@@ -264,26 +268,34 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          * @return the matching method, if any
          */
         private Method findMethod(HttpServletRequest request) throws NoSuchMethodException {
+            if (getInformation().isReadOnly() && !hasRequestMethod(request, GET)) {
+                return null;
+            }
+
             Method method = null;
             int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
             if (fragments == 2) {
-                if (RequestMethod.GET.name().equals(request.getMethod())) {
+                if (hasRequestMethod(request, GET)) {
                     method = toMethodIfEnabled("findAll", getInformation().findAll());
-                } else if (RequestMethod.POST.name().equals(request.getMethod())) {
+                } else if (hasRequestMethod(request, POST)) {
                     method = toMethodIfEnabled("create", getInformation().create());
                 }
             } else if (fragments == 3) {
-                if (RequestMethod.GET.name().equals(request.getMethod())) {
+                if (hasRequestMethod(request, GET)) {
                     method = toMethodIfEnabled("findOne", getInformation().findOne());
-                } else if (RequestMethod.PUT.name().equals(request.getMethod())) {
+                } else if (hasRequestMethod(request, PUT)) {
                     method = toMethodIfEnabled("update", getInformation().update());
-                } else if (RequestMethod.DELETE.name().equals(request.getMethod())) {
+                } else if (hasRequestMethod(request, DELETE)) {
                     method = toMethodIfEnabled("delete", getInformation().delete());
                 }
             }
             return method;
         }
         
+        private boolean hasRequestMethod(HttpServletRequest request, RequestMethod method) {
+            return method.name().equals(request.getMethod());
+        }
+
         private Method toMethodIfEnabled(String methodName, RestConfig config) throws NoSuchMethodException {
             Method method = null;
             if (config.enabled()) {
@@ -352,9 +364,12 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         void enhance(com.mangofactory.swagger.models.dto.ApiListing listing) {
             registerFindAll(listing);
             registerFindOne(listing);
-            registerCreate(listing);
-            registerUpdate(listing);
-            registerDelete(listing);
+
+            if (!information.isReadOnly()) {
+                registerCreate(listing);
+                registerUpdate(listing);
+                registerDelete(listing);
+            }
         }
         
         private void registerFindAll(com.mangofactory.swagger.models.dto.ApiListing listing) {

@@ -48,8 +48,14 @@ public @interface RestEnable {
     Class<?> resultType() default Object.class;
     
     /**
-     * Enable this if the GET should only return pages.
-     * @return if paged only
+     * Enable this if you only want to handle {@code GET} requests.
+     * @return the read only
+     */
+    boolean readOnly() default false;
+    
+    /**
+     * Enable this when our {@code getAll} should only return pages.
+     * @return the paged only
      */
     boolean pagedOnly() default false;
 
