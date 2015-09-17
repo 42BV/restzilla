@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
@@ -29,6 +28,8 @@ import org.springframework.data.repository.support.Repositories;
  */
 public class CrudServiceLocator {
     
+    private final CrudServiceRegistry registry = CrudServiceRegistry.getInstance();
+
     private final ApplicationContext applicationContext;
 
     private final String basePackage;
@@ -50,8 +51,6 @@ public class CrudServiceLocator {
      * @throws Exception whenever something goes wrong
      */
     public CrudServiceRegistry execute() throws Exception {
-        CrudServiceRegistry result = new CrudServiceRegistry();
-
         Repositories repositories = new Repositories(applicationContext);
         Services services = new Services(applicationContext);
 
@@ -60,25 +59,31 @@ public class CrudServiceLocator {
         Set<BeanDefinition> components = provider.findCandidateComponents(basePackage);
         for (BeanDefinition component : components) {
             Class<?> entityClass = Class.forName(component.getBeanClassName());
-            CrudService<?, ?> service = getService(entityClass, services, repositories);
-            result.register(entityClass, service);
+            registerBeansForEntity(entityClass, services, repositories);
         }
         
-        return result;
+        return registry;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private CrudService<?, ?> getService(Class entityClass, Services services, Repositories repositories) throws Exception {
+    private void registerBeansForEntity(Class entityClass, Services services, Repositories repositories) throws Exception {
+        PagingAndSortingRepository repository = getRepository(entityClass, repositories);
+        registry.register(entityClass, repository);
+
         CrudService service = services.getByEntityClass(entityClass);
         if (service == null) {
-            AutowireCapableBeanFactory beanFactory = applicationContext.getAutowireCapableBeanFactory();
-            Object repository = repositories.getRepositoryFor(entityClass);
-            if (!(repository instanceof PagingAndSortingRepository)) {
-                repository = buildNewRepository(entityClass, beanFactory);
-            }
-            service = buildNewService(entityClass, (PagingAndSortingRepository) repository, beanFactory);
+            service = buildNewService(entityClass, repository);
         }
-        return service;
+        registry.register(entityClass, service);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private PagingAndSortingRepository getRepository(Class entityClass, Repositories repositories) {
+        Object repository = repositories.getRepositoryFor(entityClass);
+        if (!(repository instanceof PagingAndSortingRepository)) {
+            repository = buildNewRepository(entityClass);
+        }
+        return (PagingAndSortingRepository) repository;
     }
 
     /**
@@ -88,8 +93,8 @@ public class CrudServiceLocator {
      * @param beanFactory the bean factory, used for injecting dependencies
      * @return the repository bean
      */
-    protected <T extends Persistable<ID>, ID extends Serializable> CrudRepository<T, ID> buildNewRepository(Class<T> entityClass, AutowireCapableBeanFactory beanFactory) {
-        return new SpringDataJpaRepositoryFactory<T, ID>(beanFactory, entityClass).build();
+    protected <T extends Persistable<ID>, ID extends Serializable> CrudRepository<T, ID> buildNewRepository(Class<T> entityClass) {
+        return new SpringDataJpaRepositoryFactory<T, ID>(applicationContext.getAutowireCapableBeanFactory(), entityClass).build();
     }
     
     /**
@@ -99,12 +104,20 @@ public class CrudServiceLocator {
      * @param beanFactory the bean factory, used for injecting dependencies
      * @return the service bean
      */
-    protected <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> buildNewService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository, AutowireCapableBeanFactory beanFactory) {
-        CrudService<T, ID> service = new TransactionalCrudService<T, ID>(repository, entityClass);
-        beanFactory.autowireBean(service);
+    protected <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> buildNewService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
+        TransactionalCrudService<T, ID> service = new TransactionalCrudService<T, ID>(repository, entityClass);
+        applicationContext.getAutowireCapableBeanFactory().autowireBean(service);
         return service;
     }
 
+    /**
+     * Retrieve the application context.
+     * @return the application context
+     */
+    protected final ApplicationContext getApplicationContext() {
+        return applicationContext;
+    }
+    
     /**
      * Registry of all currently defined services. Only used for internal purposes.
      */

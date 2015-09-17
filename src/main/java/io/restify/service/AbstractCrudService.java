@@ -12,6 +12,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.util.Assert;
 
 /**
  * Template implementation of the CrudService, delegates all to the repository.
@@ -21,31 +22,49 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  */
 public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID> {
 
-    private final PagingAndSortingRepository<T, ID> repository;
-    
     private final Class<T> entityClass;
 
+    private PagingAndSortingRepository<T, ID> repository;
+
     /**
-     * Construct a new CRUD service.
-     * <br><br>
-     * <b>This constructor dynamically resolves the entity from our type argument.</b>
-     * 
+     * Construct a new service.
+     */
+    @SuppressWarnings("unchecked")
+    public AbstractCrudService() {
+        this.entityClass = (Class<T>) GenericTypeResolver.resolveTypeArguments(getClass(), CrudService.class)[0];
+        Assert.notNull(entityClass, "Entity class cannot be null");
+    }
+    
+    /**
+     * Construct a new service.
+     * @param entityClass the entity class
+     */
+    @SuppressWarnings("unchecked")
+    public AbstractCrudService(Class<T> entityClass) {
+        Assert.notNull(entityClass, "Entity class cannot be null");
+        this.entityClass = entityClass;
+    }
+
+    /**
+     * Construct a new service.
      * @param repository the repository
      */
     @SuppressWarnings("unchecked")
     public AbstractCrudService(PagingAndSortingRepository<T, ID> repository) {
+        this();
+        Assert.notNull(repository, "Repository cannot be null");
         this.repository = repository;
-        this.entityClass = (Class<T>) GenericTypeResolver.resolveTypeArguments(getClass(), CrudService.class)[0];
     }
 
     /**
-     * Construct a new CRUD service.
-     * @param repository the repository
+     * Construct a new service.
      * @param entityClass the entity class
+     * @param repository the repository
      */
-    public AbstractCrudService(PagingAndSortingRepository<T, ID> repository, Class<T> entityClass) {
+    public AbstractCrudService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
+        this(entityClass);
+        Assert.notNull(repository, "Repository cannot be null");
         this.repository = repository;
-        this.entityClass = entityClass;
     }
 
     /**
@@ -53,7 +72,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public List<T> findAll() {
-        return (List<T>) repository.findAll();
+        return (List<T>) getRepository().findAll();
     }
     
     /**
@@ -61,7 +80,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public List<T> findAll(Sort sort) {
-        return (List<T>) repository.findAll(sort);
+        return (List<T>) getRepository().findAll(sort);
     }
     
     /**
@@ -69,7 +88,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public Page<T> findAll(Pageable pageable) {
-        return repository.findAll(pageable);
+        return getRepository().findAll(pageable);
     }
     
     /**
@@ -77,7 +96,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public T findOne(ID id) {
-        return repository.findOne(id);
+        return getRepository().findOne(id);
     }
 
     /**
@@ -85,7 +104,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public <S extends T> S save(S entity) {
-        return repository.save(entity);
+        return getRepository().save(entity);
     }
     
     /**
@@ -93,7 +112,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public void delete(ID id) {
-        repository.delete(id);
+        getRepository().delete(id);
     }
     
     /**
@@ -110,6 +129,18 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
     @Override
     public Class<T> getEntityClass() {
         return entityClass;
+    }
+    
+    /**
+     * Retrieve the underlying repository.
+     * @return the repository
+     */
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    protected PagingAndSortingRepository<T, ID> getRepository() {
+        if (repository == null) {
+            repository = (PagingAndSortingRepository) CrudServiceRegistry.getInstance().getRepository(entityClass);
+        }
+        return repository;
     }
 
 }

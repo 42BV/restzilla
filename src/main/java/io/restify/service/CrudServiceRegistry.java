@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.data.repository.PagingAndSortingRepository;
+
 /**
  * Registry of all entities that require REST and their services.
  *
@@ -15,14 +17,39 @@ import java.util.Set;
  */
 public class CrudServiceRegistry {
     
-    private Map<Class<?>, CrudService<?, ?>> instances = new HashMap<Class<?>, CrudService<?, ?>>();
+    /**
+     * Reference to the singleton instance of our registry.
+     */
+    private static CrudServiceRegistry INSTANCE;
+    
+    // Delegate instances
+
+    private final Map<Class<?>, PagingAndSortingRepository<?, ?>> repositories;
+    
+    private final Map<Class<?>, CrudService<?, ?>> services;
+    
+    private CrudServiceRegistry() {
+        repositories = new HashMap<Class<?>, PagingAndSortingRepository<?, ?>>();
+        services = new HashMap<Class<?>, CrudService<?, ?>>();
+    }
+    
+    /**
+     * Retrieve the instance.
+     * @return the instance
+     */
+    public static CrudServiceRegistry getInstance() {
+        if (INSTANCE == null) {
+            INSTANCE = new CrudServiceRegistry();
+        }
+        return INSTANCE;
+    }
 
     /**
      * Retrieve all entity classes.
      * @return the entity classes
      */
     public Set<Class<?>> getEntityClasses() {
-        return instances.keySet();
+        return services.keySet();
     }
 
     /**
@@ -31,7 +58,16 @@ public class CrudServiceRegistry {
      * @return the CRUD service
      */
     public CrudService<?, ?> getService(Class<?> entityClass) {
-        return instances.get(entityClass);
+        return services.get(entityClass);
+    }
+    
+    /**
+     * Retrieve the CRUD repository for our entity.
+     * @param entityClass the entity class
+     * @return the CRUD repository
+     */
+    PagingAndSortingRepository<?, ?> getRepository(Class<?> entityClass) {
+        return repositories.get(entityClass);
     }
     
     /**
@@ -39,8 +75,17 @@ public class CrudServiceRegistry {
      * @param entityClass the entity class
      * @param instance the instance
      */
-    public void register(Class<?> entityClass, CrudService<?, ?> instance) {
-        instances.put(entityClass, instance);
+    void register(Class<?> entityClass, CrudService<?, ?> instance) {
+        services.put(entityClass, instance);
+    }
+    
+    /**
+     * Register a new repository instance.
+     * @param entityClass the entity class
+     * @param instance the instance
+     */
+    void register(Class<?> entityClass, PagingAndSortingRepository<?, ?> instance) {
+        repositories.put(entityClass, instance);
     }
 
 }

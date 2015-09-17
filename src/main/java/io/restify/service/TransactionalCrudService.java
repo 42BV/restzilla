@@ -33,7 +33,7 @@ public class TransactionalCrudService<T extends Persistable<ID>, ID extends Seri
      * @param entityClass the entity class
      */
     public TransactionalCrudService(PagingAndSortingRepository<T, ID> repository, Class<T> entityClass) {
-        super(repository, entityClass);
+        super(entityClass, repository);
     }
     
     /**
