@@ -135,10 +135,10 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * Retrieve the underlying repository.
      * @return the repository
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings("unchecked")
     protected PagingAndSortingRepository<T, ID> getRepository() {
         if (repository == null) {
-            repository = (PagingAndSortingRepository) CrudServiceRegistry.getInstance().getRepository(entityClass);
+            repository = (PagingAndSortingRepository<T, ID>) CrudServiceRegistry.getRepository(entityClass);
         }
         return repository;
     }

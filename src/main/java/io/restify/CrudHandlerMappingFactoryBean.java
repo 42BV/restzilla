@@ -8,11 +8,13 @@ import io.restify.handler.CrudHandlerMapping;
 import io.restify.handler.DefaultEntityHandlerMappingFactory;
 import io.restify.handler.EntityHandlerMapping;
 import io.restify.handler.EntityHandlerMappingFactory;
-import io.restify.handler.security.DefaultSecurityProvider;
+import io.restify.handler.security.AlwaysSecurityProvider;
 import io.restify.handler.security.SecurityProvider;
 import io.restify.service.CrudService;
 import io.restify.service.CrudServiceLocator;
 import io.restify.service.CrudServiceRegistry;
+import io.restify.service.factory.CrudServiceFactory;
+import io.restify.service.factory.DefaultServiceFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,30 +46,28 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @since Aug 21, 2015
  */
 public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, InitializingBean, ApplicationContextAware {
-
+    
+    private static final String SPRING_SECURITY_PATH = "org.springframework.security.core.context.SecurityContext";
     private static final Logger LOGGER = LoggerFactory.getLogger(CrudHandlerMappingFactoryBean.class);
 
-    // Service locator
-    
-    /**
-     * Locates or creates CRUD services and repositories.
-     */
-    private CrudServiceLocator serviceLocator;
-    
-    /**
-     * Application context used for locating and creating beans dynamically.
-     */
     private ApplicationContext applicationContext;
-    
+
+    // Service locator
+
     /**
      * Base package of the entities to scan.
      */
     private String basePackage;
+    
+    /**
+     * Creates CRUD service and repository beans.
+     */
+    private CrudServiceFactory serviceFactory;
 
     // Handler mapping
 
     /**
-     * Creates the REST endpoint mappings.
+     * Creates REST endpoint mappings.
      */
     private EntityHandlerMappingFactory handlerMappingFactory;
     
@@ -98,12 +98,13 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public CrudHandlerMapping getObject() throws Exception {
         CrudHandlerMapping handlerMapping = new CrudHandlerMapping(applicationContext);
-        CrudServiceRegistry services = serviceLocator.execute();
-        for (Class<?> entityClass : services.getEntityClasses()) {
+
+        new CrudServiceLocator(applicationContext).registerAll(basePackage, serviceFactory);
+        for (Class<?> entityClass : CrudServiceRegistry.getEntityClasses()) {
             RestEnable annotation = entityClass.getAnnotationsByType(RestEnable.class)[0];
             RestInformation information = new RestInformation(entityClass, annotation);
 
-            CrudService<?, ?> service = services.getService(entityClass);
+            CrudService service = CrudServiceRegistry.getService(entityClass);
             EntityHandlerMapping entityHandlerMapping = handlerMappingFactory.build(service, information);
             handlerMapping.registerHandler(information.getBasePath(), entityHandlerMapping);
             
@@ -129,45 +130,31 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     }
 
     /**
-     * Instantiates the default service locator and handler
-     * mapping factory, when left unconfigured.
+     * Instantiate beans when not configured.
      */
     @Override
     public void afterPropertiesSet() throws Exception {
-        // Construct the service locator, when not overwritten
-        if (serviceLocator == null) {
-            serviceLocator = new CrudServiceLocator(applicationContext, basePackage);
+        if (serviceFactory == null) {
+            serviceFactory = new DefaultServiceFactory(applicationContext);
         }
-
-        // Construct the handler mapping factory, when not overwritten
         if (handlerMappingFactory == null) {
             if (securityProvider == null) {
-                initSecurityProvider();
+                buildSecurityProvider();
             }
             handlerMappingFactory = new DefaultEntityHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider);
         }
     }
     
-    private void initSecurityProvider() {
+
+    private void buildSecurityProvider() {
         try {
-            Class.forName("org.springframework.security.core.context.SecurityContext");
+            Class.forName(SPRING_SECURITY_PATH);
             securityProvider = new io.restify.handler.security.SpringSecurityProvider();
         } catch (ClassNotFoundException cnfe) {
-            LOGGER.info("Skipping roles in @CrudConfig because Spring Security is not on the classpath.");
-            securityProvider = new DefaultSecurityProvider();
+            securityProvider = new AlwaysSecurityProvider();
         }
     }
-
-    // Service locator
     
-    /**
-     * <i>Optionally</i> set a custom service locator.
-     * @param serviceLocator the service locator
-     */
-    public void setServiceLocator(CrudServiceLocator serviceLocator) {
-        this.serviceLocator = serviceLocator;
-    }
-
     /**
      * {@inheritDoc}
      */
@@ -176,6 +163,8 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         this.applicationContext = applicationContext;
     }
     
+    // Service locator
+
     /**
      * Configure the base package of our entities.
      * @param basePackage the base package
@@ -192,26 +181,48 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         setBasePackage(basePackageClass.getPackage().getName());
     }
 
+    /**
+     * <i>Optionally</i> set a custom service factory.
+     * @param serviceFactory the service factory
+     */
+    @Autowired(required = false)
+    public void setServiceFactory(CrudServiceFactory serviceFactory) {
+        this.serviceFactory = serviceFactory;
+    }
+
     // Handler mapping
     
     /**
      * <i>Optionally</i> set a custom handler mapping factory.
      * @param handlerMappingFactory the handler mapping factory
      */
+    @Autowired(required = false)
     public void setHandlerMappingFactory(EntityHandlerMappingFactory handlerMappingFactory) {
         this.handlerMappingFactory = handlerMappingFactory;
     }
     
+    /**
+     * <i>Optionally</i> set a custom bean mapper.
+     * @param beanMapper the bean mapper
+     */
     @Autowired(required = false)
     public void setBeanMapper(BeanMapper beanMapper) {
         this.beanMapper = beanMapper;
     }
     
+    /**
+     * <i>Optionally</i> set a custom conversion service.
+     * @param conversionService the conversion service
+     */
     @Autowired(required = false)
     public void setConversionService(ConversionService conversionService) {
         this.conversionService = conversionService;
     }
     
+    /**
+     * <i>Optionally</i> set a custom object mapper.
+     * @param objectMapper the object mapper
+     */
     @Autowired(required = false)
     public void setObjectMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
@@ -221,6 +232,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * <i>Optionally</i> set a custom security provider on our mappings.
      * @param securityProvider the security provider
      */
+    @Autowired(required = false)
     public void setSecurityProvider(SecurityProvider securityProvider) {
         this.securityProvider = securityProvider;
     }

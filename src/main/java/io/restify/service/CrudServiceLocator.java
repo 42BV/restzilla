@@ -4,9 +4,8 @@
 package io.restify.service;
 
 import io.restify.RestEnable;
-import io.restify.repository.SpringDataJpaRepositoryFactory;
+import io.restify.service.factory.CrudServiceFactory;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -15,42 +14,37 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.data.repository.support.Repositories;
+import org.springframework.util.Assert;
 
 /**
- * Factory bean that creates a registry from all entities to their services.
+ * Factory bean that registers all services per entity.
  *
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
 public class CrudServiceLocator {
     
-    private final CrudServiceRegistry registry = CrudServiceRegistry.getInstance();
-
     private final ApplicationContext applicationContext;
 
-    private final String basePackage;
-
-    public CrudServiceLocator(ApplicationContext applicationContext, String basePackage) {
-        if (basePackage == null) {
-            throw new IllegalStateException("Base package is required.");
-        }
+    public CrudServiceLocator(ApplicationContext applicationContext) {
+        Assert.notNull(applicationContext, "Application context is required.");
         this.applicationContext = applicationContext;
-        this.basePackage = basePackage;
     }
 
     /**
-     * Locate the CrudServices for all entities annotated with @EnableRest.
-     * When no repository or service yet exists, we will dynamically create
-     * a new instance. Instantiation behaviour can be overwritten by subclasses.
+     * Register all services for the entities in the provided base package.
+     * Whenever a service or repository is missing we will dynamically generate
+     * an implementation bean, using the provided factory.
      * 
-     * @return registry with all service beans per entity class
+     * @param basePackage the base package to search for entities
+     * @param factory the factory that creates missing repositories or reservices
      * @throws Exception whenever something goes wrong
      */
-    public CrudServiceRegistry execute() throws Exception {
+    public void registerAll(String basePackage, CrudServiceFactory factory) throws Exception {
+        Assert.notNull(basePackage, "Base package is required.");
+
         Repositories repositories = new Repositories(applicationContext);
         Services services = new Services(applicationContext);
 
@@ -59,65 +53,31 @@ public class CrudServiceLocator {
         Set<BeanDefinition> components = provider.findCandidateComponents(basePackage);
         for (BeanDefinition component : components) {
             Class<?> entityClass = Class.forName(component.getBeanClassName());
-            registerBeansForEntity(entityClass, services, repositories);
+            registerBeansFor(entityClass, services, repositories, factory);
         }
-        
-        return registry;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void registerBeansForEntity(Class entityClass, Services services, Repositories repositories) throws Exception {
-        PagingAndSortingRepository repository = getRepository(entityClass, repositories);
-        registry.register(entityClass, repository);
-
+    private void registerBeansFor(Class entityClass, Services services, Repositories repositories, CrudServiceFactory factory) throws Exception {
+        PagingAndSortingRepository repository = getRepository(entityClass, repositories, factory);
         CrudService service = services.getByEntityClass(entityClass);
         if (service == null) {
-            service = buildNewService(entityClass, repository);
+            service = factory.buildService(entityClass, repository);
         }
-        registry.register(entityClass, service);
+        
+        CrudServiceRegistry.register(entityClass, repository);
+        CrudServiceRegistry.register(entityClass, service);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private PagingAndSortingRepository getRepository(Class entityClass, Repositories repositories) {
+    private PagingAndSortingRepository getRepository(Class entityClass, Repositories repositories, CrudServiceFactory factory) {
         Object repository = repositories.getRepositoryFor(entityClass);
         if (!(repository instanceof PagingAndSortingRepository)) {
-            repository = buildNewRepository(entityClass);
+            repository = factory.buildRepository(entityClass);
         }
         return (PagingAndSortingRepository) repository;
     }
 
-    /**
-     * Build a new CrudRepository for the entity.
-     * 
-     * @param entityClass the entity class
-     * @param beanFactory the bean factory, used for injecting dependencies
-     * @return the repository bean
-     */
-    protected <T extends Persistable<ID>, ID extends Serializable> CrudRepository<T, ID> buildNewRepository(Class<T> entityClass) {
-        return new SpringDataJpaRepositoryFactory<T, ID>(applicationContext.getAutowireCapableBeanFactory(), entityClass).build();
-    }
-    
-    /**
-     * Build a new CrudService for the entity.
-     * @param entityClass the entity class
-     * @param repository the delegate repository
-     * @param beanFactory the bean factory, used for injecting dependencies
-     * @return the service bean
-     */
-    protected <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> buildNewService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
-        TransactionalCrudService<T, ID> service = new TransactionalCrudService<T, ID>(repository, entityClass);
-        applicationContext.getAutowireCapableBeanFactory().autowireBean(service);
-        return service;
-    }
-
-    /**
-     * Retrieve the application context.
-     * @return the application context
-     */
-    protected final ApplicationContext getApplicationContext() {
-        return applicationContext;
-    }
-    
     /**
      * Registry of all currently defined services. Only used for internal purposes.
      */

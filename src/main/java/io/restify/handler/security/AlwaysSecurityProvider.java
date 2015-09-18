@@ -9,7 +9,7 @@ package io.restify.handler.security;
  * @author Jeroen van Schagen
  * @since Sep 8, 2015
  */
-public class DefaultSecurityProvider implements SecurityProvider {
+public class AlwaysSecurityProvider implements SecurityProvider {
     
     /**
      * {@inheritDoc}
