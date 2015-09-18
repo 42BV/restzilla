@@ -28,15 +28,22 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
 
     /**
      * Construct a new service.
+     * <br>
+     * <b>This constructor dynamically resolves the entity type with reflection.</b>
      */
     @SuppressWarnings("unchecked")
     public AbstractCrudService() {
-        this.entityClass = (Class<T>) GenericTypeResolver.resolveTypeArguments(getClass(), CrudService.class)[0];
+        this.entityClass = (Class<T>) resolveEntityType();
         Assert.notNull(entityClass, "Entity class cannot be null");
+    }
+
+    private Class<?> resolveEntityType() {
+        return GenericTypeResolver.resolveTypeArguments(getClass(), CrudService.class)[0];
     }
     
     /**
      * Construct a new service.
+     * 
      * @param entityClass the entity class
      */
     @SuppressWarnings("unchecked")
@@ -47,22 +54,26 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
 
     /**
      * Construct a new service.
+     * <br>
+     * <b>This constructor dynamically resolves the entity type with reflection.</b>
+     * 
      * @param repository the repository
      */
     @SuppressWarnings("unchecked")
     public AbstractCrudService(PagingAndSortingRepository<T, ID> repository) {
-        this();
+        this(); // Dynamically resolve entity type
         Assert.notNull(repository, "Repository cannot be null");
         this.repository = repository;
     }
 
     /**
      * Construct a new service.
+     * 
      * @param entityClass the entity class
      * @param repository the repository
      */
     public AbstractCrudService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
-        this(entityClass);
+        this(entityClass); // Store entity type
         Assert.notNull(repository, "Repository cannot be null");
         this.repository = repository;
     }
@@ -133,11 +144,13 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
     
     /**
      * Retrieve the underlying repository.
+     * 
      * @return the repository
      */
     @SuppressWarnings("unchecked")
     protected PagingAndSortingRepository<T, ID> getRepository() {
         if (repository == null) {
+            // Whenever no repository is provided, dynamically retrieve it from our registry
             repository = (PagingAndSortingRepository<T, ID>) CrudServiceRegistry.getRepository(entityClass);
         }
         return repository;
