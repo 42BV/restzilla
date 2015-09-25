@@ -3,6 +3,8 @@
  */
 package io.restify.handler.security;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * Default implementation that grants everbody access.
  *
@@ -15,7 +17,7 @@ public class AlwaysSecurityProvider implements SecurityProvider {
      * {@inheritDoc}
      */
     @Override
-    public boolean isAuthorized(String[] roles) {
+    public boolean isAuthorized(String[] roles, HttpServletRequest request) {
         return true;
     }
     

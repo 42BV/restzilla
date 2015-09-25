@@ -102,7 +102,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
-            checkIsAuthorized(information.findAll().roles());
+            checkIsAuthorized(information.findAll().roles(), request);
             if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
                 return findAllAsPage(request);
             } else {
@@ -110,8 +110,8 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
             }
         }
 
-        private void checkIsAuthorized(String[] roles) {
-            if (!securityProvider.isAuthorized(roles)) {
+        private void checkIsAuthorized(String[] roles, HttpServletRequest request) {
+            if (!securityProvider.isAuthorized(roles, request)) {
                 throw new SecurityException("Not authorized, should be one of: " + StringUtils.join(roles, ", "));
             }
         }
@@ -152,7 +152,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
-            checkIsAuthorized(information.findOne().roles());
+            checkIsAuthorized(information.findOne().roles(), request);
             Object entity = getEntityById(request);
             return beanMapper.map(entity, information.getResultType(information.findOne()));
         }
@@ -170,7 +170,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
-            checkIsAuthorized(information.create().roles());
+            checkIsAuthorized(information.create().roles(), request);
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
             Persistable<?> entity = beanMapper.map(input, information.getEntityClass());
             Persistable<?> output = service.save(entity);
@@ -184,7 +184,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
-            checkIsAuthorized(information.update().roles());
+            checkIsAuthorized(information.update().roles(), request);
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.update()));
             Persistable<?> entity = getEntityById(request);
             Persistable<?> output = service.save(beanMapper.map(input, entity));
@@ -207,7 +207,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object delete(HttpServletRequest request) {
-            checkIsAuthorized(information.delete().roles());
+            checkIsAuthorized(information.delete().roles(), request);
             Persistable<?> entity = getEntityById(request);
             service.delete(entity);
             return convert(entity, information.getResultType(information.delete()));

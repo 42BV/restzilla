@@ -149,7 +149,8 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     private void buildSecurityProvider() {
         try {
             Class.forName(SPRING_SECURITY_PATH);
-            securityProvider = new io.restify.handler.security.SpringSecurityProvider();
+            securityProvider = new io.restify.handler.security.SpringExpressionSecurityProvider();
+            applicationContext.getAutowireCapableBeanFactory().autowireBean(securityProvider);
         } catch (ClassNotFoundException cnfe) {
             securityProvider = new AlwaysSecurityProvider();
         }

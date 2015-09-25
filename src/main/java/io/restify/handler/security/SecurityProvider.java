@@ -3,6 +3,8 @@
  */
 package io.restify.handler.security;
 
+import javax.servlet.http.HttpServletRequest;
+
 /**
  * Determines if a user is authorized.
  *
@@ -17,6 +19,6 @@ public interface SecurityProvider {
      * @param roles the roles
      * @return {@code true} if authorized, else {@code false}
      */
-    boolean isAuthorized(String[] roles);
+    boolean isAuthorized(String[] roles, HttpServletRequest request);
 
 }
