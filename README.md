@@ -18,7 +18,7 @@ Add the dependency to your own project:
 <dependency>
   <groupId>io.restify</groupId>
   <artifactId>restify</artifactId>
-  <version>1.7-SNAPSHOT</version>
+  <version>1.7.1-SNAPSHOT</version>
 </dependency>
 ```
 
