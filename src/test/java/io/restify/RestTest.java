@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.security.authentication.TestingAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
@@ -189,15 +191,32 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertNull(getHandlerChain(request));
     }
     
+    @Test
+    public void testSecuredHasRole() throws Exception {
+        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(admin);
+
+        try {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/withsecurity");
+            request.setMethod(RequestMethod.GET.name());
+            
+            MockHttpServletResponse response = call(request);
+            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        } finally {
+            SecurityContextHolder.getContext().setAuthentication(null);
+        }
+    }
+    
     @Test(expected = SecurityException.class)
-    public void testSecured() throws Exception {
+    public void testSecuredWithoutRoleNotLoggedIn() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/withsecurity");
         request.setMethod(RequestMethod.GET.name());
         
         call(request);
     }
-    
+
     @Test
     public void testReadOnly() throws Exception {
         WithReadOnly entity = new WithReadOnly();

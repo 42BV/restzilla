@@ -43,7 +43,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingFactory {
+public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory {
     
     private final ObjectMapper objectMapper;
     
@@ -54,7 +54,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
     private final SecurityProvider securityProvider;
     
     /**
-     * Instantiate a new {@link DefaultEntityHandlerMappingFactory}.
+     * Instantiate a new {@link DefaultHandlerMappingFactory}.
      * 
      * @param objectMapper
      *              the {@link ObjectMapper} for JSON parsing and formatting
@@ -65,7 +65,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
      * @param securityProvider
      *              the {@link SecurityProvider} checking the authorization
      */
-    public DefaultEntityHandlerMappingFactory(ObjectMapper objectMapper,
+    public DefaultHandlerMappingFactory(ObjectMapper objectMapper,
                                          ConversionService conversionService,
                                                 BeanMapper beanMapper,
                                           SecurityProvider securityProvider) {
@@ -102,7 +102,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
-            checkIsAuthorized(information.findAll().roles(), request);
+            checkIsAuthorized(information.findAll().secured(), request);
             if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
                 return findAllAsPage(request);
             } else {
@@ -152,7 +152,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
-            checkIsAuthorized(information.findOne().roles(), request);
+            checkIsAuthorized(information.findOne().secured(), request);
             Object entity = getEntityById(request);
             return beanMapper.map(entity, information.getResultType(information.findOne()));
         }
@@ -170,7 +170,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
-            checkIsAuthorized(information.create().roles(), request);
+            checkIsAuthorized(information.create().secured(), request);
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
             Persistable<?> entity = beanMapper.map(input, information.getEntityClass());
             Persistable<?> output = service.save(entity);
@@ -184,7 +184,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
-            checkIsAuthorized(information.update().roles(), request);
+            checkIsAuthorized(information.update().secured(), request);
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.update()));
             Persistable<?> entity = getEntityById(request);
             Persistable<?> output = service.save(beanMapper.map(input, entity));
@@ -207,7 +207,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
          */
         @ResponseBody
         public Object delete(HttpServletRequest request) {
-            checkIsAuthorized(information.delete().roles(), request);
+            checkIsAuthorized(information.delete().secured(), request);
             Persistable<?> entity = getEntityById(request);
             service.delete(entity);
             return convert(entity, information.getResultType(information.delete()));
@@ -240,6 +240,12 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
      */
     private static class DefaultHandlerMapping extends EntityHandlerMapping implements SwaggerApiDescriptor {
         
+        private static final String FIND_ALL_NAME = "findAll";
+        private static final String FIND_ONE_NAME = "findOne";
+        private static final String CREATE_NAME = "create";
+        private static final String UPDATE_NAME = "update";
+        private static final String DELETE_NAME = "delete";
+
         private final DefaultCrudController controller;
         
         public DefaultHandlerMapping(DefaultCrudController controller) {
@@ -259,7 +265,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
             }
             return result;
         }
-        
+
         /**
          * Dynamically match our servlet request to one of the service
          * methods. Whenever a request is recognized we return that method.
@@ -276,17 +282,17 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
             int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
             if (fragments == 2) {
                 if (hasRequestMethod(request, GET)) {
-                    method = toMethodIfEnabled("findAll", getInformation().findAll());
+                    method = toMethodIfEnabled(FIND_ALL_NAME, getInformation().findAll());
                 } else if (hasRequestMethod(request, POST)) {
-                    method = toMethodIfEnabled("create", getInformation().create());
+                    method = toMethodIfEnabled(CREATE_NAME, getInformation().create());
                 }
             } else if (fragments == 3) {
                 if (hasRequestMethod(request, GET)) {
-                    method = toMethodIfEnabled("findOne", getInformation().findOne());
+                    method = toMethodIfEnabled(FIND_ONE_NAME, getInformation().findOne());
                 } else if (hasRequestMethod(request, PUT)) {
-                    method = toMethodIfEnabled("update", getInformation().update());
+                    method = toMethodIfEnabled(UPDATE_NAME, getInformation().update());
                 } else if (hasRequestMethod(request, DELETE)) {
-                    method = toMethodIfEnabled("delete", getInformation().delete());
+                    method = toMethodIfEnabled(DELETE_NAME, getInformation().delete());
                 }
             }
             return method;
@@ -304,8 +310,6 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
             return method;
         }
         
-        // Swagger integration
-
         /**
          * {@inheritDoc}
          * <br><br>
@@ -364,7 +368,6 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         void enhance(com.mangofactory.swagger.models.dto.ApiListing listing) {
             registerFindAll(listing);
             registerFindOne(listing);
-
             if (!information.isReadOnly()) {
                 registerCreate(listing);
                 registerUpdate(listing);
@@ -374,7 +377,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         
         private void registerFindAll(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.findAll().enabled()) {
-                registerModel(listing, information.getResultType(information.findAll()));
+                addModel(listing, information.getResultType(information.findAll()));
                 newDescription(FIND_ALL_NAME, basePath, RequestMethod.GET).responseClassIterable(information.getResultType(information.findAll())).addQueryParameter(
                         PAGE_PARAM, Long.class, false).addQueryParameter(SIZE_PARAM, Long.class, false).addQueryParameter(SORT_PARAM, String.class, false).register(
                         listing);
@@ -383,7 +386,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         
         private void registerFindOne(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.findOne().enabled()) {
-                registerModel(listing, information.getResultType(information.findOne()));
+                addModel(listing, information.getResultType(information.findOne()));
                 newDescription(FIND_ONE_NAME, basePath + "/{id}", RequestMethod.GET)
                     .responseClass(information.getResultType(information.findOne()))
                     .addPathParameter(ID_PARAM, information.getIdentifierClass())
@@ -393,8 +396,8 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
         
         private void registerCreate(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.create().enabled()) {
-                registerModel(listing, information.getInputType(information.create()));
-                registerModel(listing, information.getResultType(information.create()));
+                addModel(listing, information.getInputType(information.create()));
+                addModel(listing, information.getResultType(information.create()));
                 newDescription(CREATE_NAME, basePath, RequestMethod.POST)
                     .responseClass(information.getResultType(information.create()))
                     .addBodyParameter(information.getInputType(information.create()))
@@ -404,8 +407,8 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
 
         private void registerUpdate(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.update().enabled()) {
-                registerModel(listing, information.getInputType(information.update()));
-                registerModel(listing, information.getResultType(information.update()));
+                addModel(listing, information.getInputType(information.update()));
+                addModel(listing, information.getResultType(information.update()));
                 newDescription(UPDATE_NAME, basePath + "/{id}", RequestMethod.PUT)
                     .responseClass(information.getResultType(information.update()))
                     .addPathParameter(ID_PARAM, information.getIdentifierClass())
@@ -416,7 +419,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
 
         private void registerDelete(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.delete().enabled()) {
-                registerModel(listing, information.getResultType(information.delete()));
+                addModel(listing, information.getResultType(information.delete()));
                 newDescription(DELETE_NAME, basePath + "/{id}", RequestMethod.DELETE)
                     .responseClass(information.getResultType(information.delete()))
                     .addPathParameter(ID_PARAM, information.getIdentifierClass())
@@ -424,7 +427,7 @@ public class DefaultEntityHandlerMappingFactory implements EntityHandlerMappingF
             }
         }
 
-        private void registerModel(com.mangofactory.swagger.models.dto.ApiListing listing, Class<?> modelType) {
+        private void addModel(com.mangofactory.swagger.models.dto.ApiListing listing, Class<?> modelType) {
             io.restify.handler.swagger.SwaggerUtils.addIfNotExists(listing, modelType, modelProvider);
         }
         

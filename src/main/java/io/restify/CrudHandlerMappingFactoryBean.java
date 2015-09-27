@@ -5,7 +5,7 @@ package io.restify;
 
 import io.beanmapper.BeanMapper;
 import io.restify.handler.CrudHandlerMapping;
-import io.restify.handler.DefaultEntityHandlerMappingFactory;
+import io.restify.handler.DefaultHandlerMappingFactory;
 import io.restify.handler.EntityHandlerMapping;
 import io.restify.handler.EntityHandlerMappingFactory;
 import io.restify.handler.security.AlwaysSecurityProvider;
@@ -47,24 +47,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, InitializingBean, ApplicationContextAware {
     
-    private static final String SPRING_SECURITY_PATH = "org.springframework.security.core.context.SecurityContext";
     private static final Logger LOGGER = LoggerFactory.getLogger(CrudHandlerMappingFactoryBean.class);
 
+    /**
+     * Base class used to check if Spring Security is available on the classpath.
+     */
+    private static final String SPRING_SECURITY_PATH = "org.springframework.security.core.context.SecurityContext";
+
+    /**
+     * Application context used to retrieve and create beans.
+     */
     private ApplicationContext applicationContext;
 
-    // Service locator
+    // Service
 
+    /**
+     * Creates CRUD service and repository beans.
+     */
+    private CrudServiceFactory serviceFactory;
+    
     /**
      * Base package of the entities to scan.
      */
     private String basePackage;
     
-    /**
-     * Creates CRUD service and repository beans.
-     */
-    private CrudServiceFactory serviceFactory;
-
-    // Handler mapping
+    // Controller
 
     /**
      * Creates REST endpoint mappings.
@@ -141,7 +148,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
             if (securityProvider == null) {
                 buildSecurityProvider();
             }
-            handlerMappingFactory = new DefaultEntityHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider);
+            handlerMappingFactory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider);
         }
     }
     
@@ -149,7 +156,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     private void buildSecurityProvider() {
         try {
             Class.forName(SPRING_SECURITY_PATH);
-            securityProvider = new io.restify.handler.security.SpringExpressionSecurityProvider();
+            securityProvider = new io.restify.handler.security.SpelSecurityProvider();
             applicationContext.getAutowireCapableBeanFactory().autowireBean(securityProvider);
         } catch (ClassNotFoundException cnfe) {
             securityProvider = new AlwaysSecurityProvider();

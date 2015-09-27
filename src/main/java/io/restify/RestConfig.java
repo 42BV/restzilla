@@ -40,9 +40,9 @@ public @interface RestConfig {
     Class<?> resultType() default Object.class;
     
     /**
-     * (Optional) the roles that are allowed to perform this functionality
-     * @return the roles
+     * (Optional) the security that are allowed to perform this functionality
+     * @return the security
      */
-    String[] roles() default {};
+    String[] secured() default {};
 
 }

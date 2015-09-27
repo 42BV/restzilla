@@ -14,8 +14,16 @@ import org.springframework.web.servlet.handler.AbstractHandlerMapping;
  */
 public abstract class EntityHandlerMapping extends AbstractHandlerMapping {
     
+    /**
+     * The REST information.
+     */
     private final RestInformation information;
     
+    /**
+     * Construct a new entity handler mapping.
+     * 
+     * @param information the REST information
+     */
     public EntityHandlerMapping(RestInformation information) {
         this.information = information;
     }
@@ -27,9 +35,9 @@ public abstract class EntityHandlerMapping extends AbstractHandlerMapping {
     public abstract Object getHandlerInternal(HttpServletRequest request) throws Exception;
 
     /**
-     * Retrieve the entity information.
+     * Retrieve the REST information.
      * 
-     * @return the information
+     * @return the REST information
      */
     public RestInformation getInformation() {
         return information;

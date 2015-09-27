@@ -15,7 +15,7 @@ public interface EntityHandlerMappingFactory {
      * Build a new handler mapping.
      * 
      * @param service the service
-     * @param information the entity information
+     * @param information the REST information
      * @return the handler mapping
      */
     EntityHandlerMapping build(CrudService<?, ?> service, RestInformation information);

@@ -41,11 +41,15 @@ public class CrudHandlerMapping extends AbstractHandlerMapping implements Priori
      * The application context.
      */
     private final ApplicationContext applicationContext;
-    
-    // Lazy attributes
-    
+
+    /**
+     * Determines if this bean is fully initialized yet.
+     */
     private AtomicBoolean initialized = new AtomicBoolean(false);
 
+    /**
+     * Delegate request handler mapping.
+     */
     private RequestMappingHandlerMapping requestHandlerMapping;
 
     /**
@@ -56,7 +60,7 @@ public class CrudHandlerMapping extends AbstractHandlerMapping implements Priori
      */
     public CrudHandlerMapping(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
-        
+
         // Register the exceptions from our request handler to skip
         this.skippedExceptions.add(HttpRequestMethodNotSupportedException.class);
         this.skippedExceptions.add(UnsatisfiedServletRequestParameterException.class);
@@ -67,8 +71,9 @@ public class CrudHandlerMapping extends AbstractHandlerMapping implements Priori
      */
     @Override
     protected Object getHandlerInternal(HttpServletRequest request) throws Exception {
-        init();
-
+        if (!initialized.getAndSet(true)) {
+            init();
+        }
         Object requestMappingHandler = findRequestMappingHandler(request);
         if (requestMappingHandler != null) {
             return requestMappingHandler;
@@ -77,11 +82,9 @@ public class CrudHandlerMapping extends AbstractHandlerMapping implements Priori
     }
 
     private void init() {
-        if (!initialized.getAndSet(true)) {
-            String[] beanNames = applicationContext.getBeanNamesForType(RequestMappingHandlerMapping.class);
-            if (beanNames.length > 0) {
-                requestHandlerMapping = applicationContext.getBean(RequestMappingHandlerMapping.class);
-            }
+        String[] beanNames = applicationContext.getBeanNamesForType(RequestMappingHandlerMapping.class);
+        if (beanNames.length > 0) {
+            requestHandlerMapping = applicationContext.getBean(RequestMappingHandlerMapping.class);
         }
     }
 

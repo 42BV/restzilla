@@ -9,7 +9,9 @@ import io.restify.RestEnable;
 import javax.persistence.Entity;
 
 @Entity
-@RestEnable(findAll = @RestConfig(roles = "ADMIN"))
+@RestEnable(
+    findAll = @RestConfig(secured = "hasRole('ROLE_ADMIN')")
+)
 public class WithSecurity extends BaseEntity {
     
     private String name;
