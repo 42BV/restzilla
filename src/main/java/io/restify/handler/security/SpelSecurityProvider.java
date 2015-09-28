@@ -36,11 +36,7 @@ public class SpelSecurityProvider implements SecurityProvider {
     public boolean isAuthorized(String[] expressions, HttpServletRequest request) {
         boolean authorized = true;
         if (expressions.length > 0) {
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if (authentication == null) {
-                authentication = new AnonymousAuthenticationToken("?", "?", AuthorityUtils.createAuthorityList("?"));
-            }
-
+            Authentication authentication = getAuthentication();
             FilterInvocation invocation = new FilterInvocation(request.getServletPath(), request.getMethod());
             EvaluationContext context = handler.createEvaluationContext(authentication, invocation);
             for (String expression : expressions) {
@@ -51,6 +47,14 @@ public class SpelSecurityProvider implements SecurityProvider {
             }
         }
         return authorized;
+    }
+
+    private Authentication getAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            authentication = new AnonymousAuthenticationToken("anonymousUser", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
+        }
+        return authentication;
     }
     
     /**
