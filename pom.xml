@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>io.beanmapper</groupId>
 			<artifactId>beanmapper</artifactId>
-			<version>0.2.13</version>
+			<version>0.2.15</version>
 		</dependency>
 
 		<!-- Web -->
