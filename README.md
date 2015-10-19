@@ -16,8 +16,8 @@ Add the dependency to your own project:
 
 ```xml
 <dependency>
-  <groupId>io.restify</groupId>
-  <artifactId>restify</artifactId>
+  <groupId>io.flyweight</groupId>
+  <artifactId>flyweight</artifactId>
   <version>1.7.1-SNAPSHOT</version>
 </dependency>
 ```
