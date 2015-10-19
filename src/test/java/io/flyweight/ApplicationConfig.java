@@ -4,7 +4,6 @@
 package io.flyweight;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
-import io.flyweight.CrudHandlerMappingFactoryBean;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -95,7 +94,7 @@ public class ApplicationConfig {
     }
     
     @Bean
-    public CrudHandlerMappingFactoryBean enableRestHandlerMapping() {
+    public CrudHandlerMappingFactoryBean crudHandlerMapping() {
         CrudHandlerMappingFactoryBean factoryBean = new CrudHandlerMappingFactoryBean();
         factoryBean.setBasePackageClass(ApplicationConfig.class);
         return factoryBean;
