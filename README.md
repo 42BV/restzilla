@@ -10,7 +10,7 @@ The purpose of [Flyweight](https://github.com/42BV/flyweight) is to dynamically 
 
 ## Quick Start ##
 
-Clone the restify project and install with Maven.
+Clone the Flyweight project and install with Maven.
 
 Add the dependency to your own project:
 
