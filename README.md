@@ -129,7 +129,7 @@ public class User {
 }
 ```
 
-Requests will now be unmarshalled to their custom type. The custom types are then mapped back on our entity as we perform our logic.
+Request bodies will now be unmarshalled to their custom type. The custom type is then mapped back to an entity as we perform our logic.
 
 Mapping between beans is automatically handled by the [BeanMapper](https://github.com/42BV/beanmapper) dependency.
 
@@ -140,7 +140,7 @@ It's also possible to secure the endpoints, making them only accessable to certa
 ```java
 @Entity
 @RestEnable(
- create = @RestConfig(roles = "ROLE_ADMIN")
+ create = @RestConfig(secured = "hasRole('ROLE_ADMIN')")
 )
 public class User {
 
@@ -155,11 +155,11 @@ When the user does not have any of the roles we will throw a SecurityException. 
 
 ## Customize beans ##
 
-Logic can be overwritten on each of the architecural layers: Repository, Service, Controller. This is particulary handy when domain specific functionality is required.
+Logic can be customized on each of the architecural layers: Repository, Service and Controller. This is particulary handy when domain specific functionality is desired.
 
 ### Repository ###
 
-Restify relies heavily on Spring Data JPA. Spring Data repositories will automatically be used:
+Restify relies heavily on Spring Data JPA. Each Spring Data repository will automatically be detected and used:
 
 ```java
 public interface UserRepository extends CrudRepository<User, Long> {
@@ -168,7 +168,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
 ### Service ###
 
-It is also possible to create a custom service. Services must implement the CrudService interface, but we also provide an AbstractCrudService template class:
+It is also possible to create a custom service. Services must implement the CrudService interface to be detected, but we also provide an AbstractCrudService template class:
 
 ```java
 @Service
@@ -186,7 +186,7 @@ public class UserService extends AbstractCrudService<User, Long> {
 
 ### Controller ###
 
-To create a custom REST endpoint, just define a regular Spring MVC request mapping:
+To customize the REST endpoint, just define a regular Spring MVC request mapping:
 
 ```java
 @RestController
@@ -202,7 +202,7 @@ public class UserController {
 
 ## Swagger ##
 
-Restify also provides native support for Swagger, automatically generating an API documentation. To activate Swagger, just configure the provided plugin:
+Restify also provides native support for Swagger, automatically generating an API documentation. To activate Swagger, just configure the provided plugin as follows:
 
 ```java
 @Bean
