@@ -21,6 +21,7 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
@@ -125,23 +126,24 @@ public class RestTest extends AbstractControllerTest {
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
     }
     
-    //    @Test
-    //    public void testUpdate() throws Exception {
-    //        User henk = userBuilder.createUser("Henk", "henk@42.nl");
-    //
-    //        MockHttpServletRequest request = new MockHttpServletRequest();
-    //        request.setRequestURI("/user/" + henk.getId());
-    //        request.setMethod(RequestMethod.PUT.name());
-    //        
-    //        setValueAsJson(request, "{\"name\":\"Piet\"}");
-    //
-    //        MockHttpServletResponse response = call(request);
-    //        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-    //        Assert.assertEquals("{\"name\":\"Piet\",\"email\":\"henk@42.nl\"}", response.getContentAsString());
-    //        
-    //        Assert.assertEquals(Long.valueOf(1), 
-    //                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
-    //    }
+    @Test
+    public void testUpdate() throws Exception {        
+        User henk = userBuilder.createUser("Henk");
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/user/" + henk.getId());
+        request.setMethod(RequestMethod.PUT.name());
+        
+        henk.setName("Piet");
+        setContentAsJson(request, henk);
+
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"name\":\"Piet\"}", response.getContentAsString());
+        
+        Assert.assertEquals(Long.valueOf(1), 
+                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
+    }
 
     @Test
     public void testDelete() throws Exception {
@@ -295,6 +297,7 @@ public class RestTest extends AbstractControllerTest {
     }
     
     @Test
+    @Transactional
     public void testNoPatch() throws Exception {
         WithoutPatch entity = new WithoutPatch();
         entity.setName("My name");

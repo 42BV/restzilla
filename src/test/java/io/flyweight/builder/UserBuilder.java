@@ -23,15 +23,10 @@ public class UserBuilder {
     
     @PersistenceContext
     private EntityManager entityManager;
-    
-    public User createUser(String name) {
-        return createUser(name, null);
-    }
 
-    public User createUser(String name, String email) {
+    public User createUser(String name) {
         User user = new User();
         user.setName(name);
-        user.setEmail(email);
         entityManager.persist(user);
         return user;
     }

@@ -41,7 +41,7 @@ public abstract class AbstractControllerTest extends AbstractSpringTest {
         setValueAsJson(request, (String) json);
     }
     
-    private void setValueAsJson(MockHttpServletRequest request, String json) throws Exception {
+    protected void setValueAsJson(MockHttpServletRequest request, String json) throws Exception {
         request.setContentType("application/json");
         request.setContent(json.getBytes());
     }
