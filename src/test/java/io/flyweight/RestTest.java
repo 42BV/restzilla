@@ -8,6 +8,8 @@ import io.flyweight.builder.OtherBuilder;
 import io.flyweight.builder.UserBuilder;
 import io.flyweight.model.User;
 import io.flyweight.model.WithOtherEntity;
+import io.flyweight.model.WithPatch;
+import io.flyweight.model.WithPatchNested;
 import io.flyweight.model.WithReadOnly;
 import io.flyweight.model.WithService;
 import io.flyweight.model.WithoutPatch;
@@ -294,6 +296,30 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertTrue(contents.contains("\"content\":[]"));
         Assert.assertTrue(contents.contains("\"number\":0"));
         Assert.assertTrue(contents.contains("\"size\":10"));
+    }
+    
+    @Test
+    @Transactional
+    public void testPatch() throws Exception {
+        WithPatch entity = new WithPatch();
+        entity.setName("My name");
+        entity.setName("email@42.nl");
+        entity.setNested(new WithPatchNested());
+        entity.getNested().setNestedName("My nested name");
+        entity.getNested().setNestedOther("My nested other");
+        entityBuilder.save(entity);
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withpatch/" + entity.getId());
+        request.setMethod(RequestMethod.PUT.name());
+        
+        setValueAsJson(request, "{\"name\":\"New name\",\"nested\":{\"nestedName\":\"New nested name\"}}");
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"id\":" + entity.getId()
+                + ",\"name\":\"New name\",\"email\":\"email@42.nl\",\"nested\":{\"nestedName\":\"New nested name\",\"nestedOther\":\"My nested other\"}}",
+                response.getContentAsString());
     }
     
     @Test
