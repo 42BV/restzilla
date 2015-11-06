@@ -25,8 +25,13 @@ public class UserBuilder {
     private EntityManager entityManager;
     
     public User createUser(String name) {
+        return createUser(name, null);
+    }
+
+    public User createUser(String name, String email) {
         User user = new User();
         user.setName(name);
+        user.setEmail(email);
         entityManager.persist(user);
         return user;
     }

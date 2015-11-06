@@ -217,6 +217,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.update()));
             Serializable id = extractId(request);
             Persistable<?> entity = service.getOne(id);
+
             Persistable<?> output = service.save(beanMapper.map(input, entity));
             return convertToResult(output, information.update());
         }

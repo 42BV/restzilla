@@ -9,6 +9,7 @@ import io.flyweight.model.WithOtherEntity;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.springframework.beans.DirectFieldAccessor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,7 +35,7 @@ public class OtherBuilder {
         entity.setOtherName(name);
         entityManager.persist(entity);
         
-        entity.setId(other.getId());
+        new DirectFieldAccessor(entity).setPropertyValue("id", other.getId());
         entityManager.merge(entity);
         
         return entity;

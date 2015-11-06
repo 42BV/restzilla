@@ -3,12 +3,14 @@
  */
 package io.flyweight;
 
+import io.flyweight.builder.EntityBuilder;
 import io.flyweight.builder.OtherBuilder;
 import io.flyweight.builder.UserBuilder;
 import io.flyweight.model.User;
 import io.flyweight.model.WithOtherEntity;
 import io.flyweight.model.WithReadOnly;
 import io.flyweight.model.WithService;
+import io.flyweight.model.WithoutPatch;
 import io.flyweight.util.PageableResolver;
 
 import org.junit.Assert;
@@ -34,6 +36,9 @@ public class RestTest extends AbstractControllerTest {
     
     @Autowired
     private OtherBuilder otherBuilder;
+    
+    @Autowired
+    private EntityBuilder entityBuilder;
 
     @Test
     public void testFindAllAsArray() throws Exception {
@@ -120,24 +125,23 @@ public class RestTest extends AbstractControllerTest {
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
     }
     
-    @Test
-    public void testUpdate() throws Exception {        
-        User henk = userBuilder.createUser("Henk");
-
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user/" + henk.getId());
-        request.setMethod(RequestMethod.PUT.name());
-        
-        henk.setName("Piet");
-        setContentAsJson(request, henk);
-
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"name\":\"Piet\"}", response.getContentAsString());
-        
-        Assert.assertEquals(Long.valueOf(1), 
-                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
-    }
+    //    @Test
+    //    public void testUpdate() throws Exception {
+    //        User henk = userBuilder.createUser("Henk", "henk@42.nl");
+    //
+    //        MockHttpServletRequest request = new MockHttpServletRequest();
+    //        request.setRequestURI("/user/" + henk.getId());
+    //        request.setMethod(RequestMethod.PUT.name());
+    //        
+    //        setValueAsJson(request, "{\"name\":\"Piet\"}");
+    //
+    //        MockHttpServletResponse response = call(request);
+    //        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+    //        Assert.assertEquals("{\"name\":\"Piet\",\"email\":\"henk@42.nl\"}", response.getContentAsString());
+    //        
+    //        Assert.assertEquals(Long.valueOf(1), 
+    //                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
+    //    }
 
     @Test
     public void testDelete() throws Exception {
@@ -156,10 +160,10 @@ public class RestTest extends AbstractControllerTest {
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user WHERE id = " + henk.getId(), Long.class));
     }
     
-    // Map by query
+    // Query
     
     @Test
-    public void testFindAllMapByQuery() throws Exception {
+    public void testFindAllWithQuery() throws Exception {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -172,7 +176,7 @@ public class RestTest extends AbstractControllerTest {
     }
     
     @Test
-    public void testFindByIdMapByQuery() throws Exception {
+    public void testFindByIdWithQuery() throws Exception {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -185,7 +189,7 @@ public class RestTest extends AbstractControllerTest {
     }
     
     @Test
-    public void testUpdateMapByQuery() throws Exception {
+    public void testUpdateWithQuery() throws Exception {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -288,6 +292,24 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertTrue(contents.contains("\"content\":[]"));
         Assert.assertTrue(contents.contains("\"number\":0"));
         Assert.assertTrue(contents.contains("\"size\":10"));
+    }
+    
+    @Test
+    public void testNoPatch() throws Exception {
+        WithoutPatch entity = new WithoutPatch();
+        entity.setName("My name");
+        entity.setName("email@42.nl");
+        entityBuilder.save(entity);
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withoutpatch/" + entity.getId());
+        request.setMethod(RequestMethod.PUT.name());
+        
+        setValueAsJson(request, "{\"name\":\"New name\"}");
+
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"New name\",\"email\":null}", response.getContentAsString());
     }
 
 }
