@@ -4,11 +4,13 @@
 package io.flyweight.handler;
 
 import static io.flyweight.RestMappingStrategy.QUERY;
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 import io.beanmapper.BeanMapper;
+import io.beanmapper.core.rule.SourceFieldMapperRule;
 import io.flyweight.RestConfig;
 import io.flyweight.RestInformation;
 import io.flyweight.handler.security.SecurityProvider;
@@ -19,11 +21,15 @@ import io.flyweight.service.impl.ReadService;
 import io.flyweight.util.PageableResolver;
 import io.flyweight.util.UrlUtils;
 
+import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -38,7 +44,10 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.CharStreams;
 
 /**
  * Default implementation of the {@link EntityHandlerMappingFactory}.
@@ -203,7 +212,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
             Persistable<?> entity = beanMapper.map(input, information.getEntityClass());
             Persistable<?> output = service.save(entity);
-            return convertToResult(output, information.create());
+            return mapEntityToResult(output, information.create());
         }
         
         /**
@@ -214,12 +223,38 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
             checkIsAuthorized(information.update().secured(), request);
-            Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.update()));
-            Serializable id = extractId(request);
-            Persistable<?> entity = service.getOne(id);
-
-            Persistable<?> output = service.save(beanMapper.map(input, entity));
-            return convertToResult(output, information.update());
+            String json = CharStreams.toString(request.getReader());
+            Object input = objectMapper.readValue(json, information.getInputType(information.update()));
+            Persistable<?> entity = service.getOne(extractId(request));
+            mapInputToEntity(input, entity, json);
+            Persistable<?> output = service.save(entity);
+            return mapEntityToResult(output, information.update());
+        }
+        
+        private void mapInputToEntity(Object input, Persistable<?> entity, String json) throws JsonProcessingException, IOException {
+            if (information.update().patch()) {
+                Set<String> propertyNames = getPropertyNamesFromJson(json);
+                beanMapper.map(input, entity, new SourceFieldMapperRule(propertyNames));
+            } else {
+                beanMapper.map(input, entity);
+            }
+        }
+        
+        private Set<String> getPropertyNamesFromJson(String json) throws JsonProcessingException, IOException {
+            JsonNode tree = objectMapper.readTree(json);
+            return getPropertyNames(tree, "");
+        }
+        
+        private Set<String> getPropertyNames(JsonNode node, String base) {
+            Set<String> propertyNames = new HashSet<String>();
+            Iterator<String> iterator = node.fieldNames();
+            while (iterator.hasNext()) {
+                String fieldName = iterator.next();
+                String propertyName = isNotBlank(base) ? base + "." + fieldName : fieldName;
+                propertyNames.add(propertyName);
+                propertyNames.addAll(getPropertyNames(node.get(fieldName), propertyName));
+            }
+            return propertyNames;
         }
 
         /**
@@ -230,10 +265,9 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         @ResponseBody
         public Object delete(HttpServletRequest request) {
             checkIsAuthorized(information.delete().secured(), request);
-            Serializable id = extractId(request);
-            Persistable<?> entity = service.getOne(id);
+            Persistable<?> entity = service.getOne(extractId(request));
             service.delete(entity);
-            return convertToResult(entity, information.delete());
+            return mapEntityToResult(entity, information.delete());
         }
         
         /**
@@ -243,7 +277,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          * @param config the configuration
          * @return the entity in its result type
          */
-        private Object convertToResult(Persistable<?> entity, RestConfig config) {
+        private Object mapEntityToResult(Persistable<?> entity, RestConfig config) {
             if (config.strategy().equals(QUERY)) {
                 return readService.getOne(config.resultType(), entity.getId());
             } else {
