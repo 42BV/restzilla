@@ -4,7 +4,6 @@
 package io.flyweight.service;
 
 import io.flyweight.RestEnable;
-import io.flyweight.service.factory.CrudServiceFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,14 +58,15 @@ public class CrudServiceLocator {
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private void registerBeansFor(Class entityClass, Services services, Repositories repositories, CrudServiceFactory factory) throws Exception {
+        PagingAndSortingRepository repository = registerRepository(entityClass, repositories, factory);
+        registerService(entityClass, repository, services, factory);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private PagingAndSortingRepository registerRepository(Class entityClass, Repositories repositories, CrudServiceFactory factory) {
         PagingAndSortingRepository repository = getRepository(entityClass, repositories, factory);
-        CrudService service = services.getByEntityClass(entityClass);
-        if (service == null) {
-            service = factory.buildService(entityClass, repository);
-        }
-        
         CrudServiceRegistry.register(entityClass, repository);
-        CrudServiceRegistry.register(entityClass, service);
+        return repository;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
@@ -76,6 +76,15 @@ public class CrudServiceLocator {
             repository = factory.buildRepository(entityClass);
         }
         return (PagingAndSortingRepository) repository;
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    private void registerService(Class entityClass, PagingAndSortingRepository repository, Services services, CrudServiceFactory factory) {
+        CrudService service = services.getByEntityClass(entityClass);
+        if (service == null) {
+            service = factory.buildService(entityClass, repository);
+        }
+        CrudServiceRegistry.register(entityClass, service);
     }
 
     /**

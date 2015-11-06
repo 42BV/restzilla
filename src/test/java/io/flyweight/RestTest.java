@@ -3,8 +3,10 @@
  */
 package io.flyweight;
 
+import io.flyweight.builder.OtherBuilder;
 import io.flyweight.builder.UserBuilder;
 import io.flyweight.model.User;
+import io.flyweight.model.WithOtherEntity;
 import io.flyweight.model.WithReadOnly;
 import io.flyweight.model.WithService;
 import io.flyweight.util.PageableResolver;
@@ -29,6 +31,9 @@ public class RestTest extends AbstractControllerTest {
 
     @Autowired
     private UserBuilder userBuilder;
+    
+    @Autowired
+    private OtherBuilder otherBuilder;
 
     @Test
     public void testFindAllAsArray() throws Exception {
@@ -149,6 +154,48 @@ public class RestTest extends AbstractControllerTest {
 
         Assert.assertEquals(Long.valueOf(0), 
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user WHERE id = " + henk.getId(), Long.class));
+    }
+    
+    // Map by query
+    
+    @Test
+    public void testFindAllMapByQuery() throws Exception {
+        WithOtherEntity entity = otherBuilder.createOther("My name");
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withotherentity");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("[{\"id\":" + entity.getId() + ",\"name\":\"My name\"}]", response.getContentAsString());
+    }
+    
+    @Test
+    public void testFindByIdMapByQuery() throws Exception {
+        WithOtherEntity entity = otherBuilder.createOther("My name");
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withotherentity/" + entity.getId());
+        request.setMethod(RequestMethod.GET.name());
+
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"My name\"}", response.getContentAsString());
+    }
+    
+    @Test
+    public void testUpdateMapByQuery() throws Exception {
+        WithOtherEntity entity = otherBuilder.createOther("My name");
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withotherentity/" + entity.getId());
+        request.setMethod(RequestMethod.PUT.name());
+        setContentAsJson(request, entity);
+
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"My name\"}", response.getContentAsString());
     }
 
     // Custom beans

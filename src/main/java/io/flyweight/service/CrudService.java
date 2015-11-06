@@ -6,10 +6,7 @@ package io.flyweight.service;
 import java.io.Serializable;
 import java.util.List;
 
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.domain.Sort;
 
 /**
  * CRUD service.
@@ -17,7 +14,7 @@ import org.springframework.data.domain.Sort;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public interface CrudService<T extends Persistable<ID>, ID extends Serializable> {
+public interface CrudService<T extends Persistable<ID>, ID extends Serializable> extends Retriever<T> {
     
     /**
      * Returns all entities.
@@ -27,22 +24,6 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
     List<T> findAll();
     
     /**
-     * Returns all entities, sorted.
-     * 
-     * @param sort the sort
-     * @return all entities
-     */
-    List<T> findAll(Sort sort);
-    
-    /**
-     * Returns a page of entities.
-     * 
-     * @param pageable the pageable
-     * @return the entities in that page
-     */
-    Page<T> findAll(Pageable pageable);
-    
-    /**
      * Retrieves an entity by its id.
      * 
      * @param id must not be {@literal null}.
@@ -50,6 +31,15 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      * @throws IllegalArgumentException if {@code id} is {@literal null}
      */
     T findOne(ID id);
+    
+    /**
+     * Retrieves an entity by its id, but when the value is null we throw an exception.
+     * 
+     * @param id must not be {@literal null}.
+     * @return the entity with the given id
+     * @throws IllegalArgumentException if {@code id} is {@literal null} or the result cannot be found
+     */
+    T getOne(ID id);
     
     /**
      * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the

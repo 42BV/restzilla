@@ -1,9 +1,10 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.flyweight.service.factory;
+package io.flyweight.service.impl;
 
 import io.flyweight.service.CrudService;
+import io.flyweight.service.CrudServiceFactory;
 import io.flyweight.service.TransactionalCrudService;
 
 import java.io.Serializable;

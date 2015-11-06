@@ -11,10 +11,11 @@ import io.flyweight.handler.EntityHandlerMappingFactory;
 import io.flyweight.handler.security.AlwaysSecurityProvider;
 import io.flyweight.handler.security.SecurityProvider;
 import io.flyweight.service.CrudService;
+import io.flyweight.service.CrudServiceFactory;
 import io.flyweight.service.CrudServiceLocator;
 import io.flyweight.service.CrudServiceRegistry;
-import io.flyweight.service.factory.CrudServiceFactory;
-import io.flyweight.service.factory.DefaultServiceFactory;
+import io.flyweight.service.ReadService;
+import io.flyweight.service.impl.DefaultServiceFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -92,7 +93,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * Performs JSON marshall and unmarshalling.
      */
     private ObjectMapper objectMapper = new ObjectMapper();
-    
+
     /**
      * Checks the authorization.
      */
@@ -105,7 +106,8 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public CrudHandlerMapping getObject() throws Exception {
         CrudHandlerMapping handlerMapping = new CrudHandlerMapping(applicationContext);
-
+        
+        // Scan the classpath for all annotated entities and their associated services, repositories
         new CrudServiceLocator(applicationContext).registerAll(basePackage, serviceFactory);
         for (Class<?> entityClass : CrudServiceRegistry.getEntityClasses()) {
             RestEnable annotation = entityClass.getAnnotationsByType(RestEnable.class)[0];
@@ -145,21 +147,26 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
             serviceFactory = new DefaultServiceFactory(applicationContext);
         }
         if (handlerMappingFactory == null) {
-            if (securityProvider == null) {
-                buildSecurityProvider();
-            }
-            handlerMappingFactory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider);
+            handlerMappingFactory = buildHandlerMappingFactory();
         }
     }
     
+    private EntityHandlerMappingFactory buildHandlerMappingFactory() {
+        ReadService readService = new ReadService(serviceFactory);
+        if (securityProvider == null) {
+            securityProvider = buildSecurityProvider();
+        }
+        return new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, readService, securityProvider);
+    }
 
-    private void buildSecurityProvider() {
+    private SecurityProvider buildSecurityProvider() {
         try {
-            Class.forName(SPRING_SECURITY_PATH);
-            securityProvider = new io.flyweight.handler.security.SpelSecurityProvider();
+            Class.forName(SPRING_SECURITY_PATH); // Check if Spring Security is on the classpath
+            SecurityProvider securityProvider = new io.flyweight.handler.security.SpelSecurityProvider();
             applicationContext.getAutowireCapableBeanFactory().autowireBean(securityProvider);
+            return securityProvider;
         } catch (ClassNotFoundException cnfe) {
-            securityProvider = new AlwaysSecurityProvider();
+            return new AlwaysSecurityProvider();
         }
     }
     

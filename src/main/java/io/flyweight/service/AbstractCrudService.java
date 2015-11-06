@@ -73,7 +73,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * @param repository the repository
      */
     public AbstractCrudService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
-        this(entityClass); // Store entity type
+        this(entityClass);
         Assert.notNull(repository, "Repository cannot be null");
         this.repository = repository;
     }
@@ -114,6 +114,18 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * {@inheritDoc}
      */
     @Override
+    public T getOne(ID id) {
+        T entity = findOne(id);
+        if (entity == null) {
+            throw new IllegalArgumentException("Could not find entity '" + getEntityClass().getSimpleName() + "' with id: " + id);
+        }
+        return entity;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public <S extends T> S save(S entity) {
         return getRepository().save(entity);
     }
@@ -150,7 +162,6 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
     @SuppressWarnings("unchecked")
     protected PagingAndSortingRepository<T, ID> getRepository() {
         if (repository == null) {
-            // Whenever no repository is provided, dynamically retrieve it from our registry
             repository = (PagingAndSortingRepository<T, ID>) CrudServiceRegistry.getRepository(entityClass);
         }
         return repository;
