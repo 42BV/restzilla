@@ -5,7 +5,6 @@ package io.flyweight.service.impl;
 
 import io.flyweight.service.CrudService;
 import io.flyweight.service.CrudServiceFactory;
-import io.flyweight.service.TransactionalCrudService;
 
 import java.io.Serializable;
 

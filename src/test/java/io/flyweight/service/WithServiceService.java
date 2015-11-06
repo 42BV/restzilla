@@ -4,7 +4,7 @@
 package io.flyweight.service;
 
 import io.flyweight.model.WithService;
-import io.flyweight.service.AbstractCrudService;
+import io.flyweight.service.impl.AbstractCrudService;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

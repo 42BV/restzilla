@@ -51,7 +51,7 @@ public class CrudServiceRegistry {
      * @param entityClass the entity class
      * @return the CRUD repository
      */
-    static PagingAndSortingRepository<?, ?> getRepository(Class<?> entityClass) {
+    public static PagingAndSortingRepository<?, ?> getRepository(Class<?> entityClass) {
         return REPOSITORIES.get(entityClass);
     }
     
@@ -61,7 +61,7 @@ public class CrudServiceRegistry {
      * @param entityClass the entity class
      * @param instance the instance
      */
-    static void register(Class<?> entityClass, CrudService<?, ?> instance) {
+    public static void register(Class<?> entityClass, CrudService<?, ?> instance) {
         SERVICES.put(entityClass, instance);
     }
     
@@ -71,7 +71,7 @@ public class CrudServiceRegistry {
      * @param entityClass the entity class
      * @param instance the instance
      */
-    static void register(Class<?> entityClass, PagingAndSortingRepository<?, ?> instance) {
+    public static void register(Class<?> entityClass, PagingAndSortingRepository<?, ?> instance) {
         REPOSITORIES.put(entityClass, instance);
     }
 

@@ -28,13 +28,20 @@ public @interface RestConfig {
     boolean enabled() default true;
     
     /**
-     * (Optional) the input type, when left empty we expect the entity type
+     * Determines if update requests can be considered as patch.
+     * When a patch occurs we only update the provided properties.
+     * @return the patch
+     */
+    boolean patch() default true;
+    
+    /**
+     * (Optional) the input type, when left empty we expect the entity type.
      * @return the input type
      */
     Class<?> inputType() default Object.class;
 
     /**
-     * (Optional) the result type, when left empty we return the default result type
+     * (Optional) the result type, when left empty we return the default result type.
      * @return the result type
      */
     Class<?> resultType() default Object.class;

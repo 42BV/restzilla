@@ -14,8 +14,8 @@ import io.flyweight.service.CrudService;
 import io.flyweight.service.CrudServiceFactory;
 import io.flyweight.service.CrudServiceLocator;
 import io.flyweight.service.CrudServiceRegistry;
-import io.flyweight.service.ReadService;
 import io.flyweight.service.impl.DefaultServiceFactory;
+import io.flyweight.service.impl.ReadService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

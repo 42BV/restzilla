@@ -14,8 +14,8 @@ import io.flyweight.RestInformation;
 import io.flyweight.handler.security.SecurityProvider;
 import io.flyweight.handler.swagger.SwaggerApiDescriptor;
 import io.flyweight.service.CrudService;
-import io.flyweight.service.ReadService;
 import io.flyweight.service.Retriever;
+import io.flyweight.service.impl.ReadService;
 import io.flyweight.util.PageableResolver;
 import io.flyweight.util.UrlUtils;
 
