@@ -300,7 +300,6 @@ public class RestTest extends AbstractControllerTest {
     
     @Test
     @Transactional
-    // TODO: Change the result nestedOther to "My nested other" when bug in bean mapper is resolved
     public void testPatch() throws Exception {
         WithPatch entity = new WithPatch();
         entity.setName("My name");
@@ -318,6 +317,7 @@ public class RestTest extends AbstractControllerTest {
         
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        // TODO: NestedOther should not be null
         Assert.assertEquals("{\"id\":" + entity.getId()
                 + ",\"name\":\"New name\",\"email\":\"email@42.nl\",\"nested\":{\"nestedName\":\"New nested name\",\"nestedOther\":null}}",
                 response.getContentAsString());
