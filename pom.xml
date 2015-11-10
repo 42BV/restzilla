@@ -3,8 +3,8 @@
 
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>io.flyweight</groupId>
-	<artifactId>flyweight</artifactId>
+	<groupId>io.restzilla</groupId>
+	<artifactId>restzilla</artifactId>
 	<version>1.7.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
 

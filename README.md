@@ -1,6 +1,6 @@
-# Flyweight
+# Restzilla
 
-The purpose of [Flyweight](https://github.com/42BV/flyweight) is to dynamically generate REST endpoints for entity CRUD. In contrast to Spring DATA REST, Flyweight follows the Controller-Service-Repository architectural pattern. Flyweight is build on convention over configuration, resulting in very minimal amounts of code with optimal functionality. But we are also very flexible, enabling simple overwrites in each architural layer.
+The purpose of [Restzilla](https://github.com/42BV/restzilla) is to dynamically generate REST endpoints for entity CRUD. In contrast to Spring DATA REST, Restzilla follows the Controller-Service-Repository architectural pattern. Restzilla is build on convention over configuration, resulting in very minimal amounts of code with optimal functionality. But we are also very flexible, enabling simple overwrites in each architural layer.
 
 ## Features ##
 
@@ -10,14 +10,14 @@ The purpose of [Flyweight](https://github.com/42BV/flyweight) is to dynamically 
 
 ## Quick Start ##
 
-Clone the Flyweight project and install with Maven.
+Clone the Restzilla project and install with Maven.
 
 Add the dependency to your own project:
 
 ```xml
 <dependency>
-  <groupId>io.flyweight</groupId>
-  <artifactId>flyweight</artifactId>
+  <groupId>io.restzilla</groupId>
+  <artifactId>restzilla</artifactId>
   <version>1.7.1-SNAPSHOT</version>
 </dependency>
 ```
@@ -59,7 +59,7 @@ public class User {
 }
 ```
 
-That's it! Flyweight will now automatically inject a repository, service and controller. Where the controller will handle the following requests:
+That's it! Restzilla will now automatically inject a repository, service and controller. Where the controller will handle the following requests:
 
 * GET    /user
 * GET    /user/{id}
@@ -113,7 +113,7 @@ public class User {
 
 ## Customize body ##
 
-Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create- or update request varies from the entity. Flyweight allows you to specify custom types:
+Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create- or update request varies from the entity. Restzilla allows you to specify custom types:
 
 ```java
 @Entity
@@ -159,7 +159,7 @@ Logic can be customized on each of the architecural layers: Repository, Service 
 
 ### Repository ###
 
-Flyweight relies heavily on Spring Data JPA. Each Spring Data repository will automatically be detected and used:
+Restzilla relies heavily on Spring Data JPA. Each Spring Data repository will automatically be detected and used:
 
 ```java
 public interface UserRepository extends CrudRepository<User, Long> {
@@ -202,7 +202,7 @@ public class UserController {
 
 ## Swagger ##
 
-Flyweight also provides native support for Swagger, automatically generating an API documentation. To activate Swagger, just configure the provided plugin as follows:
+Restzilla also provides native support for Swagger, automatically generating an API documentation. To activate Swagger, just configure the provided plugin as follows:
 
 ```java
 @Bean
