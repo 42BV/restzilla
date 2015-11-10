@@ -3,7 +3,7 @@
  */
 package io.flyweight.model;
 
-import static io.flyweight.RestMappingStrategy.QUERY;
+import static io.flyweight.RestResultStrategy.QUERY;
 import io.flyweight.RestConfig;
 import io.flyweight.RestEnable;
 

@@ -6,7 +6,7 @@ package io.flyweight;
  * @author Jeroen van Schagen
  * @since Nov 6, 2015
  */
-public enum RestMappingStrategy {
+public enum RestResultStrategy {
     
     /**
      * Convert the entity into it's result type using reflection

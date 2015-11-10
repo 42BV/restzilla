@@ -3,11 +3,14 @@
  */
 package io.flyweight;
 
+import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.beanmapper.BeanMapper;
 import io.flyweight.handler.CrudHandlerMapping;
 import io.flyweight.handler.DefaultHandlerMappingFactory;
 import io.flyweight.handler.EntityHandlerMapping;
 import io.flyweight.handler.EntityHandlerMappingFactory;
+import io.flyweight.handler.naming.DefaultRestNamingStrategy;
+import io.flyweight.handler.naming.RestNamingStrategy;
 import io.flyweight.handler.security.AlwaysSecurityProvider;
 import io.flyweight.handler.security.SecurityProvider;
 import io.flyweight.service.CrudService;
@@ -59,6 +62,11 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * Application context used to retrieve and create beans.
      */
     private ApplicationContext applicationContext;
+    
+    /**
+     * Generates the base paths per entity.
+     */
+    private RestNamingStrategy namingStrategy = new DefaultRestNamingStrategy();
 
     // Service
 
@@ -110,9 +118,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         // Scan the classpath for all annotated entities and their associated services, repositories
         new CrudServiceLocator(applicationContext).registerAll(basePackage, serviceFactory);
         for (Class<?> entityClass : CrudServiceRegistry.getEntityClasses()) {
-            RestEnable annotation = entityClass.getAnnotationsByType(RestEnable.class)[0];
-            RestInformation information = new RestInformation(entityClass, annotation);
-
+            RestInformation information = buildInformation(entityClass);
             CrudService service = CrudServiceRegistry.getService(entityClass);
             EntityHandlerMapping entityHandlerMapping = handlerMappingFactory.build(service, information);
             handlerMapping.registerHandler(information.getBasePath(), entityHandlerMapping);
@@ -120,6 +126,16 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
             LOGGER.info("Generated REST mapping for /{} [{}]", information.getBasePath(), entityClass.getName());
         }
         return handlerMapping;
+    }
+
+    private RestInformation buildInformation(Class<?> entityClass) throws NoSuchMethodException {
+        RestEnable annotation = entityClass.getAnnotationsByType(RestEnable.class)[0];
+        String basePath = annotation.basePath();
+        if (isBlank(basePath)) {
+            basePath = namingStrategy.getBasePath(entityClass);
+        }
+        RestInformation information = new RestInformation(entityClass, basePath, annotation);
+        return information;
     }
     
     /**
@@ -178,6 +194,14 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         this.applicationContext = applicationContext;
     }
     
+    /**
+     * <i>Optionally</i> configure the naming strategy.
+     * @param namingStrategy the namingStrategy to set
+     */
+    public void setNamingStrategy(RestNamingStrategy namingStrategy) {
+        this.namingStrategy = namingStrategy;
+    }
+
     // Service locator
 
     /**

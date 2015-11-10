@@ -47,10 +47,10 @@ public @interface RestConfig {
     Class<?> resultType() default Object.class;
     
     /**
-     * Strategy used to map our entity into its result type.
-     * @return the strategy
+     * Strategy used to convert our entity into its result type.
+     * @return the conversion strategy
      */
-    RestMappingStrategy strategy() default RestMappingStrategy.MAPPING;
+    RestResultStrategy strategy() default RestResultStrategy.MAPPING;
     
     /**
      * (Optional) the security that are allowed to perform this functionality

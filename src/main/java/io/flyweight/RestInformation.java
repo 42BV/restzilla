@@ -3,8 +3,6 @@
  */
 package io.flyweight;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
-
 import org.springframework.data.domain.Persistable;
 
 /**
@@ -21,13 +19,16 @@ public class RestInformation {
     
     private final RestEnable annotation;
     
+    private final String basePath;
+    
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public RestInformation(Class<?> entityClass, RestEnable annotation) throws NoSuchMethodException {
+    public RestInformation(Class<?> entityClass, String basePath, RestEnable annotation) throws NoSuchMethodException {
         if (!(Persistable.class.isAssignableFrom(entityClass))) {
             throw new IllegalStateException("Entity does not extend from Persistable");
         }
         this.entityClass = (Class) entityClass;
         this.identifierClass = entityClass.getMethod("getId").getReturnType();
+        this.basePath = basePath;
         this.annotation = annotation;
     }
 
@@ -37,10 +38,6 @@ public class RestInformation {
      * @return the base path
      */
     public String getBasePath() {
-        String basePath = annotation.basePath();
-        if (isBlank(basePath)) {
-            basePath = entityClass.getSimpleName().toLowerCase();
-        }
         return basePath;
     }
     
@@ -107,9 +104,7 @@ public class RestInformation {
     private static boolean isCustom(Class<?> clazz) {
         return !Object.class.equals(clazz);
     }
-    
-    // Specific configurations
-    
+
     /**
      * Retrieve the {@code findAll} configuration.
      * 

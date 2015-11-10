@@ -3,7 +3,7 @@
  */
 package io.flyweight.handler;
 
-import static io.flyweight.RestMappingStrategy.QUERY;
+import static io.flyweight.RestResultStrategy.QUERY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
