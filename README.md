@@ -111,7 +111,41 @@ public class User {
 }
 ```
 
-## Customize body ##
+## Partial request body ##
+
+Restzilla provides native support for "patch" requests, where you only update a fragment of the entity. For example, if we have a model with multiple properties:
+
+```java
+@Entity
+@RestEnable
+public class User {
+
+ @Id
+ private Long id;
+ private String name;
+ private String email;
+
+}
+```
+
+And in our request we only want to update the name:
+
+```json
+{
+  "name": "New name"
+}
+```
+
+Our original email remains unchanged, where normally it would have been reset to null. When you do want to clear the email adress, just provide it in the body:
+
+```json
+{
+  "name": "New name",
+  "email": 
+}
+```
+
+## Customize body (request and response) ##
 
 Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create- or update request varies from the entity. Restzilla allows you to specify custom types:
 
