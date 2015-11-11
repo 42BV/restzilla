@@ -33,16 +33,18 @@ public class CrudServiceLocator {
     }
 
     /**
-     * Register all services for the entities in the provided base package.
+     * Build a service registry for the entities in the provided base package.
      * Whenever a service or repository is missing we will dynamically generate
      * an implementation bean, using the provided factory.
      * 
      * @param basePackage the base package to search for entities
-     * @param factory the factory that creates missing repositories or reservices
+     * @param factory the factory that creates missing repositories or services
+     * @return the service registry, containing all registered repositories and services
      * @throws Exception whenever something goes wrong
      */
-    public void registerAll(String basePackage, CrudServiceFactory factory) throws Exception {
+    public CrudServiceRegistry buildRegistry(String basePackage, CrudServiceFactory factory) throws Exception {
         Assert.notNull(basePackage, "Base package is required.");
+        CrudServiceRegistry registry = new CrudServiceRegistry(factory);
 
         Repositories repositories = new Repositories(applicationContext);
         Services services = new Services(applicationContext);
@@ -52,39 +54,36 @@ public class CrudServiceLocator {
         Set<BeanDefinition> components = provider.findCandidateComponents(basePackage);
         for (BeanDefinition component : components) {
             Class<?> entityClass = Class.forName(component.getBeanClassName());
-            registerBeansFor(entityClass, services, repositories, factory);
+            registerBeansFor(entityClass, services, repositories, registry);
         }
+        
+        return registry;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void registerBeansFor(Class entityClass, Services services, Repositories repositories, CrudServiceFactory factory) throws Exception {
-        PagingAndSortingRepository repository = registerRepository(entityClass, repositories, factory);
-        registerService(entityClass, repository, services, factory);
+    private void registerBeansFor(Class entityClass, Services services, Repositories repositories, CrudServiceRegistry registry) throws Exception {
+        PagingAndSortingRepository repository = registerRepository(entityClass, repositories, registry);
+        registerService(entityClass, repository, services, registry);
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private PagingAndSortingRepository registerRepository(Class entityClass, Repositories repositories, CrudServiceFactory factory) {
-        PagingAndSortingRepository repository = getRepository(entityClass, repositories, factory);
-        CrudServiceRegistry.register(entityClass, repository);
-        return repository;
-    }
-
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private PagingAndSortingRepository getRepository(Class entityClass, Repositories repositories, CrudServiceFactory factory) {
+    private PagingAndSortingRepository registerRepository(Class entityClass, Repositories repositories, CrudServiceRegistry registry) {
         Object repository = repositories.getRepositoryFor(entityClass);
-        if (!(repository instanceof PagingAndSortingRepository)) {
-            repository = factory.buildRepository(entityClass);
+        if (repository instanceof PagingAndSortingRepository) {
+            return registry.registerRepository(entityClass, (PagingAndSortingRepository) repository);
+        } else {
+            return registry.generateRepository(entityClass);
         }
-        return (PagingAndSortingRepository) repository;
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void registerService(Class entityClass, PagingAndSortingRepository repository, Services services, CrudServiceFactory factory) {
+    private void registerService(Class entityClass, PagingAndSortingRepository repository, Services services, CrudServiceRegistry registry) {
         CrudService service = services.getByEntityClass(entityClass);
-        if (service == null) {
-            service = factory.buildService(entityClass, repository);
+        if (service != null) {
+            registry.registerService(entityClass, service);
+        } else {
+            registry.generateService(entityClass, repository);
         }
-        CrudServiceRegistry.register(entityClass, service);
     }
 
     /**

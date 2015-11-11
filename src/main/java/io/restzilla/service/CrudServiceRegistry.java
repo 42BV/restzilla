@@ -3,10 +3,12 @@
  */
 package io.restzilla.service;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
@@ -17,13 +19,19 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  */
 public class CrudServiceRegistry {
 
-    private static final Map<Class<?>, PagingAndSortingRepository<?, ?>> REPOSITORIES;
+    private final Map<Class<?>, PagingAndSortingRepository<?, ?>> repositories;
     
-    private static final Map<Class<?>, CrudService<?, ?>> SERVICES;
+    private final Map<Class<?>, CrudService<?, ?>> services;
     
-    static {
-        REPOSITORIES = new HashMap<Class<?>, PagingAndSortingRepository<?, ?>>();
-        SERVICES = new HashMap<Class<?>, CrudService<?, ?>>();
+    private final CrudServiceFactory factory;
+
+    {
+        repositories = new HashMap<Class<?>, PagingAndSortingRepository<?, ?>>();
+        services = new HashMap<Class<?>, CrudService<?, ?>>();
+    }
+
+    public CrudServiceRegistry(CrudServiceFactory factory) {
+        this.factory = factory;
     }
 
     /**
@@ -31,48 +39,105 @@ public class CrudServiceRegistry {
      * 
      * @return the entity classes
      */
-    public static Set<Class<?>> getEntityClasses() {
-        return SERVICES.keySet();
+    public Set<Class<?>> getEntityClasses() {
+        return services.keySet();
     }
 
     /**
-     * Retrieve the CRUD service for our entity.
+     * Retrieve the service for our entity. When no instance can be found we
+     * initialize and register a new service bean.
      * 
      * @param entityClass the entity class
-     * @return the CRUD service
+     * @return the service bean
      */
-    public static CrudService<?, ?> getService(Class<?> entityClass) {
-        return SERVICES.get(entityClass);
+    @SuppressWarnings("unchecked")
+    public <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> getService(Class<T> entityClass) {
+        CrudService<T, ID> service = (CrudService<T, ID>) services.get(entityClass);
+        if (service == null) {
+            service = generateService(entityClass);
+        }
+        return service;
     }
     
     /**
-     * Retrieve the CRUD repository for our entity.
+     * Retrieve the repository for our entity. When no instance can be found we
+     * initialize and register a new repository bean.
      * 
      * @param entityClass the entity class
-     * @return the CRUD repository
+     * @return the repository bean
      */
-    public static PagingAndSortingRepository<?, ?> getRepository(Class<?> entityClass) {
-        return REPOSITORIES.get(entityClass);
+    @SuppressWarnings("unchecked")
+    public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> getRepository(Class<T> entityClass) {
+        PagingAndSortingRepository<T, ID> repository = (PagingAndSortingRepository<T, ID>) repositories.get(entityClass);
+        if (repository == null) {
+            repository = generateRepository(entityClass);
+        }
+        return repository;
     }
     
     /**
      * Register a new service instance.
      * 
      * @param entityClass the entity class
-     * @param instance the instance
+     * @param service the instance
      */
-    public static void register(Class<?> entityClass, CrudService<?, ?> instance) {
-        SERVICES.put(entityClass, instance);
+    @SuppressWarnings("unchecked")
+    <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> registerService(Class<T> entityClass, CrudService<T, ID> service) {
+        services.put(entityClass, service);
+        // Hook that automatically wires the repository into a custom service
+        if (service instanceof RepositoryAware) {
+            autowireRepository(entityClass, (RepositoryAware<T, ID>) service);
+        }
+        return service;
+    }
+    
+    private <T extends Persistable<ID>, ID extends Serializable> void autowireRepository(Class<T> entityClass, RepositoryAware<T, ID> instance) {
+        if (instance.getRepository() == null) {
+            instance.setRepository(getRepository(entityClass));
+        }
+    }
+
+    /**
+     * Generates a new service instance.
+     * 
+     * @param entityClass the entity class
+     * @param repository the repository instance
+     */
+    <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass) {
+        PagingAndSortingRepository<T, ID> repository = getRepository(entityClass);
+        return generateService(entityClass, repository);
+    }
+    
+    /**
+     * Generates a new service instance.
+     * 
+     * @param entityClass the entity class
+     * @param repository the repository instance
+     */
+    <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
+        CrudService<T, ID> service = factory.buildService(entityClass, repository);
+        return registerService(entityClass, service);
     }
     
     /**
      * Register a new repository instance.
      * 
      * @param entityClass the entity class
-     * @param instance the instance
+     * @param repository the instance
      */
-    public static void register(Class<?> entityClass, PagingAndSortingRepository<?, ?> instance) {
-        REPOSITORIES.put(entityClass, instance);
+    <T, ID extends Serializable> PagingAndSortingRepository<T, ID> registerRepository(Class<?> entityClass, PagingAndSortingRepository<T, ID> repository) {
+        repositories.put(entityClass, repository);
+        return repository;
+    }
+    
+    /**
+     * Generates a new repository instance.
+     * 
+     * @param entityClass the entity class
+     */
+    <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> generateRepository(Class<T> entityClass) {
+        PagingAndSortingRepository<T, ID> repository = factory.buildRepository(entityClass);
+        return registerRepository(entityClass, repository);
     }
 
 }

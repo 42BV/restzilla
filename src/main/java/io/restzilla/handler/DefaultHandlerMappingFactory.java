@@ -15,8 +15,9 @@ import io.restzilla.RestInformation;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
-import io.restzilla.service.Retriever;
+import io.restzilla.service.Listable;
 import io.restzilla.service.impl.ReadService;
+import io.restzilla.service.impl.ReadServiceListableAdapter;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
 
@@ -63,7 +64,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
     private final BeanMapper beanMapper;
     
     private final ReadService readService;
-
+    
     private final SecurityProvider securityProvider;
     
     /**
@@ -84,7 +85,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
                                    ConversionService conversionService,
                                           BeanMapper beanMapper,
                                          ReadService readService,
-                                         SecurityProvider securityProvider) {
+                                    SecurityProvider securityProvider) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
         this.beanMapper = beanMapper;
@@ -103,12 +104,12 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private class DefaultCrudController {
 
-        private final CrudService service;
+        private final CrudService entityService;
         
         private final RestInformation information;
         
-        public DefaultCrudController(CrudService service, RestInformation information) {
-            this.service = service;
+        public DefaultCrudController(CrudService entityService, RestInformation information) {
+            this.entityService = entityService;
             this.information = information;
         }
         
@@ -120,7 +121,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
             checkIsAuthorized(information.findAll().secured(), request);
-            Retriever<?> retriever = resolveEntityRetriever();
+            Listable<?> retriever = resolveEntityRetriever();
             if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
                 return findAllAsPage(retriever, request);
             } else {
@@ -134,10 +135,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             }
         }
 
-        private Retriever<?> resolveEntityRetriever() {
-            Retriever<?> retrievable = service;
+        private Listable<?> resolveEntityRetriever() {
+            Listable<?> retrievable = entityService;
             if (information.findAll().resultByQuery()) {
-                retrievable = new WrappedReadService(information.findAll().resultType());
+                retrievable = new ReadServiceListableAdapter(readService, information.findAll().resultType());
             }
             return retrievable;
         }
@@ -149,7 +150,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          * @param request the request
          * @return the page of entities, in result type
          */
-        private Page findAllAsPage(Retriever<?> retriever, HttpServletRequest request) {
+        private Page findAllAsPage(Listable<?> retriever, HttpServletRequest request) {
             Pageable pageable = PageableResolver.getPageable(request, information.getEntityClass());
             Page<?> result = retriever.findAll(pageable);
             if (result.hasContent()) {
@@ -166,7 +167,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          * @param retriever the entity retriever
          * @return the collection of entities, in result type
          */
-        private Collection findAllAsCollection(Retriever<?> retriever, HttpServletRequest request) {
+        private Collection findAllAsCollection(Listable<?> retriever, HttpServletRequest request) {
             Sort sort = PageableResolver.getSort(request, information.getEntityClass());
             List<?> entities = retriever.findAll(sort);
             return beanMapper.map(entities, information.getResultType(information.findAll()));
@@ -182,11 +183,11 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         public Object findOne(HttpServletRequest request) {
             checkIsAuthorized(information.findOne().secured(), request);
             Serializable id = extractId(request);
-            Class<?> resultType = information.getResultType(information.findOne());
+            Class resultType = information.getResultType(information.findOne());
             if (information.findOne().resultByQuery()) {
                 return readService.getOne(resultType, id);
             } else {
-                return beanMapper.map(service.getOne(id), resultType);
+                return beanMapper.map(entityService.getOne(id), resultType);
             }
         }
         
@@ -210,7 +211,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             checkIsAuthorized(information.create().secured(), request);
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
             Persistable<?> entity = beanMapper.map(input, information.getEntityClass());
-            Persistable<?> output = service.save(entity);
+            Persistable<?> output = entityService.save(entity);
             return mapEntityToResult(output, information.create());
         }
         
@@ -224,9 +225,9 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             checkIsAuthorized(information.update().secured(), request);
             String json = CharStreams.toString(request.getReader());
             Object input = objectMapper.readValue(json, information.getInputType(information.update()));
-            Persistable<?> entity = service.getOne(extractId(request));
+            Persistable<?> entity = entityService.getOne(extractId(request));
             mapInputToEntity(input, entity, json);
-            Persistable<?> output = service.save(entity);
+            Persistable<?> output = entityService.save(entity);
             return mapEntityToResult(output, information.update());
         }
         
@@ -264,8 +265,8 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         @ResponseBody
         public Object delete(HttpServletRequest request) {
             checkIsAuthorized(information.delete().secured(), request);
-            Persistable<?> entity = service.getOne(extractId(request));
-            service.delete(entity);
+            Persistable<?> entity = entityService.getOne(extractId(request));
+            entityService.delete(entity);
             return mapEntityToResult(entity, information.delete());
         }
         
@@ -277,7 +278,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          * @return the entity in its result type
          */
         private Object mapEntityToResult(Persistable<?> entity, RestConfig config) {
-            Class<?> resultType = information.getResultType(config);
+            Class resultType = information.getResultType(config);
             if (config.resultByQuery()) {
                 return readService.getOne(resultType, entity.getId());
             } else {
@@ -302,39 +303,6 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             }
         }
 
-    }
-    
-    /**
-     * Create a read service wrapper that attaches us to a specific entity class.
-     *
-     * @author Jeroen van Schagen
-     * @since Nov 6, 2015
-     */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    private class WrappedReadService implements Retriever<Object> {
-        
-        private final Class entityClass;
-        
-        public WrappedReadService(Class entityClass) {
-            this.entityClass = entityClass;
-        }
-
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public List<Object> findAll(Sort sort) {
-            return readService.findAll(entityClass, sort);
-        }
-        
-        /**
-         * {@inheritDoc}
-         */
-        @Override
-        public Page<Object> findAll(Pageable pageable) {
-            return readService.findAll(entityClass, pageable);
-        }
-        
     }
 
     /**

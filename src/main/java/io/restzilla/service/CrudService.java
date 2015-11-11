@@ -14,7 +14,7 @@ import org.springframework.data.domain.Persistable;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public interface CrudService<T extends Persistable<ID>, ID extends Serializable> extends Retriever<T> {
+public interface CrudService<T extends Persistable<ID>, ID extends Serializable> extends Listable<T> {
     
     /**
      * Returns all entities.

@@ -3,7 +3,6 @@
  */
 package io.restzilla.service.impl;
 
-import io.restzilla.service.CrudServiceFactory;
 import io.restzilla.service.CrudServiceRegistry;
 
 import java.io.Serializable;
@@ -11,8 +10,8 @@ import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
  * Service capable of reading any type of entity.
@@ -25,10 +24,15 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  */
 public class ReadService {
     
-    private final CrudServiceFactory factory;
+    private final CrudServiceRegistry registry;
     
-    public ReadService(CrudServiceFactory factory) {
-        this.factory = factory;
+    /**
+     * Initialize a new read service.
+     * 
+     * @param registry the service registry, used to retrieve delegate services
+     */
+    public ReadService(CrudServiceRegistry registry) {
+        this.registry = registry;
     }
 
     /**
@@ -38,9 +42,8 @@ public class ReadService {
      * @param sort the sorting
      * @return the sorted entities
      */
-    public <T> List<T> findAll(Class<T> entityClass, Sort sort) {
-        PagingAndSortingRepository<T, ?> repository = getRepository(entityClass);
-        return (List<T>) repository.findAll(sort);
+    public <T extends Persistable<ID>, ID extends Serializable> List<T> findAll(Class<T> entityClass, Sort sort) {
+        return registry.getService(entityClass).findAll(sort);
     }
 
     /**
@@ -50,36 +53,19 @@ public class ReadService {
      * @param pageable the pageable
      * @return the page of entities
      */
-    public <T> Page<T> findAll(Class<T> entityClass, Pageable pageable) {
-        PagingAndSortingRepository<T, ?> repository = getRepository(entityClass);
-        return repository.findAll(pageable);
+    public <T extends Persistable<ID>, ID extends Serializable> Page<T> findAll(Class<T> entityClass, Pageable pageable) {
+        return registry.getService(entityClass).findAll(pageable);
     }
 
     /**
      * Retrieve a specific entity, with an identifier.
      * 
      * @param entityClass the entity class
-     * @param primaryKey the primary key
+     * @param id the identifier
      * @return the result entity, if any
      */
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public <T> T getOne(Class<T> entityClass, Serializable primaryKey) {
-        PagingAndSortingRepository repository = getRepository(entityClass);
-        T entity = (T) repository.findOne(primaryKey);
-        if (entity == null) {
-            throw new IllegalArgumentException("Could not find entity '" + entityClass.getSimpleName() + "' with id: " + primaryKey);
-        }
-        return entity;
-    }
-    
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    private <T> PagingAndSortingRepository<T, ?> getRepository(Class entityClass) {
-        PagingAndSortingRepository repository = CrudServiceRegistry.getRepository(entityClass);
-        if (repository == null) {
-            repository = factory.buildRepository(entityClass);
-            CrudServiceRegistry.register(entityClass, repository);
-        }
-        return repository;
+    public <T extends Persistable<ID>, ID extends Serializable> T getOne(Class<T> entityClass, ID id) {
+        return registry.getService(entityClass).findOne(id);
     }
 
 }

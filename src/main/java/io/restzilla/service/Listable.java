@@ -15,7 +15,7 @@ import org.springframework.data.domain.Sort;
  * @author Jeroen van Schagen
  * @since Nov 6, 2015
  */
-public interface Retriever<T> {
+public interface Listable<T> {
 
     /**
      * Returns all entities, sorted.
@@ -32,5 +32,5 @@ public interface Retriever<T> {
      * @return the entities in that page
      */
     Page<T> findAll(Pageable pageable);
-    
+
 }
