@@ -4,7 +4,7 @@
 package io.restzilla.service.impl;
 
 import io.restzilla.service.CrudService;
-import io.restzilla.service.CrudServiceRegistry;
+import io.restzilla.service.RepositoryAware;
 
 import java.io.Serializable;
 import java.util.List;
@@ -23,7 +23,7 @@ import org.springframework.util.Assert;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID> {
+public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID>, RepositoryAware<T, ID> {
 
     private final Class<T> entityClass;
 
@@ -49,7 +49,6 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * 
      * @param entityClass the entity class
      */
-    @SuppressWarnings("unchecked")
     public AbstractCrudService(Class<T> entityClass) {
         Assert.notNull(entityClass, "Entity class cannot be null");
         this.entityClass = entityClass;
@@ -62,7 +61,6 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * 
      * @param repository the repository
      */
-    @SuppressWarnings("unchecked")
     public AbstractCrudService(PagingAndSortingRepository<T, ID> repository) {
         this(); // Dynamically resolve entity type
         Assert.notNull(repository, "Repository cannot be null");
@@ -158,16 +156,19 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
     }
     
     /**
-     * Retrieve the underlying repository.
-     * 
-     * @return the repository
+     * {@inheritDoc}
      */
-    @SuppressWarnings("unchecked")
-    protected PagingAndSortingRepository<T, ID> getRepository() {
-        if (repository == null) {
-            repository = (PagingAndSortingRepository<T, ID>) CrudServiceRegistry.getRepository(entityClass);
-        }
+    @Override
+    public PagingAndSortingRepository<T, ID> getRepository() {
         return repository;
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setRepository(PagingAndSortingRepository<T, ID> repository) {
+        this.repository = repository;
     }
 
 }
