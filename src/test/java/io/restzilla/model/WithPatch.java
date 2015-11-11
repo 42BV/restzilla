@@ -3,14 +3,13 @@
  */
 package io.restzilla.model;
 
-import io.restzilla.RestConfig;
 import io.restzilla.RestEnable;
 
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
 
 @Entity
-@RestEnable(update = @RestConfig(patch = true))
+@RestEnable(patch = true)
 public class WithPatch extends BaseEntity {
     
     private String name;

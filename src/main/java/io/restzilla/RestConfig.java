@@ -26,14 +26,7 @@ public @interface RestConfig {
      * @return the enabled
      */
     boolean enabled() default true;
-    
-    /**
-     * Determines if update requests can be considered as patch.
-     * When a patch occurs we only update the provided properties.
-     * @return the patch
-     */
-    boolean patch() default true;
-    
+
     /**
      * (Optional) the input type, when left empty we expect the entity type.
      * @return the input type
@@ -47,10 +40,10 @@ public @interface RestConfig {
     Class<?> resultType() default Object.class;
     
     /**
-     * Strategy used to convert our entity into its result type.
-     * @return the conversion strategy
+     * Determines if we retrieve the result object by query.
+     * @return the result by query
      */
-    RestResultStrategy strategy() default RestResultStrategy.MAPPING;
+    boolean resultByQuery() default false;
     
     /**
      * (Optional) the security that are allowed to perform this functionality

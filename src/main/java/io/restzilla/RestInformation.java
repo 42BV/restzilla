@@ -60,6 +60,15 @@ public class RestInformation {
     }
     
     /**
+     * Retrieve if patch.
+     * 
+     * @return the patch
+     */
+    public boolean isPatch() {
+        return annotation.patch();
+    }
+    
+    /**
      * Retrieve the entity class.
      * 
      * @return the entity class

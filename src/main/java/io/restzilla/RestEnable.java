@@ -58,6 +58,13 @@ public @interface RestEnable {
      * @return the paged only
      */
     boolean pagedOnly() default false;
+    
+    /**
+     * Determines if update requests can be considered as patch.
+     * When a patch occurs we only update the provided properties.
+     * @return the patch
+     */
+    boolean patch() default true;
 
     // Specific configuration per function
 

@@ -3,7 +3,6 @@
  */
 package io.restzilla.handler;
 
-import static io.restzilla.RestResultStrategy.QUERY;
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
@@ -137,7 +136,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
 
         private Retriever<?> resolveEntityRetriever() {
             Retriever<?> retrievable = service;
-            if (information.findAll().strategy().equals(QUERY)) {
+            if (information.findAll().resultByQuery()) {
                 retrievable = new WrappedReadService(information.findAll().resultType());
             }
             return retrievable;
@@ -184,7 +183,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             checkIsAuthorized(information.findOne().secured(), request);
             Serializable id = extractId(request);
             Class<?> resultType = information.getResultType(information.findOne());
-            if (information.findOne().strategy().equals(QUERY)) {
+            if (information.findOne().resultByQuery()) {
                 return readService.getOne(resultType, id);
             } else {
                 return beanMapper.map(service.getOne(id), resultType);
@@ -232,7 +231,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         }
         
         private void mapInputToEntity(Object input, Persistable<?> entity, String json) throws JsonProcessingException, IOException {
-            if (information.update().patch()) {
+            if (information.isPatch()) {
                 Set<String> propertyNames = getPropertyNamesFromJson(json);
                 beanMapper.map(input, entity, new SourceFieldMapperRule(propertyNames));
             } else {
@@ -278,10 +277,11 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          * @return the entity in its result type
          */
         private Object mapEntityToResult(Persistable<?> entity, RestConfig config) {
-            if (config.strategy().equals(QUERY)) {
-                return readService.getOne(config.resultType(), entity.getId());
+            Class<?> resultType = information.getResultType(config);
+            if (config.resultByQuery()) {
+                return readService.getOne(resultType, entity.getId());
             } else {
-                return convertToType(entity, information.getResultType(config));
+                return convertToType(entity, resultType);
             }
         }
 
@@ -483,9 +483,12 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         private void registerFindAll(com.mangofactory.swagger.models.dto.ApiListing listing) {
             if (information.findAll().enabled()) {
                 addModel(listing, information.getResultType(information.findAll()));
-                newDescription(FIND_ALL_NAME, basePath, RequestMethod.GET).responseClassIterable(information.getResultType(information.findAll())).addQueryParameter(
-                        PAGE_PARAM, Long.class, false).addQueryParameter(SIZE_PARAM, Long.class, false).addQueryParameter(SORT_PARAM, String.class, false).register(
-                        listing);
+                newDescription(FIND_ALL_NAME, basePath, RequestMethod.GET)
+                        .responseClassIterable(information.getResultType(information.findAll()))
+                        .addQueryParameter(PAGE_PARAM, Long.class, false)
+                        .addQueryParameter(SIZE_PARAM, Long.class, false)
+                        .addQueryParameter(SORT_PARAM, String.class, false)
+                        .register(listing);
             }
         }
         

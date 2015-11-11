@@ -3,7 +3,6 @@
  */
 package io.restzilla.model;
 
-import static io.restzilla.RestResultStrategy.QUERY;
 import io.restzilla.RestConfig;
 import io.restzilla.RestEnable;
 
@@ -11,9 +10,9 @@ import javax.persistence.Entity;
 
 @Entity
 @RestEnable(
-    findAll = @RestConfig(resultType = OtherEntity.class, strategy = QUERY),
-    findOne = @RestConfig(resultType = OtherEntity.class, strategy = QUERY),
-    update = @RestConfig(resultType = OtherEntity.class, strategy = QUERY)
+    findAll = @RestConfig(resultType = OtherEntity.class, resultByQuery = true),
+    findOne = @RestConfig(resultType = OtherEntity.class, resultByQuery = true),
+    update = @RestConfig(resultType = OtherEntity.class, resultByQuery = true)
 )
 public class WithOtherEntity extends BaseEntity {
     
