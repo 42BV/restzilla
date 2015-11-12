@@ -317,9 +317,8 @@ public class RestTest extends AbstractControllerTest {
         
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        // TODO: NestedOther should not be null
         Assert.assertEquals("{\"id\":" + entity.getId()
-                + ",\"name\":\"New name\",\"email\":\"email@42.nl\",\"nested\":{\"nestedName\":\"New nested name\",\"nestedOther\":null}}",
+                + ",\"name\":\"New name\",\"email\":\"email@42.nl\",\"nested\":{\"nestedName\":\"New nested name\",\"nestedOther\":\"My nested other\"}}",
                 response.getContentAsString());
     }
     
