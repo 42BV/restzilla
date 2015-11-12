@@ -145,7 +145,8 @@ Sometimes you want to return the entity in a different format. For example, retu
 ```java
 @Entity
 @RestResource(
- create = @RestConfig(inputType = CreateUserForm.class, resultType = CreateUserResult.class)
+ create = @RestConfig(inputType = CreateUserForm.class, 
+                      resultType = CreateUserResult.class)
 )
 public class User {
 
@@ -158,7 +159,9 @@ public class User {
 
 ```java
 public class CreateUserForm {
+
  public String name;
+ 
 }
 ```
 
