@@ -1,10 +1,12 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla;
+package io.restzilla.config;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.beanmapper.BeanMapper;
+import io.restzilla.RestInformation;
+import io.restzilla.RestResource;
 import io.restzilla.handler.CrudHandlerMapping;
 import io.restzilla.handler.DefaultHandlerMappingFactory;
 import io.restzilla.handler.EntityHandlerMapping;
