@@ -232,22 +232,19 @@ public class UserController {
 Restzilla also provides native support for Swagger, automatically generating an API documentation. To activate Swagger, just configure the provided plugin as follows:
 
 ```java
-@Bean
-public CrudHandlerMapping crudHandlerMapping(ApplicationContext applicationContext) throws Exception {
- CrudHandlerMappingFactoryBean crudHandlerMapping = new CrudHandlerMappingFactoryBean();
- crudHandlerMapping.setBasePackageClass(WebMvcConfig.class);
- crudHandlerMapping.setApplicationContext(applicationContext);
- crudHandlerMapping.afterPropertiesSet();
- return crudHandlerMapping.getObject();
+@EnableWebMvc
+@EnableSwagger
+@EnableRest(basePackageClass = WebMvcConfig.class)
+public class WebMvcConfig extends WebMvcConfigurerAdapter {
+ @Bean
+ public SwaggerRestPlugin swaggerRestPlugin(CrudHandlerMapping crudHandlerMapping) {
+  return new SwaggerRestPlugin(springSwaggerConfig, crudHandlerMapping);
+ }
+
+ @Autowired
+ public void setSpringSwaggerConfig(SpringSwaggerConfig springSwaggerConfig) {
+  this.springSwaggerConfig = springSwaggerConfig;
+ }
 }
 
-@Bean
-public SwaggerRestPlugin swaggerRestPlugin(CrudHandlerMapping crudHandlerMapping) {
- return new SwaggerRestPlugin(springSwaggerConfig, crudHandlerMapping);
-}
-
-@Autowired
-public void setSpringSwaggerConfig(SpringSwaggerConfig springSwaggerConfig) {
- this.springSwaggerConfig = springSwaggerConfig;
-}
 ```
