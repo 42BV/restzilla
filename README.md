@@ -1,6 +1,6 @@
 # Restzilla
 
-The purpose of [Restzilla](https://github.com/42BV/restzilla) is to dynamically generate REST endpoints for entity CRUD. In contrast to Spring DATA REST, Restzilla follows the Controller-Service-Repository architectural pattern. Restzilla is build on convention over configuration, resulting in very minimal amounts of code with optimal functionality. But we are also very flexible, enabling simple overwrites in each architural layer.
+The purpose of [Restzilla](https://github.com/42BV/restzilla) is to dynamically generate REST endpoints for entity CRUD. In contrast to Spring DATA REST, Restzilla follows the Controller-Service-Repository architectural pattern. Restzilla is build on convention over configuration, resulting in very minimal amounts of code with optimal functionality. It is also possible to overwrite functionality in each architectural layer.
 
 ## Features ##
 
