@@ -21,6 +21,7 @@ import io.restzilla.service.CrudServiceLocator;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.DefaultServiceFactory;
 import io.restzilla.service.impl.ReadService;
+import io.restzilla.util.ClasspathChecker;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -173,12 +174,11 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     }
 
     private SecurityProvider buildSecurityProvider() {
-        try {
-            Class.forName(SPRING_SECURITY_PATH); // Check if Spring Security is on the classpath
+        if (ClasspathChecker.isOnClasspath(SPRING_SECURITY_PATH)) {
             SecurityProvider securityProvider = new io.restzilla.handler.security.SpelSecurityProvider();
             applicationContext.getAutowireCapableBeanFactory().autowireBean(securityProvider);
             return securityProvider;
-        } catch (ClassNotFoundException cnfe) {
+        } else {
             return new AlwaysSecurityProvider();
         }
     }

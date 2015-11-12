@@ -18,7 +18,7 @@ Add the dependency to your own project:
 <dependency>
   <groupId>io.restzilla</groupId>
   <artifactId>restzilla</artifactId>
-  <version>1.7.1-SNAPSHOT</version>
+  <version>1.8.0-SNAPSHOT</version>
 </dependency>
 ```
 
