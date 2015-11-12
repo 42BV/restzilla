@@ -238,6 +238,15 @@ public class RestTest extends AbstractControllerTest {
     // Custom configuration
 
     @Test
+    public void testCustomBasePath() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/mybasepath");
+        request.setMethod(RequestMethod.GET.name());
+        
+        Assert.assertNotNull(getHandlerChain(request));
+    }
+    
+    @Test
     public void testDisabled() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/withdisabled");

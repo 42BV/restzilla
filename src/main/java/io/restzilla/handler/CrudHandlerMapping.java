@@ -121,7 +121,7 @@ public class CrudHandlerMapping extends AbstractHandlerMapping implements Priori
      * @param handlerMapping the handler mapping
      */
     public void registerHandler(String basePath, EntityHandlerMapping handlerMapping) {
-        handlerMappings.put(basePath, handlerMapping);
+        handlerMappings.put(UrlUtils.stripSlashes(basePath), handlerMapping);
     }
     
     /**

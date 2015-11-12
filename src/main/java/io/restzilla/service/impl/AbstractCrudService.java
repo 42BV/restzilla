@@ -84,7 +84,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public List<T> findAll() {
-        return (List<T>) getRepository().findAll();
+        return (List<T>) repository.findAll();
     }
     
     /**
@@ -92,7 +92,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public List<T> findAll(Sort sort) {
-        return (List<T>) getRepository().findAll(sort);
+        return (List<T>) repository.findAll(sort);
     }
     
     /**
@@ -100,7 +100,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public Page<T> findAll(Pageable pageable) {
-        return getRepository().findAll(pageable);
+        return repository.findAll(pageable);
     }
     
     /**
@@ -108,7 +108,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public T findOne(ID id) {
-        return getRepository().findOne(id);
+        return repository.findOne(id);
     }
 
     /**
@@ -128,7 +128,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public <S extends T> S save(S entity) {
-        return getRepository().save(entity);
+        return repository.save(entity);
     }
     
     /**
@@ -136,7 +136,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public void delete(ID id) {
-        getRepository().delete(id);
+        repository.delete(id);
     }
     
     /**

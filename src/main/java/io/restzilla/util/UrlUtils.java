@@ -38,7 +38,23 @@ public class UrlUtils {
      */
     public static String getRootPath(HttpServletRequest request) {
         String path = getPath(request);
-        return StringUtils.substringBetween(path + SLASH, SLASH, SLASH);
+        return stripSlashes(path);
+    }
+
+    /**
+     * Removes the slashes from a path.
+     * 
+     * @param path the raw path
+     * @return the same path without slashes
+     */
+    public static String stripSlashes(String path) {
+        if (!path.startsWith(SLASH)) {
+            path = SLASH + path;
+        }
+        if (!path.endsWith(SLASH)) {
+            path = path + SLASH;
+        }
+        return StringUtils.substringBetween(path, SLASH, SLASH);
     }
     
     /**
