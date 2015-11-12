@@ -237,6 +237,8 @@ Restzilla also provides native support for Swagger, automatically generating an 
 @EnableRest(basePackageClass = WebMvcConfig.class)
 public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
+ private SpringSwaggerConfig springSwaggerConfig;
+
  @Bean
  public SwaggerRestPlugin swaggerRestPlugin(CrudHandlerMapping crudHandlerMapping) {
   return new SwaggerRestPlugin(springSwaggerConfig, crudHandlerMapping);
