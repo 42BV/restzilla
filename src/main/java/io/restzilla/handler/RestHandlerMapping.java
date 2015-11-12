@@ -25,7 +25,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class CrudHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
+public class RestHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
     
     /**
      * Handlers mapped per entity type.
@@ -58,7 +58,7 @@ public class CrudHandlerMapping extends AbstractHandlerMapping implements Priori
      * @param applicationContext
      *            the initialized {@link ApplicationContext}
      */
-    public CrudHandlerMapping(ApplicationContext applicationContext) {
+    public RestHandlerMapping(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
 
         // Register the exceptions from our request handler to skip

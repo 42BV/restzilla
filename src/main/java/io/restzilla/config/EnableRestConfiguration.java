@@ -3,7 +3,7 @@
  */
 package io.restzilla.config;
 
-import io.restzilla.handler.CrudHandlerMapping;
+import io.restzilla.handler.RestHandlerMapping;
 
 import java.util.Map;
 
@@ -36,8 +36,8 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
      * @throws Exception whenever something goes wrong
      */
     @Bean
-    public CrudHandlerMapping crudHandlerMapping() throws Exception {
-        CrudHandlerMappingFactoryBean factoryBean = new CrudHandlerMappingFactoryBean();
+    public RestHandlerMapping crudHandlerMapping() throws Exception {
+        RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean();
         factoryBean.setBasePackageClass((Class<?>) attributes.get(BASE_PACKAGE_CLASS_NAME));
         factoryBean.setApplicationContext(applicationContext);
         factoryBean.afterPropertiesSet();

@@ -7,7 +7,7 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.beanmapper.BeanMapper;
 import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
-import io.restzilla.handler.CrudHandlerMapping;
+import io.restzilla.handler.RestHandlerMapping;
 import io.restzilla.handler.DefaultHandlerMappingFactory;
 import io.restzilla.handler.EntityHandlerMapping;
 import io.restzilla.handler.EntityHandlerMappingFactory;
@@ -52,9 +52,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, InitializingBean, ApplicationContextAware {
+public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, InitializingBean, ApplicationContextAware {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(CrudHandlerMappingFactoryBean.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestHandlerMappingFactoryBean.class);
 
     /**
      * Base class used to check if Spring Security is available on the classpath.
@@ -110,8 +110,8 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public CrudHandlerMapping getObject() throws Exception {
-        CrudHandlerMapping rootHandlerMapping = new CrudHandlerMapping(applicationContext);
+    public RestHandlerMapping getObject() throws Exception {
+        RestHandlerMapping rootHandlerMapping = new RestHandlerMapping(applicationContext);
         
         // Scans the classpath and register all resources per entity
         CrudServiceLocator locator = new CrudServiceLocator(applicationContext);
