@@ -9,7 +9,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 import io.beanmapper.BeanMapper;
-import io.beanmapper.core.rule.SourceFieldMapperRule;
+import io.beanmapper.core.rule.MappableFields;
 import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
 import io.restzilla.handler.security.SecurityProvider;
@@ -234,7 +234,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         private void mapInputToEntity(Object input, Persistable<?> entity, String json) throws JsonProcessingException, IOException {
             if (information.isPatch()) {
                 Set<String> propertyNames = getPropertyNamesFromJson(json);
-                beanMapper.map(input, entity, new SourceFieldMapperRule(propertyNames));
+                beanMapper.map(input, entity, new MappableFields(propertyNames));
             } else {
                 beanMapper.map(input, entity);
             }
