@@ -88,7 +88,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     /**
      * Maps between entities.
      */
-    private BeanMapper beanMapper = new BeanMapper();
+    private BeanMapper beanMapper;
     
     /**
      * Converts the standard types.
@@ -165,6 +165,10 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
 
     @Override
     public void afterPropertiesSet() throws Exception {
+        if (beanMapper == null) {
+            beanMapper = new BeanMapper();
+            beanMapper.addPackagePrefix(basePackage);
+        }
         if (serviceFactory == null) {
             serviceFactory = new DefaultServiceFactory(applicationContext);
         }
