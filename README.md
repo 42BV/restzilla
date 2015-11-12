@@ -140,7 +140,7 @@ Our original email remains unchanged, where normally it would have been reset to
 
 ## Customize body (request and response) ##
 
-Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create- or update request varies from the entity. Restzilla allows you to specify custom types:
+Sometimes you want to return the entity in a different format. For example, return a user without it's password for security reasons. Also, in some cases the create/update request bodies vary from the entity. Restzilla allows you to specify custom types:
 
 ```java
 @Entity
