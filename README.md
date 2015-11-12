@@ -145,7 +145,7 @@ Sometimes you want to return the entity in a different format. For example, retu
 ```java
 @Entity
 @RestResource(
- create = @RestConfig(inputType = CreateUserModel.class, resultType = Long.class)
+ create = @RestConfig(inputType = CreateUserForm.class, resultType = CreateUserResult.class)
 )
 public class User {
 
@@ -156,7 +156,13 @@ public class User {
 }
 ```
 
-Request bodies will now be unmarshalled to their custom type. The custom type is then mapped back to an entity as we perform our logic.
+```java
+public class CreateUserForm {
+ public String name;
+}
+```
+
+Create request bodies will now be unmarshalled into a CreateUserForm object. Then our form is mapped to a User entity and persisted in the database. Afterwards our persisted User is mapped to a CreateUserResult object and provided in the response body.
 
 Mapping between beans is automatically handled by the [BeanMapper](https://github.com/42BV/beanmapper) dependency.
 
