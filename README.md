@@ -29,23 +29,16 @@ Other dependencies:
 * Jackson (2.0+)
 * Java (1.6+)
 
-Create the handler resolver in your web configuration:
+Activate Restzilla in your configuration:
 
 ```java
 @EnableWebMvc
+@EnableRest(basePackageClass = WebMvcConfig.class)
 public class WebMvcConfig extends WebMvcConfigurerAdapter {
-
- @Bean
- public CrudHandlerMappingFactoryBean crudHandlerMapping() {
-  CrudHandlerMappingFactoryBean crudHandlerMapping = new CrudHandlerMappingFactoryBean();
-  crudHandlerMapping.setBasePackageClass(WebMvcConfig.class);
-  return crudHandlerMapping;
- }
-
 }
 ```
 
-Annotate your entities with one simple annotation:
+Mark the entity as REST resource:
 
 ```java
 @Entity

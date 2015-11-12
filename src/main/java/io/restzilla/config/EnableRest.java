@@ -10,6 +10,8 @@ import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+import org.springframework.context.annotation.Import;
+
 /**
  * Automatically generates REST endpoints for all entities
  * inside your base package.
@@ -20,6 +22,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target(TYPE)
 @Retention(RUNTIME)
+@Import(EnableRestConfiguration.class)
 public @interface EnableRest {
 
     Class<?> basePackageClass();

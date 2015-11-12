@@ -4,7 +4,6 @@
 package io.restzilla;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
-import io.restzilla.config.CrudHandlerMappingFactoryBean;
 import io.restzilla.config.EnableRest;
 
 import java.util.HashMap;
@@ -44,7 +43,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @ComponentScan(
     basePackageClasses = ApplicationConfig.class,
     excludeFilters = {
-        @Filter({ ControllerAdvice.class, Controller.class, RestController.class })
+        @Filter({ ControllerAdvice.class, Controller.class, RestController.class, Configuration.class })
 })
 @EnableTransactionManagement
 @EnableRest(basePackageClass = ApplicationConfig.class)
@@ -96,13 +95,6 @@ public class ApplicationConfig {
         return mapper;
     }
     
-    @Bean
-    public CrudHandlerMappingFactoryBean crudHandlerMapping() {
-        CrudHandlerMappingFactoryBean factoryBean = new CrudHandlerMappingFactoryBean();
-        factoryBean.setBasePackageClass(ApplicationConfig.class);
-        return factoryBean;
-    }
-
     @Bean
     public RequestMappingHandlerAdapter requestMappingHandlerAdapter() {
         RequestMappingHandlerAdapter adapter = new RequestMappingHandlerAdapter();
