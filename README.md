@@ -29,7 +29,7 @@ Other dependencies:
 * Jackson (2.0+)
 * Java (1.6+)
 
-Activate Restzilla in your configuration:
+Annotate your Spring Configuration with @EnableRest:
 
 ```java
 @EnableWebMvc
@@ -38,7 +38,7 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 }
 ```
 
-Mark the entity as REST resource:
+Then annotate the entities that should have REST endpoints with @RestResource:
 
 ```java
 @Entity
