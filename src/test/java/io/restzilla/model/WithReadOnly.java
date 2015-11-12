@@ -4,12 +4,12 @@
 package io.restzilla.model;
 
 import io.restzilla.RestConfig;
-import io.restzilla.RestEnable;
+import io.restzilla.RestResource;
 
 import javax.persistence.Entity;
 
 @Entity
-@RestEnable(readOnly = true, create = @RestConfig(enabled = true))
+@RestResource(readOnly = true, create = @RestConfig(enabled = true))
 public class WithReadOnly extends BaseEntity {
     
     private String name;

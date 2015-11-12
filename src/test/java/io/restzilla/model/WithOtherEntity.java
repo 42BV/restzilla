@@ -4,12 +4,12 @@
 package io.restzilla.model;
 
 import io.restzilla.RestConfig;
-import io.restzilla.RestEnable;
+import io.restzilla.RestResource;
 
 import javax.persistence.Entity;
 
 @Entity
-@RestEnable(
+@RestResource(
     findAll = @RestConfig(resultType = OtherEntity.class, resultByQuery = true),
     findOne = @RestConfig(resultType = OtherEntity.class, resultByQuery = true),
     update = @RestConfig(resultType = OtherEntity.class, resultByQuery = true)

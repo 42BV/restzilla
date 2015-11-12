@@ -3,12 +3,12 @@
  */
 package io.restzilla.model;
 
-import io.restzilla.RestEnable;
+import io.restzilla.RestResource;
 
 import javax.persistence.Entity;
 
 @Entity
-@RestEnable(pagedOnly = true)
+@RestResource(pagedOnly = true)
 public class WithPagedOnly extends BaseEntity {
     
     private String name;

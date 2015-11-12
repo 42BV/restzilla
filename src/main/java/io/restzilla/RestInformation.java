@@ -17,12 +17,12 @@ public class RestInformation {
     
     private final Class<?> identifierClass;
     
-    private final RestEnable annotation;
+    private final RestResource annotation;
     
     private final String basePath;
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public RestInformation(Class<?> entityClass, String basePath, RestEnable annotation) throws NoSuchMethodException {
+    public RestInformation(Class<?> entityClass, String basePath, RestResource annotation) throws NoSuchMethodException {
         if (!(Persistable.class.isAssignableFrom(entityClass))) {
             throw new IllegalStateException("Entity does not extend from Persistable");
         }

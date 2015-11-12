@@ -35,7 +35,7 @@ import org.springframework.web.servlet.HandlerMapping;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
- * Create a REST endpoint for all entities annotated with {@link RestEnable}.
+ * Create a REST endpoint for all entities annotated with {@link RestResource}.
  * This endpoint will provide full CRUD functionality on the entity,
  * following the conventional layered architecture: controller, service,
  * repository. At each layer in the architecture you are able to overwrite
@@ -131,7 +131,7 @@ public class CrudHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     }
 
     private RestInformation buildInformation(Class<?> entityClass) throws NoSuchMethodException {
-        RestEnable annotation = entityClass.getAnnotationsByType(RestEnable.class)[0];
+        RestResource annotation = entityClass.getAnnotationsByType(RestResource.class)[0];
         String basePath = annotation.basePath();
         if (isBlank(basePath)) {
             basePath = namingStrategy.getBasePath(entityClass);

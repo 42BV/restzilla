@@ -49,7 +49,7 @@ Annotate your entities with one simple annotation:
 
 ```java
 @Entity
-@RestEnable
+@RestResource
 public class User {
 
  @Id
@@ -82,7 +82,7 @@ You can also specify default orders per entity, as fallback when no orders are s
 
 ```java
 @Entity
-@RestEnable
+@RestResource
 @SortingDefault("name")
 public class User {
 
@@ -97,7 +97,7 @@ More complicated orders are also possible:
 
 ```java
 @Entity
-@RestEnable
+@RestResource
 @SortingDefaults({
  @SortingDefault("name"),
  @SortingDefault(value = "id", direction = Direction.DESC)
@@ -117,7 +117,7 @@ Restzilla provides native support for "patch" requests, where you only update a 
 
 ```java
 @Entity
-@RestEnable
+@RestResource
 public class User {
 
  @Id
@@ -151,7 +151,7 @@ Sometimes you want to return the entity in a different format. For example, retu
 
 ```java
 @Entity
-@RestEnable(
+@RestResource(
  create = @RestConfig(inputType = CreateUserModel.class, resultType = Long.class)
 )
 public class User {
@@ -173,7 +173,7 @@ It's also possible to secure the endpoints, making them only accessable to certa
 
 ```java
 @Entity
-@RestEnable(
+@RestResource(
  create = @RestConfig(secured = "hasRole('ROLE_ADMIN')")
 )
 public class User {

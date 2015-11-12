@@ -1,11 +1,11 @@
 package io.restzilla.model;
 
-import io.restzilla.RestEnable;
+import io.restzilla.RestResource;
 
 import javax.persistence.Entity;
 
 @Entity
-@RestEnable
+@RestResource
 public class WithRepository extends BaseEntity {
     
     private String name;

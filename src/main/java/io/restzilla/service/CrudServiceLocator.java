@@ -3,7 +3,7 @@
  */
 package io.restzilla.service;
 
-import io.restzilla.RestEnable;
+import io.restzilla.RestResource;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -50,7 +50,7 @@ public class CrudServiceLocator {
         Services services = new Services(applicationContext);
 
         ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
-        provider.addIncludeFilter(new AnnotationTypeFilter(RestEnable.class));
+        provider.addIncludeFilter(new AnnotationTypeFilter(RestResource.class));
         Set<BeanDefinition> components = provider.findCandidateComponents(basePackage);
         for (BeanDefinition component : components) {
             Class<?> entityClass = Class.forName(component.getBeanClassName());

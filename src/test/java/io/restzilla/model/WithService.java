@@ -3,12 +3,12 @@
  */
 package io.restzilla.model;
 
-import io.restzilla.RestEnable;
+import io.restzilla.RestResource;
 
 import javax.persistence.Entity;
 
 @Entity
-@RestEnable
+@RestResource
 public class WithService extends BaseEntity {
     
     private String name;

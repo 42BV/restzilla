@@ -33,7 +33,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target(TYPE)
 @Retention(RUNTIME)
-public @interface RestEnable {
+public @interface RestResource {
     
     /**
      * (Optional) the base path, when empty we use the entity name.
