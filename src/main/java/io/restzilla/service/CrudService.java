@@ -45,10 +45,19 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
      * entity instance completely.
      * 
-     * @param entity
+     * @param entity the entity
      * @return the saved entity
      */
     <S extends T> S save(S entity);
+    
+    /**
+     * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
+     * entity instance completely.
+     * 
+     * @param entity the lazy entity
+     * @return the saved entity
+     */
+    <S extends T> S save(Lazy<S> entity);
     
     /**
      * Deletes the entity with the given id.

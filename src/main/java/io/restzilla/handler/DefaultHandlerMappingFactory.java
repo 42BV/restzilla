@@ -3,7 +3,6 @@
  */
 package io.restzilla.handler;
 
-import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -15,19 +14,18 @@ import io.restzilla.RestInformation;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
+import io.restzilla.service.Lazy;
 import io.restzilla.service.Listable;
 import io.restzilla.service.impl.ReadService;
 import io.restzilla.service.impl.ReadServiceListableAdapter;
+import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
 
-import java.io.IOException;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
@@ -44,8 +42,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 
@@ -184,11 +180,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             checkIsAuthorized(information.findOne().secured(), request);
             Serializable id = extractId(request);
             Class resultType = information.getResultType(information.findOne());
-            if (information.findOne().resultByQuery()) {
-                return readService.getOne(resultType, id);
-            } else {
-                return beanMapper.map(entityService.getOne(id), resultType);
-            }
+            return mapIdToResult(id, resultType);
         }
         
         private Serializable extractId(HttpServletRequest request) {
@@ -196,7 +188,15 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             String raw = StringUtils.substringAfterLast(path, UrlUtils.SLASH);
             return conversionService.convert(raw, information.getIdentifierClass().asSubclass(Serializable.class));
         }
-        
+
+        private Object mapIdToResult(Serializable id, Class resultType) {
+            if (information.findOne().resultByQuery()) {
+                return readService.getOne(resultType, id);
+            } else {
+                return beanMapper.map(entityService.getOne(id), resultType);
+            }
+        }
+
         //
         // Modifications
         //
@@ -223,38 +223,11 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
             checkIsAuthorized(information.update().secured(), request);
+            Serializable id = extractId(request);
             String json = CharStreams.toString(request.getReader());
             Object input = objectMapper.readValue(json, information.getInputType(information.update()));
-            Persistable<?> entity = entityService.getOne(extractId(request));
-            mapInputToEntity(input, entity, json);
-            Persistable<?> output = entityService.save(entity);
+            Persistable<?> output = entityService.save(new LazyMappingEntity(id, input, json));
             return mapEntityToResult(output, information.update());
-        }
-        
-        private void mapInputToEntity(Object input, Persistable<?> entity, String json) throws JsonProcessingException, IOException {
-            if (information.isPatch()) {
-                Set<String> propertyNames = getPropertyNamesFromJson(json);
-                beanMapper.map(input, entity, new MappableFields(propertyNames));
-            } else {
-                beanMapper.map(input, entity);
-            }
-        }
-        
-        private Set<String> getPropertyNamesFromJson(String json) throws JsonProcessingException, IOException {
-            JsonNode tree = objectMapper.readTree(json);
-            return getPropertyNames(tree, "");
-        }
-        
-        private Set<String> getPropertyNames(JsonNode node, String base) {
-            Set<String> propertyNames = new HashSet<String>();
-            Iterator<String> iterator = node.fieldNames();
-            while (iterator.hasNext()) {
-                String fieldName = iterator.next();
-                String propertyName = isNotBlank(base) ? base + "." + fieldName : fieldName;
-                propertyNames.add(propertyName);
-                propertyNames.addAll(getPropertyNames(node.get(fieldName), propertyName));
-            }
-            return propertyNames;
         }
 
         /**
@@ -301,6 +274,45 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             } else {
                 return beanMapper.map(entity, resultType);
             }
+        }
+
+        /**
+         * Maps our input into the persisted entity on demand.
+         * This mapping is performed lazy to ensure that the
+         * entity is not auto-updated between transactions.
+         *
+         * @author Jeroen van Schagen
+         * @since Nov 13, 2015
+         */
+        private class LazyMappingEntity implements Lazy<Object> {
+            
+            private final Serializable id;
+            
+            private final Object input;
+            
+            private final String json;
+            
+            public LazyMappingEntity(Serializable id, Object input, String json) {
+                this.id = id;
+                this.input = input;
+                this.json = json;
+            }
+            
+            /**
+             * {@inheritDoc}
+             */
+            @Override
+            public Object get() {
+                Persistable<?> entity = entityService.getOne(id);
+                if (information.isPatch()) {
+                    Set<String> propertyNames = JsonUtil.getPropertyNamesFromJson(json, objectMapper);
+                    beanMapper.map(input, entity, new MappableFields(propertyNames));
+                } else {
+                    beanMapper.map(input, entity);
+                }
+                return entity;
+            }
+            
         }
 
     }

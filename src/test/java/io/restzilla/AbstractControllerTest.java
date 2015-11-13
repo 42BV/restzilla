@@ -46,4 +46,8 @@ public abstract class AbstractControllerTest extends AbstractSpringTest {
         request.setContent(json.getBytes());
     }
 
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
 }

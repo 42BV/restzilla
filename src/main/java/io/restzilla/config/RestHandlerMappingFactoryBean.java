@@ -20,7 +20,7 @@ import io.restzilla.service.CrudServiceLocator;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.DefaultServiceFactory;
 import io.restzilla.service.impl.ReadService;
-import io.restzilla.util.ClasspathChecker;
+import io.restzilla.util.ClassUtil;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
@@ -170,7 +170,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     }
 
     private SecurityProvider buildSecurityProvider() {
-        if (ClasspathChecker.isOnClasspath(SPRING_SECURITY_PATH)) {
+        if (ClassUtil.isOnClasspath(SPRING_SECURITY_PATH)) {
             SecurityProvider securityProvider = new io.restzilla.handler.security.SpelSecurityProvider();
             applicationContext.getAutowireCapableBeanFactory().autowireBean(securityProvider);
             return securityProvider;

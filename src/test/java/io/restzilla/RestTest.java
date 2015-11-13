@@ -11,6 +11,7 @@ import io.restzilla.model.WithOtherEntity;
 import io.restzilla.model.WithPatch;
 import io.restzilla.model.WithPatchNested;
 import io.restzilla.model.WithReadOnly;
+import io.restzilla.model.WithRollback;
 import io.restzilla.model.WithService;
 import io.restzilla.model.WithoutPatch;
 import io.restzilla.util.PageableResolver;
@@ -235,6 +236,30 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertEquals("{\"id\":1,\"name\":\"Test!\"}", response.getContentAsString());
     }
     
+    @Test
+    public void testCustomServiceRollback() throws Exception {
+        WithRollback entity = new WithRollback();
+        entity.setName("Initial");
+        entityBuilder.save(entity);
+
+        // Change name, and enforce rollback
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withrollback/" + entity.getId());
+        request.setMethod(RequestMethod.PUT.name());
+        setValueAsJson(request, "{\"name\":\"Updated\"}");
+        
+        try {
+            call(request);
+            //Assert.fail("Expected an UnsupportedOperationException.");
+        } catch (UnsupportedOperationException uoe) {
+        } catch (RuntimeException rte) {
+            //Assert.fail("Expected an UnsupportedOperationException.");
+        }
+
+        WithRollback result = entityBuilder.get(WithRollback.class, entity.getId());
+        Assert.assertEquals("Initial", result.getName());
+    }
+
     // Custom configuration
 
     @Test

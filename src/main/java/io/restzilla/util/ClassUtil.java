@@ -9,7 +9,7 @@ package io.restzilla.util;
  * @author Jeroen van Schagen
  * @since Nov 12, 2015
  */
-public class ClasspathChecker {
+public class ClassUtil {
     
     /**
      * Determines if the class with the provided full name is

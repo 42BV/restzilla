@@ -4,6 +4,7 @@
 package io.restzilla.service.impl;
 
 import io.restzilla.service.CrudService;
+import io.restzilla.service.Lazy;
 import io.restzilla.service.RepositoryAware;
 
 import java.io.Serializable;
@@ -129,6 +130,14 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
     @Override
     public <S extends T> S save(S entity) {
         return repository.save(entity);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <S extends T> S save(Lazy<S> entity) {
+        return save(entity.get());
     }
     
     /**

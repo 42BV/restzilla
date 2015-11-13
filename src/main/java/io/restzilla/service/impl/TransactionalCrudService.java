@@ -3,6 +3,8 @@
  */
 package io.restzilla.service.impl;
 
+import io.restzilla.service.Lazy;
+
 import java.io.Serializable;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,13 @@ public class TransactionalCrudService<T extends Persistable<ID>, ID extends Seri
 
     /**
      * Create a new transactional CRUD service.
+     */
+    public TransactionalCrudService() {
+        super();
+    }
+    
+    /**
+     * Create a new transactional CRUD service.
      * 
      * @param repository the repository
      * @param entityClass the entity class
@@ -42,6 +51,14 @@ public class TransactionalCrudService<T extends Persistable<ID>, ID extends Seri
     @Override
     public <S extends T> S save(S entity) {
         return transactionTemplate.execute(new SaveCallback<S>(entity));
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <S extends T> S save(Lazy<S> entity) {
+        return transactionTemplate.execute(new SaveLazyCallback<S>(entity));
     }
 
     /**
@@ -82,6 +99,21 @@ public class TransactionalCrudService<T extends Persistable<ID>, ID extends Seri
         @Override
         public S doInTransaction(TransactionStatus status) {
             return TransactionalCrudService.super.save(entity);
+        }
+        
+    }
+    
+    private class SaveLazyCallback<S extends T> implements TransactionCallback<S> {
+        
+        private final Lazy<S> entity;
+        
+        public SaveLazyCallback(Lazy<S> entity) {
+            this.entity = entity;
+        }
+        
+        @Override
+        public S doInTransaction(TransactionStatus status) {
+            return TransactionalCrudService.super.save(entity.get());
         }
         
     }
