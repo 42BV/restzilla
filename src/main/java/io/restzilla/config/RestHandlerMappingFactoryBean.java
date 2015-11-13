@@ -7,10 +7,9 @@ import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.beanmapper.BeanMapper;
 import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
-import io.restzilla.handler.RestHandlerMapping;
 import io.restzilla.handler.DefaultHandlerMappingFactory;
-import io.restzilla.handler.EntityHandlerMapping;
 import io.restzilla.handler.EntityHandlerMappingFactory;
+import io.restzilla.handler.RestHandlerMapping;
 import io.restzilla.handler.naming.DefaultRestNamingStrategy;
 import io.restzilla.handler.naming.RestNamingStrategy;
 import io.restzilla.handler.security.AlwaysSecurityProvider;
@@ -23,8 +22,6 @@ import io.restzilla.service.DefaultServiceFactory;
 import io.restzilla.service.impl.ReadService;
 import io.restzilla.util.ClasspathChecker;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -54,8 +51,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  */
 public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, InitializingBean, ApplicationContextAware {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(RestHandlerMappingFactoryBean.class);
-
     /**
      * Base class used to check if Spring Security is available on the classpath.
      */
@@ -124,10 +119,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         for (Class entityClass : registry.getEntityClasses()) {
             RestInformation entityInfo = buildInformation(entityClass);
             CrudService crudService = registry.getService(entityClass);
-
-            EntityHandlerMapping handlerMapping = handlerMappingFactory.build(crudService, entityInfo);
-            rootHandlerMapping.registerHandler(entityInfo.getBasePath(), handlerMapping);
-            LOGGER.info("Registered REST mapping for /{} [{}]", entityInfo.getBasePath(), entityClass.getName());
+            rootHandlerMapping.registerHandler(handlerMappingFactory.build(crudService, entityInfo));
         }
 
         return rootHandlerMapping;

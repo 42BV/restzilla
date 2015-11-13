@@ -240,7 +240,25 @@ public class RestTest extends AbstractControllerTest {
     @Test
     public void testCustomBasePath() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/mybasepath");
+        request.setRequestURI("/MyBasePath");
+        request.setMethod(RequestMethod.GET.name());
+        
+        Assert.assertNotNull(getHandlerChain(request));
+    }
+    
+    @Test
+    public void testNestedBasePath() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/mybase/path");
+        request.setMethod(RequestMethod.GET.name());
+        
+        Assert.assertNull(getHandlerChain(request));
+    }
+    
+    @Test
+    public void testDuplicate() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withduplicate");
         request.setMethod(RequestMethod.GET.name());
         
         Assert.assertNotNull(getHandlerChain(request));

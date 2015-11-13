@@ -8,7 +8,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
-
 import io.beanmapper.BeanMapper;
 import io.beanmapper.core.rule.MappableFields;
 import io.restzilla.RestConfig;
@@ -354,13 +353,13 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
 
             Method method = null;
             int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
-            if (fragments == 2) {
+            if (fragments == 1) {
                 if (hasRequestMethod(request, GET)) {
                     method = toMethodIfEnabled(FIND_ALL_NAME, getInformation().findAll());
                 } else if (hasRequestMethod(request, POST)) {
                     method = toMethodIfEnabled(CREATE_NAME, getInformation().create());
                 }
-            } else if (fragments == 3) {
+            } else if (fragments == 2) {
                 if (hasRequestMethod(request, GET)) {
                     method = toMethodIfEnabled(FIND_ONE_NAME, getInformation().findOne());
                 } else if (hasRequestMethod(request, PUT)) {

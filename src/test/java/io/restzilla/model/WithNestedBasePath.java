@@ -8,7 +8,7 @@ import io.restzilla.RestResource;
 import javax.persistence.Entity;
 
 @Entity
-@RestResource(basePath = "/mybasepath/")
-public class WithBasePath extends BaseEntity {
+@RestResource(basePath = "/mybase/path/")
+public class WithNestedBasePath extends BaseEntity {
 
 }

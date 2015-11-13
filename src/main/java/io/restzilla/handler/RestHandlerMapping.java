@@ -1,5 +1,6 @@
 package io.restzilla.handler;
 
+import io.restzilla.RestInformation;
 import io.restzilla.util.UrlUtils;
 
 import java.util.Collection;
@@ -11,6 +12,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.core.PriorityOrdered;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -27,6 +30,8 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  */
 public class RestHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
     
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestHandlerMapping.class);
+
     /**
      * Handlers mapped per entity type.
      */
@@ -106,22 +111,31 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
     }
     
     private Object findCrudHandler(HttpServletRequest request) throws Exception {
-        String basePath = UrlUtils.getRootPath(request);
-        EntityHandlerMapping delegateHandler = handlerMappings.get(basePath);
+        String basePath = UrlUtils.getBasePath(request);
+        EntityHandlerMapping delegateHandler = handlerMappings.get(basePath.toUpperCase());
         if (delegateHandler != null) {
             return delegateHandler.getHandlerInternal(request);
         }
         return null;
     }
 
+
     /**
      * Register a custom handler mapping.
      * 
-     * @param basePath the base path
      * @param handlerMapping the handler mapping
      */
-    public void registerHandler(String basePath, EntityHandlerMapping handlerMapping) {
-        handlerMappings.put(UrlUtils.stripSlashes(basePath), handlerMapping);
+    public void registerHandler(EntityHandlerMapping handlerMapping) {
+        RestInformation information = handlerMapping.getInformation();
+        String basePath = UrlUtils.stripSlashes(information.getBasePath());
+        if (basePath.contains(UrlUtils.SLASH)) {
+            LOGGER.warn("Overlooked REST resource /{}, because multiple slashes are not supported.", basePath);
+        } else if (handlerMappings.containsKey(basePath.toUpperCase())) {
+            LOGGER.warn("Duplicated REST resource /{}", basePath);
+        } else {
+            handlerMappings.put(basePath.toUpperCase(), handlerMapping);
+            LOGGER.info("Registered REST resource /{} [{}]", basePath, information.getEntityClass().getName());
+        }
     }
     
     /**

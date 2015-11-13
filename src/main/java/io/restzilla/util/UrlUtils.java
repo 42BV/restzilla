@@ -27,18 +27,7 @@ public class UrlUtils {
      */
     public static String getPath(HttpServletRequest request) {
         String contextPath = request.getContextPath();
-        return request.getRequestURI().substring(contextPath.length());
-    }
-    
-    /**
-     * Retrieve the root path from a request.
-     * 
-     * @param request the request
-     * @return the root path
-     */
-    public static String getRootPath(HttpServletRequest request) {
-        String path = getPath(request);
-        return stripSlashes(path);
+        return stripSlashes(request.getRequestURI().substring(contextPath.length()));
     }
 
     /**
@@ -54,7 +43,18 @@ public class UrlUtils {
         if (!path.endsWith(SLASH)) {
             path = path + SLASH;
         }
-        return StringUtils.substringBetween(path, SLASH, SLASH);
+        return path.substring(1, path.length() - 1);
+    }
+    
+    /**
+     * Retrieve the first path element in our request path.
+     * 
+     * @param request the request
+     * @return the first path element
+     */
+    public static String getBasePath(HttpServletRequest request) {
+        String path = getPath(request);
+        return StringUtils.substringBefore(path, SLASH);
     }
     
     /**
