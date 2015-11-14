@@ -18,7 +18,7 @@ Add the dependency to your own project:
 <dependency>
   <groupId>io.restzilla</groupId>
   <artifactId>restzilla</artifactId>
-  <version>1.8.0-SNAPSHOT</version>
+  <version>1.8.1-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -204,13 +204,13 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
 ### Service ###
 
-It is also possible to create a custom service. Services must implement the CrudService interface to be detected, but we also provide an AbstractCrudService template class:
+It is also possible to create a custom service. Services must implement the CrudService interface to be detected, but we also provide an DefaultCrudService template class:
 
 ```java
 @Service
 @Transactional
 @Scope(proxyMode = TARGET_CLASS)
-public class UserService extends AbstractCrudService<User, Long> {
+public class UserService extends DefaultCrudService<User, Long> {
  
  @Autowired
  public UserService(UserRepository userRepository) {

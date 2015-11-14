@@ -4,7 +4,6 @@
 package io.restzilla.service.impl;
 
 import io.restzilla.service.CrudService;
-import io.restzilla.service.Lazy;
 import io.restzilla.service.RepositoryAware;
 
 import java.io.Serializable;
@@ -19,12 +18,12 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.util.Assert;
 
 /**
- * Template implementation of the CrudService, delegates all to the repository.
+ * Default implementation of the CRUD service, delegates all to the repository.
  *
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID>, RepositoryAware<T, ID> {
+public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> extends CrudServiceSupport<T, ID> implements RepositoryAware<T, ID> {
 
     private final Class<T> entityClass;
 
@@ -36,7 +35,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * <b>This constructor dynamically resolves the entity type with reflection.</b>
      */
     @SuppressWarnings("unchecked")
-    public AbstractCrudService() {
+    public DefaultCrudService() {
         this.entityClass = (Class<T>) resolveEntityType();
         Assert.notNull(entityClass, "Entity class cannot be null");
     }
@@ -50,7 +49,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * 
      * @param entityClass the entity class
      */
-    public AbstractCrudService(Class<T> entityClass) {
+    public DefaultCrudService(Class<T> entityClass) {
         Assert.notNull(entityClass, "Entity class cannot be null");
         this.entityClass = entityClass;
     }
@@ -62,8 +61,8 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * 
      * @param repository the repository
      */
-    public AbstractCrudService(PagingAndSortingRepository<T, ID> repository) {
-        this(); // Dynamically resolve entity type
+    public DefaultCrudService(PagingAndSortingRepository<T, ID> repository) {
+        this(); // Dynamically resolve entity class
         Assert.notNull(repository, "Repository cannot be null");
         this.repository = repository;
     }
@@ -74,7 +73,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * @param entityClass the entity class
      * @param repository the repository
      */
-    public AbstractCrudService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
+    public DefaultCrudService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
         this(entityClass);
         Assert.notNull(repository, "Repository cannot be null");
         this.repository = repository;
@@ -116,44 +115,16 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * {@inheritDoc}
      */
     @Override
-    public T getOne(ID id) {
-        T entity = findOne(id);
-        if (entity == null) {
-            throw new IllegalArgumentException("Could not find entity '" + getEntityClass().getSimpleName() + "' with id: " + id);
-        }
-        return entity;
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public <S extends T> S save(S entity) {
         return repository.save(entity);
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public <S extends T> S save(Lazy<S> entity) {
-        return save(entity.get());
-    }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     public void delete(ID id) {
         repository.delete(id);
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void delete(T entity) {
-        delete(entity.getId());
     }
     
     /**

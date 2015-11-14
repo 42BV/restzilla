@@ -21,7 +21,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Jeroen van Schagen
  * @since Aug 22, 2015
  */
-public final class TransactionalCrudService<T extends Persistable<ID>, ID extends Serializable> extends AbstractCrudService<T, ID> {
+public final class TransactionalCrudService<T extends Persistable<ID>, ID extends Serializable> extends DefaultCrudService<T, ID> {
     
     /**
      * Template that handles transactions.
@@ -66,7 +66,7 @@ public final class TransactionalCrudService<T extends Persistable<ID>, ID extend
      */
     @Override
     public void delete(ID id) {
-        transactionTemplate.execute(new DeleteCallback(id));
+        transactionTemplate.execute(new DeleteByIdCallback(id));
     }
 
     /**
@@ -118,11 +118,11 @@ public final class TransactionalCrudService<T extends Persistable<ID>, ID extend
         
     }
 
-    private class DeleteCallback implements TransactionCallback<Void> {
+    private class DeleteByIdCallback implements TransactionCallback<Void> {
         
         private final ID id;
         
-        public DeleteCallback(ID id) {
+        public DeleteByIdCallback(ID id) {
             this.id = id;
         }
         
