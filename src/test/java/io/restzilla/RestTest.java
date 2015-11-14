@@ -250,10 +250,10 @@ public class RestTest extends AbstractControllerTest {
         
         try {
             call(request);
-            //Assert.fail("Expected an UnsupportedOperationException.");
+            Assert.fail("Expected an UnsupportedOperationException.");
         } catch (UnsupportedOperationException uoe) {
         } catch (RuntimeException rte) {
-            //Assert.fail("Expected an UnsupportedOperationException.");
+            Assert.fail("Expected an UnsupportedOperationException.");
         }
 
         WithRollback result = entityBuilder.get(WithRollback.class, entity.getId());

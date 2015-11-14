@@ -21,7 +21,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  * @author Jeroen van Schagen
  * @since Aug 22, 2015
  */
-public class TransactionalCrudService<T extends Persistable<ID>, ID extends Serializable> extends AbstractCrudService<T, ID> {
+public final class TransactionalCrudService<T extends Persistable<ID>, ID extends Serializable> extends AbstractCrudService<T, ID> {
     
     /**
      * Template that handles transactions.
@@ -113,7 +113,7 @@ public class TransactionalCrudService<T extends Persistable<ID>, ID extends Seri
         
         @Override
         public S doInTransaction(TransactionStatus status) {
-            return TransactionalCrudService.super.save(entity.get());
+            return TransactionalCrudService.super.save(entity);
         }
         
     }

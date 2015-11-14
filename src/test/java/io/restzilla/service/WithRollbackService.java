@@ -3,15 +3,18 @@
  */
 package io.restzilla.service;
 
+import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 import io.restzilla.model.WithRollback;
-import io.restzilla.service.impl.TransactionalCrudService;
+import io.restzilla.service.impl.AbstractCrudService;
 
+import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Transactional
-public class WithRollbackService extends TransactionalCrudService<WithRollback, Long> {
+@Scope(proxyMode = TARGET_CLASS)
+public class WithRollbackService extends AbstractCrudService<WithRollback, Long> {
 
     @Override
     public <S extends WithRollback> S save(S entity) {
