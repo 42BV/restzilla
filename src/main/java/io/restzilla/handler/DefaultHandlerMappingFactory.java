@@ -9,6 +9,8 @@ import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.core.rule.MappableFields;
+import io.beanmapper.spring.PageableMapper;
+import io.beanmapper.spring.util.JsonUtil;
 import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
 import io.restzilla.handler.security.SecurityProvider;
@@ -18,13 +20,11 @@ import io.restzilla.service.Lazy;
 import io.restzilla.service.Listable;
 import io.restzilla.service.impl.ReadService;
 import io.restzilla.service.impl.ReadServiceListableAdapter;
-import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -34,7 +34,6 @@ import javax.servlet.http.HttpServletRequest;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
@@ -148,13 +147,9 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         private Page findAllAsPage(Listable<?> retriever, HttpServletRequest request) {
             Pageable pageable = PageableResolver.getPageable(request, information.getEntityClass());
-            Page<?> result = retriever.findAll(pageable);
-            if (result.hasContent()) {
-                List<?> content = new ArrayList(result.getContent());
-                List<?> transformed = new ArrayList(beanMapper.map(content, information.getResultType(information.findAll())));
-                result = new PageImpl(transformed, pageable, result.getTotalElements());
-            }
-            return result;
+            Page<?> page = retriever.findAll(pageable);
+            Class<?> resultType = information.getResultType(information.findAll());
+            return PageableMapper.map(page, resultType, beanMapper);
         }
 
         /**
