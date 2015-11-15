@@ -3,7 +3,7 @@
  */
 package io.restzilla.service.impl;
 
-import io.restzilla.service.Lazy;
+import io.beanmapper.spring.Lazy;
 
 import java.io.Serializable;
 

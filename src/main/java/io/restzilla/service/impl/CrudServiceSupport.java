@@ -3,8 +3,8 @@
  */
 package io.restzilla.service.impl;
 
+import io.beanmapper.spring.Lazy;
 import io.restzilla.service.CrudService;
-import io.restzilla.service.Lazy;
 
 import java.io.Serializable;
 
