@@ -10,7 +10,7 @@ import java.io.Serializable;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
-import org.springframework.beans.factory.config.AutowireCapableBeanFactory;
+import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
@@ -24,13 +24,13 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  */
 public class DefaultServiceFactory implements CrudServiceFactory {
     
-    private final AutowireCapableBeanFactory beanFactory;
-
+    private final ConfigurableListableBeanFactory beanFactory;
+    
     @PersistenceContext
     private EntityManager entityManager;
 
     public DefaultServiceFactory(ApplicationContext applicationContext) {
-        beanFactory = applicationContext.getAutowireCapableBeanFactory();
+        beanFactory = (ConfigurableListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();        
         beanFactory.autowireBean(this);
     }
     
@@ -51,6 +51,7 @@ public class DefaultServiceFactory implements CrudServiceFactory {
     public <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> buildService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
         TransactionalCrudService<T, ID> service = new TransactionalCrudService<T, ID>(repository, entityClass);
         beanFactory.autowireBean(service);
+        beanFactory.registerSingleton(entityClass.getSimpleName() + "Service", service);
         return service;
     }
     

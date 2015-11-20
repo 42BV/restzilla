@@ -232,8 +232,8 @@ public class RestTest extends AbstractControllerTest {
         
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        // In the service we append an '!' to the name 
-        Assert.assertEquals("{\"id\":1,\"name\":\"Test!\"}", response.getContentAsString());
+        // In the service we append ' with User!' to the name 
+        Assert.assertEquals("{\"id\":1,\"name\":\"Test with User!\"}", response.getContentAsString());
     }
     
     @Test
