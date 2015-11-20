@@ -3,8 +3,12 @@
  */
 package io.restzilla.config;
 
+import io.restzilla.handler.RestHandlerMapping;
+
 import java.util.Map;
 
+import org.springframework.context.ApplicationContext;
+import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportAware;
@@ -17,9 +21,11 @@ import org.springframework.core.type.AnnotationMetadata;
  * @since Nov 12, 2015
  */
 @Configuration
-public class EnableRestConfiguration implements ImportAware {
+public class EnableRestConfiguration implements ImportAware, ApplicationContextAware {
     
     private static final String BASE_PACKAGE_CLASS_NAME = "basePackageClass";
+
+    private ApplicationContext applicationContext;
 
     private Map<String, Object> attributes;
 
@@ -30,10 +36,12 @@ public class EnableRestConfiguration implements ImportAware {
      * @throws Exception whenever something goes wrong
      */
     @Bean
-    public RestHandlerMappingFactoryBean crudHandlerMapping() throws Exception {
+    public RestHandlerMapping crudHandlerMapping() throws Exception {
         RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean();
         factoryBean.setBasePackageClass((Class<?>) attributes.get(BASE_PACKAGE_CLASS_NAME));
-        return factoryBean;
+        factoryBean.setApplicationContext(applicationContext);
+        factoryBean.afterPropertiesSet();
+        return factoryBean.getObject();
     }
 
     /**
@@ -42,6 +50,14 @@ public class EnableRestConfiguration implements ImportAware {
     @Override
     public void setImportMetadata(AnnotationMetadata importMetadata) {
         attributes = importMetadata.getAnnotationAttributes(EnableRest.class.getName());
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
     }
 
 }
