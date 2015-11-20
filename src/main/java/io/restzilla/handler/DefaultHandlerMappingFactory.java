@@ -11,7 +11,6 @@ import io.beanmapper.BeanMapper;
 import io.beanmapper.core.rule.MappableFields;
 import io.beanmapper.spring.Lazy;
 import io.beanmapper.spring.PageableMapper;
-import io.beanmapper.spring.util.JsonUtil;
 import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
 import io.restzilla.RestInformation.ResultInformation;
@@ -21,6 +20,7 @@ import io.restzilla.service.CrudService;
 import io.restzilla.service.Listable;
 import io.restzilla.service.impl.ReadService;
 import io.restzilla.service.impl.ReadServiceListableAdapter;
+import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
 
