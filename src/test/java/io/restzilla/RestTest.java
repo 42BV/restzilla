@@ -14,6 +14,7 @@ import io.restzilla.model.WithReadOnly;
 import io.restzilla.model.WithRollback;
 import io.restzilla.model.WithService;
 import io.restzilla.model.WithoutPatch;
+import io.restzilla.model.dto.ValidationDto;
 import io.restzilla.util.PageableResolver;
 
 import org.junit.Assert;
@@ -25,6 +26,7 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindException;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 /**
@@ -297,32 +299,6 @@ public class RestTest extends AbstractControllerTest {
         
         Assert.assertNull(getHandlerChain(request));
     }
-    
-    @Test
-    public void testSecuredHasRole() throws Exception {
-        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_ADMIN");
-        SecurityContextHolder.getContext().setAuthentication(admin);
-
-        try {
-            MockHttpServletRequest request = new MockHttpServletRequest();
-            request.setRequestURI("/withsecurity");
-            request.setMethod(RequestMethod.GET.name());
-            
-            MockHttpServletResponse response = call(request);
-            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        } finally {
-            SecurityContextHolder.getContext().setAuthentication(null);
-        }
-    }
-    
-    @Test(expected = SecurityException.class)
-    public void testSecuredWithoutRoleNotLoggedIn() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withsecurity");
-        request.setMethod(RequestMethod.GET.name());
-        
-        call(request);
-    }
 
     @Test
     public void testReadOnly() throws Exception {
@@ -391,6 +367,62 @@ public class RestTest extends AbstractControllerTest {
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
         Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"New name\",\"email\":null}", response.getContentAsString());
+    }
+    
+    @Test
+    public void testSecuredHasRole() throws Exception {
+        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(admin);
+
+        try {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/withsecurity");
+            request.setMethod(RequestMethod.GET.name());
+            
+            MockHttpServletResponse response = call(request);
+            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        } finally {
+            SecurityContextHolder.getContext().setAuthentication(null);
+        }
+    }
+    
+    @Test(expected = SecurityException.class)
+    public void testSecuredWithoutRoleNotLoggedIn() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withsecurity");
+        request.setMethod(RequestMethod.GET.name());
+        
+        call(request);
+    }
+    
+    @Test
+    public void testValidation() throws Exception {
+        ValidationDto dto = new ValidationDto();
+        dto.name = "Henk";
+        dto.street = "Teststreet 42";
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withvalidation");
+        request.setMethod(RequestMethod.POST.name());
+        setContentAsJson(request, dto);
+        
+        MockHttpServletResponse response = call(request);
+        String contents = response.getContentAsString();
+        Assert.assertTrue(contents.contains("\"name\":\"Henk\""));
+        Assert.assertTrue(contents.contains("\"street\":\"Teststreet 42\""));
+    }
+    
+    @Test(expected = BindException.class)
+    public void testValidationFail() throws Exception {
+        ValidationDto dto = new ValidationDto();
+        dto.name = "Henk";
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withvalidation");
+        request.setMethod(RequestMethod.POST.name());
+        setContentAsJson(request, dto);
+        
+        call(request);
     }
 
 }

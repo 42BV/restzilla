@@ -57,6 +57,7 @@
 			<scope>provided</scope>
 		</dependency>
 		
+		<!-- Swagger -->
 		<dependency>
             <groupId>com.mangofactory</groupId>
             <artifactId>swagger-springmvc</artifactId>
@@ -112,6 +113,20 @@
 			<version>${spring.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<!-- Validation -->
+		<dependency>
+           <groupId>javax.el</groupId>
+           <artifactId>javax.el-api</artifactId>
+           <version>2.2.4</version>
+           <scope>provided</scope>
+        </dependency>
+        <dependency>
+           <groupId>org.glassfish.web</groupId>
+           <artifactId>javax.el</artifactId>
+           <version>2.2.4</version>
+           <scope>provided</scope>
+        </dependency>
 
 		<!-- Logging -->
 		<dependency>

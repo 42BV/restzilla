@@ -20,6 +20,7 @@ import io.restzilla.service.CrudServiceLocator;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.DefaultServiceFactory;
 import io.restzilla.service.impl.ReadService;
+import io.restzilla.util.NoOpValidator;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
@@ -30,7 +31,6 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.util.ClassUtils;
-import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import org.springframework.web.servlet.HandlerMapping;
 
@@ -274,19 +274,6 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     @Autowired(required = false)
     public void setValidator(Validator validator) {
         this.validator = validator;
-    }
-    
-    private static class NoOpValidator implements Validator {
-
-        @Override
-        public boolean supports(Class<?> clazz) {
-            return true;
-        }
-
-        @Override
-        public void validate(Object target, Errors errors) { 
-        }
-        
     }
 
 }
