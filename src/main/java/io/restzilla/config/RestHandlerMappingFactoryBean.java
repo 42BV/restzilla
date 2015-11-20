@@ -20,7 +20,6 @@ import io.restzilla.service.CrudServiceLocator;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.DefaultServiceFactory;
 import io.restzilla.service.impl.ReadService;
-import io.restzilla.util.ClassUtil;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
@@ -30,6 +29,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.util.ClassUtils;
 import org.springframework.web.servlet.HandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -170,7 +170,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     }
 
     private SecurityProvider buildSecurityProvider() {
-        if (ClassUtil.isOnClasspath(SPRING_SECURITY_PATH)) {
+        if (ClassUtils.isPresent(SPRING_SECURITY_PATH, getClass().getClassLoader())) {
             SecurityProvider securityProvider = new io.restzilla.handler.security.SpelSecurityProvider();
             applicationContext.getAutowireCapableBeanFactory().autowireBean(securityProvider);
             return securityProvider;
