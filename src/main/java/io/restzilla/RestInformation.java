@@ -103,11 +103,30 @@ public class RestInformation {
      * @return the result type
      */
     public Class<?> getResultType(RestConfig config) {
-        return isCustom(config.resultType()) ? config.resultType() : getResultType();
+        ResultInformation result = getResultInfo(config);
+        return result.getType();
     }
     
-    private Class<?> getResultType() {
-        return isCustom(annotation.resultType()) ? annotation.resultType() : entityClass;
+    /**
+     * Determine the result type.
+     * 
+     * @param config the configuration
+     * @return the result type
+     */
+    public ResultInformation getResultInfo(RestConfig config) {
+        if (isCustom(config.resultType())) {
+            return new ResultInformation(config.resultType(), config.resultByQuery());
+        } else {
+            return getResultInfo();
+        }
+    }
+    
+    private ResultInformation getResultInfo() {
+        if (isCustom(annotation.resultType())) {
+            return new ResultInformation(annotation.resultType(), annotation.resultByQuery());
+        } else {
+            return new ResultInformation(entityClass, false);
+        } 
     }
 
     private static boolean isCustom(Class<?> clazz) {
@@ -157,6 +176,27 @@ public class RestInformation {
      */
     public RestConfig delete() {
         return annotation.delete();
+    }
+    
+    public static class ResultInformation {
+        
+        private final Class<?> type;
+        
+        private final boolean query;
+
+        private ResultInformation(Class<?> type, boolean query) {
+            this.type = type;
+            this.query = query;
+        }
+        
+        public Class<?> getType() {
+            return type;
+        }
+        
+        public boolean isQuery() {
+            return query;
+        }
+
     }
 
 }

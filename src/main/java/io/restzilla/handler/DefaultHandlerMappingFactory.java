@@ -14,6 +14,7 @@ import io.beanmapper.spring.PageableMapper;
 import io.beanmapper.spring.util.JsonUtil;
 import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
+import io.restzilla.RestInformation.ResultInformation;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
@@ -132,8 +133,9 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
 
         private Listable<?> resolveEntityRetriever() {
             Listable<?> retrievable = entityService;
-            if (information.findAll().resultByQuery()) {
-                retrievable = new ReadServiceListableAdapter(readService, information.findAll().resultType());
+            ResultInformation result = information.getResultInfo(information.findAll());
+            if (result.isQuery()) {
+                retrievable = new ReadServiceListableAdapter(readService, result.getType());
             }
             return retrievable;
         }
@@ -148,7 +150,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         private Page findAllAsPage(Listable<?> retriever, HttpServletRequest request) {
             Pageable pageable = PageableResolver.getPageable(request, information.getEntityClass());
             Page<?> page = retriever.findAll(pageable);
-            Class<?> resultType = information.getResultType(information.findAll());
+            Class<?> resultType = information.getResultInfo(information.findAll()).getType();
             return PageableMapper.map(page, resultType, beanMapper);
         }
 
@@ -161,7 +163,8 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         private Collection findAllAsCollection(Listable<?> retriever, HttpServletRequest request) {
             Sort sort = PageableResolver.getSort(request, information.getEntityClass());
             List<?> entities = retriever.findAll(sort);
-            return beanMapper.map(entities, information.getResultType(information.findAll()));
+            Class<?> resultType = information.getResultInfo(information.findAll()).getType();
+            return beanMapper.map(entities, resultType);
         }
 
         /**
@@ -173,9 +176,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
             checkIsAuthorized(information.findOne().secured(), request);
-            Serializable id = extractId(request);
-            Class resultType = information.getResultType(information.findOne());
-            return mapIdToResult(id, resultType);
+            return mapIdToResult(extractId(request));
         }
         
         private Serializable extractId(HttpServletRequest request) {
@@ -184,11 +185,12 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             return conversionService.convert(raw, information.getIdentifierClass().asSubclass(Serializable.class));
         }
 
-        private Object mapIdToResult(Serializable id, Class resultType) {
-            if (information.findOne().resultByQuery()) {
-                return readService.getOne(resultType, id);
+        private Object mapIdToResult(Serializable id) {
+            ResultInformation result = information.getResultInfo(information.findOne());
+            if (result.isQuery()) {
+                return readService.getOne((Class) result.getType(), id);
             } else {
-                return beanMapper.map(entityService.getOne(id), resultType);
+                return beanMapper.map(entityService.getOne(id), result.getType());
             }
         }
 
@@ -246,11 +248,11 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          * @return the entity in its result type
          */
         private Object mapEntityToResult(Persistable<?> entity, RestConfig config) {
-            Class resultType = information.getResultType(config);
-            if (config.resultByQuery()) {
-                return readService.getOne(resultType, entity.getId());
+            ResultInformation result = information.getResultInfo(config);
+            if (result.isQuery()) {
+                return readService.getOne((Class) result.getType(), entity.getId());
             } else {
-                return convertToType(entity, resultType);
+                return convertToType(entity, result.getType());
             }
         }
 

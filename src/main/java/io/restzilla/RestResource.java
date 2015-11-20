@@ -42,10 +42,17 @@ public @interface RestResource {
     String basePath() default "";
     
     /**
-     * (Optional) the result type, when left empty we return the entity
+     * (Optional) the custom result type, when empty we just return the entity.
      * @return the result type
      */
     Class<?> resultType() default Object.class;
+    
+    /**
+     * Whether the result value should be queried. Otherwise
+     * we just perform a mapping.
+     * @return if the result should be queried
+     */
+    boolean resultByQuery() default false;
     
     /**
      * Enable this if you only want to handle {@code GET} requests.

@@ -34,17 +34,17 @@ public @interface RestConfig {
     Class<?> inputType() default Object.class;
 
     /**
-     * (Optional) the result type, when left empty we return the default result type.
+     * (Optional) the custom result type, when empty we just return the entity.
      * @return the result type
      */
     Class<?> resultType() default Object.class;
     
     /**
-     * Determines if we retrieve the result object by query.
-     * @return the result by query
+     * Whether the result value should be queried. Otherwise
+     * we just perform a mapping.
      */
     boolean resultByQuery() default false;
-    
+
     /**
      * (Optional) the security that are allowed to perform this functionality
      * @return the security
