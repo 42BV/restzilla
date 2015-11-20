@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Scope(proxyMode = TARGET_CLASS)
 public class WithServiceService extends DefaultCrudService<WithService, Long> {
 
-    @SuppressWarnings("unused")
     private CrudService<User, Long> userService;
 
     @Override
@@ -29,9 +28,14 @@ public class WithServiceService extends DefaultCrudService<WithService, Long> {
         return super.save(entity);
     }
     
+    /**
+     * Configure the user service. This is merely a check to ensure
+     * that generated services can also be injected.
+     * @param userService the user service
+     */
     @Lazy
     @Autowired
-    @Qualifier("UserService")
+    @Qualifier("userService")
     public void setUserService(CrudService<User, Long> userService) {
         this.userService = userService;
     }

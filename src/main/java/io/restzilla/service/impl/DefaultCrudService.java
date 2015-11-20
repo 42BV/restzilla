@@ -3,6 +3,7 @@
  */
 package io.restzilla.service.impl;
 
+import io.beanmapper.spring.Lazy;
 import io.restzilla.service.CrudService;
 import io.restzilla.service.RepositoryAware;
 
@@ -15,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
 /**
@@ -23,7 +25,7 @@ import org.springframework.util.Assert;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> extends CrudServiceSupport<T, ID> implements RepositoryAware<T, ID> {
+public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID>, RepositoryAware<T, ID> {
 
     private final Class<T> entityClass;
 
@@ -83,6 +85,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      * {@inheritDoc}
      */
     @Override
+    @Transactional(readOnly = true)
     public List<T> findAll() {
         return (List<T>) repository.findAll();
     }
@@ -91,6 +94,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      * {@inheritDoc}
      */
     @Override
+    @Transactional(readOnly = true)
     public List<T> findAll(Sort sort) {
         return (List<T>) repository.findAll(sort);
     }
@@ -99,6 +103,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      * {@inheritDoc}
      */
     @Override
+    @Transactional(readOnly = true)
     public Page<T> findAll(Pageable pageable) {
         return repository.findAll(pageable);
     }
@@ -107,26 +112,62 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      * {@inheritDoc}
      */
     @Override
+    @Transactional(readOnly = true)
     public T findOne(ID id) {
         return repository.findOne(id);
     }
-
+    
     /**
      * {@inheritDoc}
      */
     @Override
-    public <S extends T> S save(S entity) {
-        return repository.save(entity);
+    @Transactional(readOnly = true)
+    public T getOne(ID id) {
+        T entity = findOne(id);
+        if (entity == null) {
+            throw new IllegalArgumentException("Could not find entity '" + getEntityClass().getSimpleName() + "' with id: " + id);
+        }
+        return entity;
     }
 
     /**
      * {@inheritDoc}
      */
     @Override
+    @Transactional
+    public <S extends T> S save(S entity) {
+        return repository.save(entity);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public <S extends T> S save(Lazy<S> entity) {
+        return save(entity.get());
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
     public void delete(ID id) {
         repository.delete(id);
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public void delete(T entity) {
+        if (!entity.isNew()) {
+            delete(entity.getId());
+        }
+    }
+
     /**
      * {@inheritDoc}
      */

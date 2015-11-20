@@ -3,7 +3,7 @@
  */
 package io.restzilla.service;
 
-import io.restzilla.service.impl.TransactionalCrudService;
+import io.restzilla.service.impl.DefaultCrudService;
 
 import java.io.Serializable;
 
@@ -15,6 +15,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.util.StringUtils;
 
 /**
  * Default implementation of the service factory.
@@ -48,11 +49,15 @@ public class DefaultServiceFactory implements CrudServiceFactory {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> buildService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
-        TransactionalCrudService<T, ID> service = new TransactionalCrudService<T, ID>(repository, entityClass);
+        DefaultCrudService<T, ID> service = new DefaultCrudService<T, ID>(entityClass, repository);
         beanFactory.autowireBean(service);
-        beanFactory.registerSingleton(entityClass.getSimpleName() + "Service", service);
-        return service;
+
+        final String beanName = StringUtils.uncapitalize(entityClass.getSimpleName()) + "Service";
+        Object proxy = beanFactory.applyBeanPostProcessorsAfterInitialization(service, beanName);
+        beanFactory.registerSingleton(beanName, proxy);
+        return (CrudService<T, ID>) proxy;
     }
     
     /**
