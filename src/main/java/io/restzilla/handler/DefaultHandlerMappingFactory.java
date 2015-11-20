@@ -38,6 +38,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.BindException;
+import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
@@ -63,6 +66,8 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
     
     private final SecurityProvider securityProvider;
     
+    private final Validator validator;
+    
     /**
      * Instantiate a new {@link DefaultHandlerMappingFactory}.
      * 
@@ -76,17 +81,21 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
      *              the {@link ReadService} for querying result entities
      * @param securityProvider
      *              the {@link SecurityProvider} checking the authorization
+     * @param validator
+     *              the {@link Validator} for verifying the input
      */
     public DefaultHandlerMappingFactory(ObjectMapper objectMapper,
                                    ConversionService conversionService,
                                           BeanMapper beanMapper,
                                          ReadService readService,
-                                    SecurityProvider securityProvider) {
+                                    SecurityProvider securityProvider,
+                                           Validator validator) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
         this.beanMapper = beanMapper;
         this.readService = readService;
         this.securityProvider = securityProvider;
+        this.validator = validator;
     }
 
     /**
@@ -207,11 +216,20 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         public Object create(HttpServletRequest request) throws Exception {
             checkIsAuthorized(information.create().secured(), request);
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
+            validate(input);
             Persistable<?> entity = beanMapper.map(input, information.getEntityClass());
             Persistable<?> output = entityService.save(entity);
             return mapEntityToResult(output, information.create());
         }
         
+        private void validate(Object input) throws BindException {
+            BeanPropertyBindingResult errors = new BeanPropertyBindingResult(input, "input");
+            validator.validate(input, errors);
+            if (errors.hasErrors()) {
+                throw new BindException(errors);
+            }
+        }
+
         /**
          * Updates an entity. Any content is retrieved from the request body.
          * 
@@ -223,6 +241,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             Serializable id = extractId(request);
             String json = CharStreams.toString(request.getReader());
             Object input = objectMapper.readValue(json, information.getInputType(information.update()));
+            validate(input);
             Persistable<?> output = entityService.save(new LazyMappingEntity(id, input, json));
             return mapEntityToResult(output, information.update());
         }

@@ -30,6 +30,8 @@ import org.springframework.context.ApplicationContextAware;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.util.ClassUtils;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 import org.springframework.web.servlet.HandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -99,6 +101,11 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * Checks the authorization.
      */
     private SecurityProvider securityProvider;
+    
+    /**
+     * Validator.
+     */
+    private Validator validator = new NoOpValidator();
 
     /**
      * {@inheritDoc}
@@ -136,7 +143,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     }
     
     protected EntityHandlerMappingFactory buildHandlerMappingFactory(CrudServiceRegistry registry) {
-        return new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, new ReadService(registry), securityProvider);
+        return new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, new ReadService(registry), securityProvider, validator);
     }
 
     /**
@@ -258,6 +265,28 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     @Autowired(required = false)
     public void setSecurityProvider(SecurityProvider securityProvider) {
         this.securityProvider = securityProvider;
+    }
+    
+    /**
+     * Set the validator that should be used to check the input.
+     * @param validator the validator to set
+     */
+    @Autowired(required = false)
+    public void setValidator(Validator validator) {
+        this.validator = validator;
+    }
+    
+    private static class NoOpValidator implements Validator {
+
+        @Override
+        public boolean supports(Class<?> clazz) {
+            return true;
+        }
+
+        @Override
+        public void validate(Object target, Errors errors) { 
+        }
+        
     }
 
 }
