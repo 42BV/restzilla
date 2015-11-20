@@ -4,8 +4,7 @@
 package io.restzilla;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
-import io.restzilla.config.RestHandlerMappingFactoryBean;
-import io.restzilla.handler.RestHandlerMapping;
+import io.restzilla.config.EnableRest;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -17,7 +16,6 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -44,14 +42,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Jeroen van Schagen
  * @since Aug 24, 2015
  */
+@Configuration
 @ComponentScan(
     basePackageClasses = ApplicationConfig.class,
-    excludeFilters = {
-        @Filter({ ControllerAdvice.class, Controller.class, RestController.class, Configuration.class })
+    excludeFilters = { @Filter({ ControllerAdvice.class, Controller.class, RestController.class, Configuration.class })
 })
 @EnableTransactionManagement
 @EnableJpaRepositories(basePackageClasses = ApplicationConfig.class)
-@Configuration
+@EnableRest(basePackageClass = ApplicationConfig.class)
 public class ApplicationConfig {
     
     @Autowired
@@ -114,17 +112,6 @@ public class ApplicationConfig {
     @Bean
     public Validator validator() {
         return new LocalValidatorFactoryBean();
-    }
-    
-    @Bean
-    public RestHandlerMapping restHandlerMapping(ApplicationContext applicationContext) throws Exception {
-        RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean();
-        factoryBean.setBasePackageClass(ApplicationConfig.class);
-        factoryBean.setApplicationContext(applicationContext);
-        factoryBean.setObjectMapper(objectMapper());
-        factoryBean.setValidator(validator());
-        factoryBean.afterPropertiesSet();
-        return factoryBean.getObject();
     }
 
     public static class HsqlConfig {

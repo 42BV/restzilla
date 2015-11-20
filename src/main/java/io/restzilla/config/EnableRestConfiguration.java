@@ -36,11 +36,12 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
      * @throws Exception whenever something goes wrong
      */
     @Bean
-    public RestHandlerMapping crudHandlerMapping() throws Exception {
+    public RestHandlerMapping restHandlerMapping() throws Exception {
         RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean();
         factoryBean.setBasePackageClass((Class<?>) attributes.get(BASE_PACKAGE_CLASS_NAME));
         factoryBean.setApplicationContext(applicationContext);
         factoryBean.afterPropertiesSet();
+        applicationContext.getAutowireCapableBeanFactory().autowireBean(factoryBean);
         return factoryBean.getObject();
     }
 

@@ -198,6 +198,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * <i>Optionally</i> configure the naming strategy.
      * @param namingStrategy the namingStrategy to set
      */
+    @Autowired(required = false)
     public void setNamingStrategy(RestNamingStrategy namingStrategy) {
         this.namingStrategy = namingStrategy;
     }
