@@ -24,16 +24,7 @@ import org.springframework.data.domain.Sort;
  */
 public class ReadService {
     
-    private final CrudServiceRegistry registry;
-    
-    /**
-     * Initialize a new read service.
-     * 
-     * @param registry the service registry, used to retrieve delegate services
-     */
-    public ReadService(CrudServiceRegistry registry) {
-        this.registry = registry;
-    }
+    private CrudServiceRegistry serviceRegistry;
 
     /**
      * Retrieve all entities with a certain sort.
@@ -43,7 +34,7 @@ public class ReadService {
      * @return the sorted entities
      */
     public <T extends Persistable<ID>, ID extends Serializable> List<T> findAll(Class<T> entityClass, Sort sort) {
-        return registry.getService(entityClass).findAll(sort);
+        return serviceRegistry.getService(entityClass).findAll(sort);
     }
 
     /**
@@ -54,7 +45,7 @@ public class ReadService {
      * @return the page of entities
      */
     public <T extends Persistable<ID>, ID extends Serializable> Page<T> findAll(Class<T> entityClass, Pageable pageable) {
-        return registry.getService(entityClass).findAll(pageable);
+        return serviceRegistry.getService(entityClass).findAll(pageable);
     }
 
     /**
@@ -65,7 +56,16 @@ public class ReadService {
      * @return the result entity, if any
      */
     public <T extends Persistable<ID>, ID extends Serializable> T getOne(Class<T> entityClass, ID id) {
-        return registry.getService(entityClass).findOne(id);
+        return serviceRegistry.getService(entityClass).findOne(id);
+    }
+
+    /**
+     * Configure the CRUD service registry. Inside the registry we
+     * hold an instance of each detected CRUD service instance.
+     * @param serviceRegistry the registry
+     */
+    public void setServiceRegistry(CrudServiceRegistry serviceRegistry) {
+        this.serviceRegistry = serviceRegistry;
     }
 
 }

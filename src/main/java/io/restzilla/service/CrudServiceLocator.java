@@ -3,6 +3,7 @@
  */
 package io.restzilla.service;
 
+import io.beanmapper.utils.Classes;
 import io.restzilla.RestResource;
 
 import java.util.HashMap;
@@ -42,7 +43,7 @@ public class CrudServiceLocator {
      * @return the service registry, containing all registered repositories and services
      * @throws Exception whenever something goes wrong
      */
-    public CrudServiceRegistry buildRegistry(String basePackage, CrudServiceFactory factory) throws Exception {
+    public CrudServiceRegistry buildRegistry(String basePackage, CrudServiceFactory factory) {
         Assert.notNull(basePackage, "Base package is required.");
         CrudServiceRegistry registry = new CrudServiceRegistry(factory);
 
@@ -53,7 +54,7 @@ public class CrudServiceLocator {
         provider.addIncludeFilter(new AnnotationTypeFilter(RestResource.class));
         Set<BeanDefinition> components = provider.findCandidateComponents(basePackage);
         for (BeanDefinition component : components) {
-            Class<?> entityClass = Class.forName(component.getBeanClassName());
+            Class<?> entityClass = Classes.forName(component.getBeanClassName());
             registerBeansFor(entityClass, services, repositories, registry);
         }
         
@@ -61,7 +62,7 @@ public class CrudServiceLocator {
     }
 
     @SuppressWarnings({ "rawtypes", "unchecked" })
-    private void registerBeansFor(Class entityClass, Services services, Repositories repositories, CrudServiceRegistry registry) throws Exception {
+    private void registerBeansFor(Class entityClass, Services services, Repositories repositories, CrudServiceRegistry registry) {
         PagingAndSortingRepository repository = registerRepository(entityClass, repositories, registry);
         registerService(entityClass, repository, services, registry);
     }

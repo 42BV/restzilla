@@ -27,7 +27,7 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
 
     private ApplicationContext applicationContext;
 
-    private Map<String, Object> attributes;
+    private Class<?> basePackageClass;
 
     /**
      * Build a new CRUD handler mapping factory.
@@ -38,9 +38,8 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
     @Bean
     public RestHandlerMapping restHandlerMapping() throws Exception {
         RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean();
-        factoryBean.setBasePackageClass((Class<?>) attributes.get(BASE_PACKAGE_CLASS_NAME));
+        factoryBean.setBasePackageClass(basePackageClass);
         factoryBean.setApplicationContext(applicationContext);
-        factoryBean.afterPropertiesSet();
         applicationContext.getAutowireCapableBeanFactory().autowireBean(factoryBean);
         return factoryBean.getObject();
     }
@@ -50,7 +49,8 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
      */
     @Override
     public void setImportMetadata(AnnotationMetadata importMetadata) {
-        attributes = importMetadata.getAnnotationAttributes(EnableRest.class.getName());
+        Map<String, Object> attributes = importMetadata.getAnnotationAttributes(EnableRest.class.getName());
+        basePackageClass = ((Class<?>) attributes.get(BASE_PACKAGE_CLASS_NAME));
     }
     
     /**

@@ -10,6 +10,8 @@ import io.restzilla.service.RepositoryAware;
 import java.io.Serializable;
 import java.util.List;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -125,7 +127,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     public T getOne(ID id) {
         T entity = findOne(id);
         if (entity == null) {
-            throw new IllegalArgumentException("Could not find entity '" + getEntityClass().getSimpleName() + "' with id: " + id);
+            throw new EntityNotFoundException("Could not find entity '" + getEntityClass().getSimpleName() + "' with id: " + id);
         }
         return entity;
     }

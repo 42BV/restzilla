@@ -18,13 +18,12 @@ import io.restzilla.service.CrudService;
 import io.restzilla.service.CrudServiceFactory;
 import io.restzilla.service.CrudServiceLocator;
 import io.restzilla.service.CrudServiceRegistry;
-import io.restzilla.service.DefaultServiceFactory;
+import io.restzilla.service.impl.DefaultServiceFactory;
 import io.restzilla.service.impl.ReadService;
 import io.restzilla.util.NoOpValidator;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -51,7 +50,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, InitializingBean, ApplicationContextAware {
+public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, ApplicationContextAware {
     
     /**
      * Base class used to check if Spring Security is available on the classpath.
@@ -68,8 +67,6 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     private RestNamingStrategy namingStrategy = new DefaultRestNamingStrategy();
 
-    // Service
-
     /**
      * Creates CRUD service and repository beans.
      */
@@ -79,8 +76,6 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * Base package of the entities to scan.
      */
     private String basePackage;
-    
-    // Controller
 
     /**
      * Maps between entities.
@@ -108,6 +103,11 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     private Validator validator = new NoOpValidator();
 
     /**
+     * Performs queries.
+     */
+    private ReadService readService = new ReadService();
+    
+    /**
      * {@inheritDoc}
      */
     @Override
@@ -115,35 +115,81 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     public RestHandlerMapping getObject() throws Exception {
         RestHandlerMapping rootHandlerMapping = new RestHandlerMapping(applicationContext);
         
-        // Scans the classpath and register all resources per entity
-        CrudServiceLocator locator = new CrudServiceLocator(applicationContext);
-        CrudServiceRegistry registry = locator.buildRegistry(basePackage, serviceFactory);
-        
-        // Build the default handler mapping factory for entities 
-        EntityHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(registry);
+        CrudServiceRegistry serviceRegistry = buildServiceRegistry();
+        afterServiceRegistry(serviceRegistry);
+        EntityHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(serviceRegistry);
 
-        // Register the handler mapping per detected entity
-        for (Class entityClass : registry.getEntityClasses()) {
+        // Register handler mapping per entity type
+        for (Class entityClass : serviceRegistry.getEntityClasses()) {
             RestInformation entityInfo = buildInformation(entityClass);
-            CrudService crudService = registry.getService(entityClass);
-            rootHandlerMapping.registerHandler(handlerMappingFactory.build(crudService, entityInfo));
+            CrudService serviceInstance = serviceRegistry.getService(entityClass);
+            rootHandlerMapping.registerHandler(handlerMappingFactory.build(serviceInstance, entityInfo));
         }
 
         return rootHandlerMapping;
     }
 
+    /**
+     * Start scanning the classpath and retrieve a registry of
+     * all found entity services.
+     * @return a registry with all entities and their related service
+     */
+    private CrudServiceRegistry buildServiceRegistry() {
+        CrudServiceLocator serviceLocator = new CrudServiceLocator(applicationContext);
+        if (serviceFactory == null) {
+            serviceFactory = new DefaultServiceFactory(applicationContext);
+        }
+        return serviceLocator.buildRegistry(basePackage, serviceFactory);
+    }
+    
+    /**
+     * Initialized all required dependencies using the service registry.
+     * @param serviceRegistry the service registry
+     */
+    protected void afterServiceRegistry(CrudServiceRegistry serviceRegistry) {
+        if (beanMapper == null) {
+            beanMapper = new BeanMapper();
+            beanMapper.addPackagePrefix(basePackage);
+        }
+        if (securityProvider == null) {
+            securityProvider = buildSecurityProvider();
+        }
+        readService.setServiceRegistry(serviceRegistry);
+    }
+    
+    private SecurityProvider buildSecurityProvider() {
+        if (ClassUtils.isPresent(SPRING_SECURITY_PATH, getClass().getClassLoader())) {
+            SecurityProvider securityProvider = new io.restzilla.handler.security.SpelSecurityProvider();
+            applicationContext.getAutowireCapableBeanFactory().autowireBean(securityProvider);
+            return securityProvider;
+        } else {
+            return new AlwaysSecurityProvider();
+        }
+    }
+    
+    /**
+     * Build the entity handler mapping factory, responsible for creating all
+     * handler mappings for each entity.
+     * @param serviceRegistry the service registry
+     * @return the created factory
+     */
+    protected EntityHandlerMappingFactory buildHandlerMappingFactory(CrudServiceRegistry serviceRegistry) {
+        return new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, readService, securityProvider, validator);
+    }
+    
+    /**
+     * Retrieve the REST meta data of an entity.
+     * @param entityClass the entity class
+     * @return the entity REST meta data
+     * @throws NoSuchMethodException
+     */
     private RestInformation buildInformation(Class<?> entityClass) throws NoSuchMethodException {
         RestResource annotation = entityClass.getAnnotationsByType(RestResource.class)[0];
         String basePath = annotation.basePath();
         if (isBlank(basePath)) {
             basePath = namingStrategy.getBasePath(entityClass);
         }
-        RestInformation information = new RestInformation(entityClass, basePath, annotation);
-        return information;
-    }
-    
-    protected EntityHandlerMappingFactory buildHandlerMappingFactory(CrudServiceRegistry registry) {
-        return new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, new ReadService(registry), securityProvider, validator);
+        return new RestInformation(entityClass, basePath, annotation);
     }
 
     /**
@@ -162,30 +208,6 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         return true;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        if (beanMapper == null) {
-            beanMapper = new BeanMapper();
-            beanMapper.addPackagePrefix(basePackage);
-        }
-        if (serviceFactory == null) {
-            serviceFactory = new DefaultServiceFactory(applicationContext);
-        }
-        if (securityProvider == null) {
-            securityProvider = buildSecurityProvider();
-        }
-    }
-
-    private SecurityProvider buildSecurityProvider() {
-        if (ClassUtils.isPresent(SPRING_SECURITY_PATH, getClass().getClassLoader())) {
-            SecurityProvider securityProvider = new io.restzilla.handler.security.SpelSecurityProvider();
-            applicationContext.getAutowireCapableBeanFactory().autowireBean(securityProvider);
-            return securityProvider;
-        } else {
-            return new AlwaysSecurityProvider();
-        }
-    }
-    
     /**
      * {@inheritDoc}
      */
@@ -202,8 +224,6 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     public void setNamingStrategy(RestNamingStrategy namingStrategy) {
         this.namingStrategy = namingStrategy;
     }
-
-    // Service locator
 
     /**
      * Configure the base package of our entities.
@@ -229,8 +249,6 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     public void setServiceFactory(CrudServiceFactory serviceFactory) {
         this.serviceFactory = serviceFactory;
     }
-
-    // Handler mapping
 
     /**
      * <i>Optionally</i> set a custom bean mapper.
@@ -275,6 +293,15 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     @Autowired(required = false)
     public void setValidator(Validator validator) {
         this.validator = validator;
+    }
+    
+    /**
+     * Set the read service used for queries.
+     * @param readService the readService to set
+     */
+    @Autowired(required = false)
+    public void setReadService(ReadService readService) {
+        this.readService = readService;
     }
 
 }

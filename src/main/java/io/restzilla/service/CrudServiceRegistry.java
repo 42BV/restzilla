@@ -11,6 +11,8 @@ import java.util.Set;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Registers all service and repository instances per entity class.
  *
@@ -19,19 +21,20 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  */
 public class CrudServiceRegistry {
 
-    private final Map<Class<?>, PagingAndSortingRepository<?, ?>> repositories;
+    private final CrudServiceFactory serviceFactory;
     
+    // Caches instances
+    private final Map<Class<?>, PagingAndSortingRepository<?, ?>> repositories;
     private final Map<Class<?>, CrudService<?, ?>> services;
     
-    private final CrudServiceFactory factory;
-
     {
         repositories = new HashMap<Class<?>, PagingAndSortingRepository<?, ?>>();
         services = new HashMap<Class<?>, CrudService<?, ?>>();
     }
 
-    public CrudServiceRegistry(CrudServiceFactory factory) {
-        this.factory = factory;
+    public CrudServiceRegistry(CrudServiceFactory serviceFactory) {
+        Preconditions.checkNotNull(serviceFactory, "Service factory cannot be null.");
+        this.serviceFactory = serviceFactory;
     }
 
     /**
@@ -115,7 +118,7 @@ public class CrudServiceRegistry {
      * @param repository the repository instance
      */
     <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
-        CrudService<T, ID> service = factory.buildService(entityClass, repository);
+        CrudService<T, ID> service = serviceFactory.buildService(entityClass, repository);
         return registerService(entityClass, service);
     }
     
@@ -136,7 +139,7 @@ public class CrudServiceRegistry {
      * @param entityClass the entity class
      */
     <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> generateRepository(Class<T> entityClass) {
-        PagingAndSortingRepository<T, ID> repository = factory.buildRepository(entityClass);
+        PagingAndSortingRepository<T, ID> repository = serviceFactory.buildRepository(entityClass);
         return registerRepository(entityClass, repository);
     }
 

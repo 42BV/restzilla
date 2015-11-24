@@ -1,9 +1,10 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service.impl;
+package io.restzilla.handler;
 
 import io.restzilla.service.Listable;
+import io.restzilla.service.impl.ReadService;
 
 import java.io.Serializable;
 import java.util.List;
@@ -19,13 +20,13 @@ import org.springframework.data.domain.Sort;
  * @author Jeroen van Schagen
  * @since Nov 6, 2015
  */
-public class ReadServiceListableAdapter<T extends Persistable<ID>, ID extends Serializable> implements Listable<T> {
+public class ListableReadServiceAdapter<T extends Persistable<ID>, ID extends Serializable> implements Listable<T> {
     
     private final ReadService readService;
 
     private final Class<T> entityClass;
     
-    public ReadServiceListableAdapter(ReadService readService, Class<T> entityClass) {
+    public ListableReadServiceAdapter(ReadService readService, Class<T> entityClass) {
         this.readService = readService;
         this.entityClass = entityClass;
     }
