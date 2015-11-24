@@ -5,6 +5,7 @@ package io.restzilla;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
 import io.restzilla.config.EnableRest;
+import io.restzilla.service.impl.ReadService;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -112,6 +113,11 @@ public class ApplicationConfig {
     @Bean
     public Validator validator() {
         return new LocalValidatorFactoryBean();
+    }
+    
+    @Bean
+    public ReadService readService() {
+        return new ReadService();
     }
 
     public static class HsqlConfig {
