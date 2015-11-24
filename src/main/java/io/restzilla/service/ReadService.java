@@ -58,7 +58,7 @@ public class ReadService {
      * @return the result entity, if any
      */
     public <T extends Persistable<ID>, ID extends Serializable> T getOne(Class<T> entityClass, ID id) {
-        return serviceRegistry.getService(entityClass).findOne(id);
+        return serviceRegistry.getService(entityClass).getOne(id);
     }
 
     /**
