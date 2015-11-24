@@ -22,6 +22,10 @@ import org.springframework.data.domain.Sort;
  */
 public class ReadService {
     
+    /**
+     * Registry containing all service instanced. Note that this
+     * variable is not final as it can be injected dynamically.
+     */
     private CrudServiceRegistry serviceRegistry;
 
     /**
