@@ -18,7 +18,8 @@ import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
 import io.restzilla.service.Listable;
-import io.restzilla.service.impl.ReadService;
+import io.restzilla.service.ReadService;
+import io.restzilla.service.adapter.ReadServiceListableAdapter;
 import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
@@ -143,7 +144,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             Listable<?> retrievable = entityService;
             ResultInformation result = information.getResultInfo(information.findAll());
             if (result.isQuery()) {
-                retrievable = new ListableReadServiceAdapter(readService, result.getType());
+                retrievable = new ReadServiceListableAdapter(readService, result.getType());
             }
             return retrievable;
         }

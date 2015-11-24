@@ -5,7 +5,7 @@ package io.restzilla;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
 import io.restzilla.config.EnableRest;
-import io.restzilla.service.impl.ReadService;
+import io.restzilla.service.ReadService;
 
 import java.util.HashMap;
 import java.util.Map;

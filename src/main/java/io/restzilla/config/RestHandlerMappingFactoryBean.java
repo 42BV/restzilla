@@ -18,8 +18,8 @@ import io.restzilla.service.CrudService;
 import io.restzilla.service.CrudServiceFactory;
 import io.restzilla.service.CrudServiceLocator;
 import io.restzilla.service.CrudServiceRegistry;
+import io.restzilla.service.ReadService;
 import io.restzilla.service.impl.DefaultServiceFactory;
-import io.restzilla.service.impl.ReadService;
 import io.restzilla.util.NoOpValidator;
 
 import org.springframework.beans.BeansException;

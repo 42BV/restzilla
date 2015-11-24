@@ -1,11 +1,13 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service.impl;
+package io.restzilla.service.adapter;
 
 import io.restzilla.AbstractSpringTest;
 import io.restzilla.builder.UserBuilder;
 import io.restzilla.model.User;
+import io.restzilla.service.ReadService;
+import io.restzilla.service.adapter.ReadServiceFinderAdapter;
 
 import org.junit.Assert;
 import org.junit.Before;

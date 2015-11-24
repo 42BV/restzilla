@@ -1,9 +1,7 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service.impl;
-
-import io.restzilla.service.CrudServiceRegistry;
+package io.restzilla.service;
 
 import java.io.Serializable;
 import java.util.List;
