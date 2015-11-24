@@ -29,8 +29,17 @@ import org.springframework.util.Assert;
  */
 public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID>, RepositoryAware<T, ID> {
 
+    /**
+     * Class reference to the type of entities that we manage
+     * in this service isntance.
+     */
     private final Class<T> entityClass;
 
+    /**
+     * Repository used to communicate with the database. Note that
+     * this instance is not marked as final, because it can be
+     * dynamically injected at runtime.
+     */
     private PagingAndSortingRepository<T, ID> repository;
 
     /**
@@ -44,6 +53,11 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         Assert.notNull(entityClass, "Entity class cannot be null");
     }
 
+    /**
+     * Dynamically resolve the entity type based on generic type arguments.
+     * 
+     * @return the resolved entity type
+     */
     private Class<?> resolveEntityType() {
         return GenericTypeResolver.resolveTypeArguments(getClass(), CrudService.class)[0];
     }

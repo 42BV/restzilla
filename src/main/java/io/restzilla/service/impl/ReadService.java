@@ -62,6 +62,7 @@ public class ReadService {
     /**
      * Configure the CRUD service registry. Inside the registry we
      * hold an instance of each detected CRUD service instance.
+     * 
      * @param serviceRegistry the registry
      */
     public void setServiceRegistry(CrudServiceRegistry serviceRegistry) {

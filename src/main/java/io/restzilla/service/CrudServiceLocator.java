@@ -19,7 +19,7 @@ import org.springframework.data.repository.support.Repositories;
 import org.springframework.util.Assert;
 
 /**
- * Factory bean that registers all services per entity.
+ * Build a registry of all CRUD service instances on our context.
  *
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
@@ -28,6 +28,11 @@ public class CrudServiceLocator {
     
     private final ApplicationContext applicationContext;
 
+    /**
+     * Create a new {@link CrudServiceLocator} instance.
+     * 
+     * @param applicationContext
+     */
     public CrudServiceLocator(ApplicationContext applicationContext) {
         Assert.notNull(applicationContext, "Application context is required.");
         this.applicationContext = applicationContext;

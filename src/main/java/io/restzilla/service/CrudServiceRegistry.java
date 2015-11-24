@@ -24,6 +24,7 @@ public class CrudServiceRegistry {
     private final CrudServiceFactory serviceFactory;
     
     // Caches instances
+
     private final Map<Class<?>, PagingAndSortingRepository<?, ?>> repositories;
     private final Map<Class<?>, CrudService<?, ?>> services;
     
@@ -32,6 +33,11 @@ public class CrudServiceRegistry {
         services = new HashMap<Class<?>, CrudService<?, ?>>();
     }
 
+    /**
+     * Create a new instance of the {@link CrudServiceRegistry}.
+     * 
+     * @param serviceFactory the service factory, used to instantiate new instances
+     */
     public CrudServiceRegistry(CrudServiceFactory serviceFactory) {
         Preconditions.checkNotNull(serviceFactory, "Service factory cannot be null.");
         this.serviceFactory = serviceFactory;
@@ -45,6 +51,8 @@ public class CrudServiceRegistry {
     public Set<Class<?>> getEntityClasses() {
         return services.keySet();
     }
+
+    // Lookup
 
     /**
      * Retrieve the service for our entity. When no instance can be found we
@@ -78,6 +86,8 @@ public class CrudServiceRegistry {
         return repository;
     }
     
+    // Registration
+
     /**
      * Register a new service instance.
      * 
@@ -106,20 +116,20 @@ public class CrudServiceRegistry {
      * @param entityClass the entity class
      * @param repository the repository instance
      */
-    <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass) {
-        PagingAndSortingRepository<T, ID> repository = getRepository(entityClass);
-        return generateService(entityClass, repository);
+    <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
+        CrudService<T, ID> service = serviceFactory.buildService(entityClass, repository);
+        return registerService(entityClass, service);
     }
-    
+
     /**
      * Generates a new service instance.
      * 
      * @param entityClass the entity class
      * @param repository the repository instance
      */
-    <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
-        CrudService<T, ID> service = serviceFactory.buildService(entityClass, repository);
-        return registerService(entityClass, service);
+    <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass) {
+        PagingAndSortingRepository<T, ID> repository = getRepository(entityClass);
+        return generateService(entityClass, repository);
     }
     
     /**

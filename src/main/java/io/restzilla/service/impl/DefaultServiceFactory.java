@@ -26,11 +26,19 @@ import org.springframework.util.StringUtils;
  */
 public class DefaultServiceFactory implements CrudServiceFactory {
     
+    /**
+     * Bean factory used to autowire and register generated beans.
+     */
     private final ConfigurableListableBeanFactory beanFactory;
     
     @PersistenceContext
     private EntityManager entityManager;
 
+    /**
+     * Create a new {@link DefaultServiceFactory} instance.
+     * 
+     * @param applicationContext the application context for autowiring
+     */
     public DefaultServiceFactory(ApplicationContext applicationContext) {
         beanFactory = (ConfigurableListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();        
         beanFactory.autowireBean(this);

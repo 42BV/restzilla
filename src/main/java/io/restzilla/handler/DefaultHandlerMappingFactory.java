@@ -215,18 +215,19 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         public Object create(HttpServletRequest request) throws Exception {
             checkIsAuthorized(information.create().secured(), request);
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
-            validate(input);
-            Persistable<?> entity = beanMapper.map(input, information.getEntityClass());
+            Persistable<?> entity = beanMapper.map(validate(input), information.getEntityClass());
             Persistable<?> output = entityService.save(entity);
             return mapEntityToResult(output, information.create());
         }
         
-        private void validate(Object input) throws BindException {
+        // Ensure that our input is valid, otherwise return with an exception
+        private Object validate(Object input) throws BindException {
             BeanPropertyBindingResult errors = new BeanPropertyBindingResult(input, "input");
             validator.validate(input, errors);
             if (errors.hasErrors()) {
                 throw new BindException(errors);
             }
+            return input;
         }
 
         /**
@@ -240,8 +241,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             Serializable id = extractId(request);
             String json = CharStreams.toString(request.getReader());
             Object input = objectMapper.readValue(json, information.getInputType(information.update()));
-            validate(input);
-            Persistable<?> output = entityService.save(new LazyMappingEntity(id, input, json));
+            Persistable<?> output = entityService.save(new LazyMappingEntity(id, validate(input), json));
             return mapEntityToResult(output, information.update());
         }
 
