@@ -174,7 +174,9 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * @return the created factory
      */
     protected EntityHandlerMappingFactory buildHandlerMappingFactory(CrudServiceRegistry serviceRegistry) {
-        return new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, readService, securityProvider, validator);
+        DefaultHandlerMappingFactory factory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, readService, securityProvider, validator);
+        applicationContext.getAutowireCapableBeanFactory().autowireBean(factory);
+        return factory;
     }
     
     /**

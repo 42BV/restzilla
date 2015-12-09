@@ -33,6 +33,8 @@ import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
@@ -67,6 +69,8 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
     
     private final Validator validator;
     
+    private ApplicationContext applicationContext;
+
     /**
      * Instantiate a new {@link DefaultHandlerMappingFactory}.
      * 
@@ -147,7 +151,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             ResultInformation result = information.getResultInfo(information.findAll());
             RestQuery query = findCustomQuery(request);
             if (query != null) {
-                return new RepositoryMethodListable(readService, information.getResultType(query), query.method(), request.getParameterMap());
+                return new RepositoryMethodListable(applicationContext, information.getResultType(query), query.method(), request.getParameterMap());
             } else if (result.isQuery()) {
                 return new ReadServiceListableAdapter(readService, result.getType());
             } else {
@@ -525,4 +529,9 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
 
     }
     
+    @Autowired
+    public void setApplicationContext(ApplicationContext applicationContext) {
+        this.applicationContext = applicationContext;
+    }
+
 }
