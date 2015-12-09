@@ -72,8 +72,14 @@ public @interface RestResource {
      * @return the patch
      */
     boolean patch() default true;
+    
+    /**
+     * Finder queries that should be supported by our resource.
+     * @return the queries
+     */
+    RestQuery[] queries() default {};
 
-    // Specific configuration per function
+    // Function based configuration
 
     /**
      * (Optional) the configuration of our {@code findAll}
