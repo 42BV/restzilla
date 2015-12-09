@@ -32,5 +32,11 @@ public @interface RestQuery {
      * @return the method
      */
     String method();
+    
+    /**
+     * Result type of the query.
+     * @return the result type
+     */
+    Class<?> resultType() default Object.class;
 
 }

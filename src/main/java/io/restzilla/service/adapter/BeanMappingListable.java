@@ -7,13 +7,11 @@ import io.beanmapper.BeanMapper;
 import io.beanmapper.spring.PageableMapper;
 import io.restzilla.service.Listable;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
 
 /**
@@ -22,7 +20,7 @@ import org.springframework.data.domain.Sort;
  * @author Jeroen van Schagen
  * @since Dec 9, 2015
  */
-public class BeanMappingListable<T extends Persistable<ID>, ID extends Serializable> implements Listable<T> {
+public class BeanMappingListable<T> implements Listable<T> {
     
     private final Listable<?> delegate;
     

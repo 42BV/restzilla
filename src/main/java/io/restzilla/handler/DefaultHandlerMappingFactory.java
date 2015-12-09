@@ -13,6 +13,7 @@ import io.beanmapper.spring.Lazy;
 import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
 import io.restzilla.RestInformation.ResultInformation;
+import io.restzilla.RestQuery;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
@@ -20,6 +21,7 @@ import io.restzilla.service.Listable;
 import io.restzilla.service.ReadService;
 import io.restzilla.service.adapter.BeanMappingListable;
 import io.restzilla.service.adapter.ReadServiceListableAdapter;
+import io.restzilla.service.adapter.RepositoryMethodListable;
 import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
@@ -124,7 +126,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         public Object findAll(HttpServletRequest request) {
             checkIsAuthorized(information.findAll().secured(), request);
             
-            Listable<?> listable = resolveEntityRetriever();
+            Listable<?> listable = resolveListable(request);
             Sort sort = PageableResolver.getSort(request, listable.getEntityClass());
 
             if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
@@ -141,14 +143,21 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             }
         }
 
-        private Listable<?> resolveEntityRetriever() {
+        private Listable<?> resolveListable(HttpServletRequest request) {
             ResultInformation result = information.getResultInfo(information.findAll());
-            if (result.isQuery()) {
+            RestQuery query = findCustomQuery(request);
+            if (query != null) {
+                return new RepositoryMethodListable(readService, information.getResultType(query), query.method(), request.getParameterMap());
+            } else if (result.isQuery()) {
                 return new ReadServiceListableAdapter(readService, result.getType());
             } else {
                 Class<?> resultType = information.getResultInfo(information.findAll()).getType();
                 return new BeanMappingListable(entityService, beanMapper, resultType);
             }
+        }
+        
+        private RestQuery findCustomQuery(HttpServletRequest request) {
+            return null; // TODO: Implement this
         }
 
         /**

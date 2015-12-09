@@ -103,8 +103,17 @@ public class RestInformation {
      * @return the result type
      */
     public Class<?> getResultType(RestConfig config) {
-        ResultInformation result = getResultInfo(config);
-        return result.getType();
+        return getResultInfo(config).getType();
+    }
+    
+    /**
+     * Determine the result type.
+     * 
+     * @param query the query
+     * @return the result type
+     */
+    public Class<?> getResultType(RestQuery query) {
+        return isCustom(query.resultType()) ? query.resultType() : this.entityClass;
     }
     
     /**
