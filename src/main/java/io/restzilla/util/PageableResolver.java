@@ -57,9 +57,20 @@ public class PageableResolver {
      * @return the resolved pageable
      */
     public static Pageable getPageable(HttpServletRequest request, Class<?> entityClass) {
+        Sort sort = getSort(request, entityClass);
+        return getPageable(request, sort);
+    }
+
+    /**
+     * Extract the {@link Pageable} instance from this request.
+     * 
+     * @param request the request
+     * @param sort the sort to use
+     * @return the resolved pageable
+     */
+    public static Pageable getPageable(HttpServletRequest request, Sort sort) {
         int page = getParameterAsInteger(request, PAGE_PARAMETER, FALLBACK_DEFAULT_PAGE);
         int size = getParameterAsInteger(request, SIZE_PARAMETER, FALLBACK_DEFAULT_SIZE);
-        Sort sort = getSort(request, entityClass);
         return new PageRequest(page, size, sort);
     }
 

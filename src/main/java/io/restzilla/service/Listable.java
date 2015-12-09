@@ -32,5 +32,12 @@ public interface Listable<T> {
      * @return the entities in that page
      */
     Page<T> findAll(Pageable pageable);
+    
+    /**
+     * Retrieve the entity class.
+     * 
+     * @return the entity class
+     */
+    Class<?> getEntityClass();
 
 }

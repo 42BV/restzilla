@@ -10,7 +10,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.core.rule.MappableFields;
 import io.beanmapper.spring.Lazy;
-import io.beanmapper.spring.PageableMapper;
 import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
 import io.restzilla.RestInformation.ResultInformation;
@@ -19,6 +18,7 @@ import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
 import io.restzilla.service.Listable;
 import io.restzilla.service.ReadService;
+import io.restzilla.service.adapter.BeanMappingListable;
 import io.restzilla.service.adapter.ReadServiceListableAdapter;
 import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
@@ -26,15 +26,12 @@ import io.restzilla.util.UrlUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.Collection;
-import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.convert.ConversionService;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
@@ -105,7 +102,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
     public DefaultHandlerMapping build(CrudService<?, ?> service, RestInformation information) {
         return new DefaultHandlerMapping(new DefaultCrudController(service, information));
     }
-
+    
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private class DefaultCrudController {
 
@@ -126,11 +123,15 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
             checkIsAuthorized(information.findAll().secured(), request);
-            Listable<?> retriever = resolveEntityRetriever();
+            
+            Listable<?> listable = resolveEntityRetriever();
+            Sort sort = PageableResolver.getSort(request, listable.getEntityClass());
+
             if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
-                return findAllAsPage(retriever, request);
+                Pageable pageable = PageableResolver.getPageable(request, sort);
+                return listable.findAll(pageable);
             } else {
-                return findAllAsCollection(retriever, request);
+                return listable.findAll(sort);
             }
         }
 
@@ -141,39 +142,13 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         }
 
         private Listable<?> resolveEntityRetriever() {
-            Listable<?> retrievable = entityService;
             ResultInformation result = information.getResultInfo(information.findAll());
             if (result.isQuery()) {
-                retrievable = new ReadServiceListableAdapter(readService, result.getType());
+                return new ReadServiceListableAdapter(readService, result.getType());
+            } else {
+                Class<?> resultType = information.getResultInfo(information.findAll()).getType();
+                return new BeanMappingListable(entityService, beanMapper, resultType);
             }
-            return retrievable;
-        }
-
-        /**
-         * Retrieve all entities in a page.
-         * 
-         * @param retriever the entity retriever
-         * @param request the request
-         * @return the page of entities, in result type
-         */
-        private Page findAllAsPage(Listable<?> retriever, HttpServletRequest request) {
-            Pageable pageable = PageableResolver.getPageable(request, information.getEntityClass());
-            Page<?> page = retriever.findAll(pageable);
-            Class<?> resultType = information.getResultInfo(information.findAll()).getType();
-            return PageableMapper.map(page, resultType, beanMapper);
-        }
-
-        /**
-         * Retrieve all entities in a collection.
-         * 
-         * @param retriever the entity retriever
-         * @return the collection of entities, in result type
-         */
-        private Collection findAllAsCollection(Listable<?> retriever, HttpServletRequest request) {
-            Sort sort = PageableResolver.getSort(request, information.getEntityClass());
-            List<?> entities = retriever.findAll(sort);
-            Class<?> resultType = information.getResultInfo(information.findAll()).getType();
-            return beanMapper.map(entities, resultType);
         }
 
         /**

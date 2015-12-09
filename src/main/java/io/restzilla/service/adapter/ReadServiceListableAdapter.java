@@ -53,4 +53,12 @@ public class ReadServiceListableAdapter<T extends Persistable<ID>, ID extends Se
         return readService.findAll(entityClass, pageable);
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getEntityClass() {
+        return entityClass;
+    }
+
 }
