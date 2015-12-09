@@ -11,6 +11,7 @@ import io.restzilla.model.WithOtherEntity;
 import io.restzilla.model.WithPatch;
 import io.restzilla.model.WithPatchNested;
 import io.restzilla.model.WithReadOnly;
+import io.restzilla.model.WithRepository;
 import io.restzilla.model.WithRollback;
 import io.restzilla.model.WithService;
 import io.restzilla.model.WithoutPatch;
@@ -220,6 +221,27 @@ public class RestTest extends AbstractControllerTest {
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
         Assert.assertEquals("[]", response.getContentAsString());
+    }
+    
+    @Test
+    public void testCustomRepositoryQuery() throws Exception {
+        WithRepository jan = new WithRepository();
+        jan.setName("Jan");
+        jan.setActive(true);
+        entityBuilder.save(jan);
+
+        WithRepository piet = new WithRepository();
+        piet.setName("Piet");
+        entityBuilder.save(piet);
+
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withrepository");
+        request.setParameter("active", "true");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("[{\"id\":1,\"name\":\"Jan\",\"active\":true},{\"id\":2,\"name\":\"Piet\",\"active\":false}]", response.getContentAsString());
     }
     
     @Test
