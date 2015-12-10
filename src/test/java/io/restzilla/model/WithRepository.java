@@ -4,14 +4,16 @@ import io.restzilla.RestQuery;
 import io.restzilla.RestResource;
 import io.restzilla.SortingDefault;
 import io.restzilla.model.dto.WithRepositoryDto;
+import io.restzilla.model.dto.WithRepositoryNameOnlyDto;
 
 import javax.persistence.Entity;
 
 @Entity
 @SortingDefault("name")
-@RestResource(
-    queries = @RestQuery(parameters = "active", method = "findAllByActive", resultType = WithRepositoryDto.class)
-)
+@RestResource(queries = {
+  @RestQuery(parameters = { "active", "type=name" }, method = "findAllByActive", resultType = WithRepositoryNameOnlyDto.class),
+  @RestQuery(parameters = "active", method = "findAllByActive", resultType = WithRepositoryDto.class)
+})
 public class WithRepository extends BaseEntity {
     
     private String name;

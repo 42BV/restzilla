@@ -298,9 +298,37 @@ public class RestTest extends AbstractControllerTest {
         
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals(
-                "{\"content\":[{\"name\":\"Jan\",\"active\":true}],\"last\":true,\"totalPages\":1,\"totalElements\":1,\"size\":10,\"number\":0,\"sort\":[{\"direction\":\"ASC\",\"property\":\"name\",\"ignoreCase\":false,\"nullHandling\":\"NATIVE\",\"ascending\":true}],\"first\":true,\"numberOfElements\":1}",
-                response.getContentAsString());
+        String contents = response.getContentAsString();
+        Assert.assertTrue(contents.contains("\"content\":[{\"name\":\"Jan\",\"active\":true}]"));
+        Assert.assertTrue(contents.contains("\"number\":0"));
+        Assert.assertTrue(contents.contains("\"size\":10"));
+    }
+
+    @Test
+    public void testCustomRepositoryQueryWithExactParameter() throws Exception {
+        WithRepository jan = new WithRepository();
+        jan.setName("Jan");
+        jan.setActive(true);
+        entityBuilder.save(jan);
+        
+        WithRepository henk = new WithRepository();
+        henk.setName("Henk");
+        henk.setActive(true);
+        entityBuilder.save(henk);
+        
+        WithRepository piet = new WithRepository();
+        piet.setName("Piet");
+        entityBuilder.save(piet);
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withrepository");
+        request.setParameter("active", "true");
+        request.setParameter("type", "name");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("[{\"name\":\"Henk\"},{\"name\":\"Jan\"}]", response.getContentAsString());
     }
 
     /*
