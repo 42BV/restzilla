@@ -23,18 +23,21 @@ public @interface RestQuery {
 
     /**
      * Parameters that our request must contain
+     * 
      * @return the parameter names
      */
     String[] parameters();
     
     /**
      * Name of the repository finder method that must be used.
+     * 
      * @return the method
      */
     String method();
     
     /**
-     * Result type of the query.
+     * Alternate entity type where the query can be found.
+     * 
      * @return the result type
      */
     Class<?> resultType() default Object.class;

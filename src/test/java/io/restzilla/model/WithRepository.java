@@ -7,6 +7,9 @@ import javax.persistence.Entity;
 
 @Entity
 @RestResource(
+    // TODO: findAllByActive(b,c,a)
+    // TODO: Prefer page queries when paged, prefer sorted when sorted.
+    // TODO: Cache the found methods
     queries = @RestQuery(parameters = "active", method = "findAllByActive")
 )
 public class WithRepository extends BaseEntity {

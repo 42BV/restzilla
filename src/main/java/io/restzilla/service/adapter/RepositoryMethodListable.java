@@ -3,7 +3,8 @@
  */
 package io.restzilla.service.adapter;
 
-import io.restzilla.RestQuery;
+import io.restzilla.RestInformation;
+import io.restzilla.RestInformation.QueryInformation;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.Listable;
 
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.support.AopUtils;
 import org.springframework.core.convert.ConversionService;
@@ -36,33 +38,62 @@ public class RepositoryMethodListable<T> implements Listable<T> {
     
     private final ConversionService conversionService;
 
-    private final Class entityClass;
+    private final RestInformation entityInfo;
     
-    private final RestQuery annotation;
+    private final QueryInformation queryInfo;
     
     private final Map<String, String[]> parameterValues;
 
     public RepositoryMethodListable(CrudServiceRegistry crudServiceRegistry, 
                                       ConversionService conversionService, 
-                                                  Class entityClass, 
-                                              RestQuery annotation,
+                                        RestInformation entityInfo, 
+                                       QueryInformation queryInfo,
                                   Map<String, String[]> parameterValues) {
         this.crudServiceRegistry = crudServiceRegistry;
         this.conversionService = conversionService;
-        this.entityClass = entityClass;
-        this.annotation = annotation;
+        this.entityInfo = entityInfo;
+        this.queryInfo = queryInfo;
         this.parameterValues = parameterValues;
     }
     
-    private InvokeableMethod findMethod(Class<?> returnType) {
-        InvokeableMethod method = findMethod(crudServiceRegistry.getService(entityClass), returnType);
-        if (method == null) {
-            method = findMethod(crudServiceRegistry.getRepository(entityClass), returnType);
-        }
-        return Preconditions.checkNotNull(method, "Could not find custom finder method '" + annotation.method() + "' for " + entityClass.getName());
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public List<T> findAll(Sort sort) {
+        InvokeableMethod invokable = findInvokableMethod(Iterable.class, Sort.class);
+        return (List<T>) invoke(invokable, Sort.class, sort);
     }
     
-    private InvokeableMethod findMethod(Object bean, Class<?> returnType) {
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Page<T> findAll(Pageable pageable) {
+        InvokeableMethod invokable = findInvokableMethod(Page.class, Pageable.class, Sort.class);
+        return (Page<T>) invoke(invokable, Pageable.class, pageable);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<?> getEntityClass() {
+        return entityInfo.getEntityClass();
+    }
+    
+    // Method retrieval
+
+    private InvokeableMethod findInvokableMethod(Class<?> returnType, Class<?>... preferredTypes) {
+        final Class entityClass = entityInfo.getEntityClass();
+        InvokeableMethod method = findInvokableMethod(crudServiceRegistry.getService(entityClass), returnType, preferredTypes);
+        if (method == null) {
+            method = findInvokableMethod(crudServiceRegistry.getRepository((Class) queryInfo.getResultType()), returnType, preferredTypes);
+        }
+        return Preconditions.checkNotNull(method, "Could not find custom finder method '" + queryInfo.getMethodName() + "' for " + entityClass.getName());
+    }
+    
+    private InvokeableMethod findInvokableMethod(Object bean, Class<?> returnType, Class<?>[] preferredTypes) {
         List<Class<?>> candidateClasses = new ArrayList<Class<?>>();
         candidateClasses.add(AopUtils.getTargetClass(bean));
         for (Class<?> interfaceClass : bean.getClass().getInterfaces()) {
@@ -70,7 +101,7 @@ public class RepositoryMethodListable<T> implements Listable<T> {
         }
 
         for (Class<?> candidateClass : candidateClasses) {
-            Method method = findMethod(bean, candidateClass, returnType);
+            Method method = findMethod(candidateClass, returnType, preferredTypes);
             if (method != null) {
                 return new InvokeableMethod(bean, method);
             }
@@ -78,15 +109,41 @@ public class RepositoryMethodListable<T> implements Listable<T> {
         return null;
     }
     
-    private Method findMethod(Object bean, Class<?> candidateClass, Class<?> returnType) {
+    private Method findMethod(Class<?> candidateClass, Class<?> returnType, Class<?>[] preferredTypes) {
         Method[] methods = ReflectionUtils.getAllDeclaredMethods(candidateClass);
+        List<Method> found = new ArrayList<Method>();
         for (Method method : methods) {
-            if (method.getName().equals(annotation.method()) && returnType.isAssignableFrom(method.getReturnType())) {
-                return method;
+            if (method.getName().equals(queryInfo.getMethodName()) && returnType.isAssignableFrom(method.getReturnType())) {
+                found.add(method);
             }
         }
-        return null;
+        return findMethodWithPreferredParameterTypes(found, preferredTypes);
     }
+    
+    /**
+     * Return the first method with a preferred parameter type. Whenever no
+     * method is preferred we just return the first method.
+     * 
+     * @param methods the suitable methods
+     * @param preferredTypes the preferred types, in order of preference
+     * @return the first preferred method
+     */
+    private Method findMethodWithPreferredParameterTypes(List<Method> methods, Class<?>[] preferredTypes) {
+        if (methods.isEmpty()) {
+            return null;
+        }
+        
+        for (Class<?> preferredType : preferredTypes) {
+            for (Method method : methods) {
+                if (ArrayUtils.contains(method.getParameterTypes(), preferredType)) {
+                    return method;
+                }
+            }
+        }
+        return methods.get(0);
+    }
+    
+    // Method invocation
 
     private <P> Object invoke(InvokeableMethod invokable, Class<P> parameterType, P parameterValue) {
         Object[] args = buildArguments(invokable, parameterType, parameterValue);
@@ -102,7 +159,7 @@ public class RepositoryMethodListable<T> implements Listable<T> {
 
     private <P> Object[] buildArguments(InvokeableMethod invokable, Class<P> parameterType, P parameterValue) {
         Class<?>[] parameterTypes = invokable.method.getParameterTypes();
-        List<String> parameterNames = collectParameterNames();
+        List<String> parameterNames = queryInfo.getParameterNames();
         
         Object[] args = new Object[parameterTypes.length];
         for (int index = 0; index < parameterTypes.length; index++) {
@@ -121,42 +178,6 @@ public class RepositoryMethodListable<T> implements Listable<T> {
         return args;
     }
 
-    private List<String> collectParameterNames() {
-        List<String> parameterNames = new ArrayList<String>();
-        for (String parameter : annotation.parameters()) {
-            if (!parameter.contains("=")) {
-                parameterNames.add(parameter);
-            }
-        }
-        return parameterNames;
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public List<T> findAll(Sort sort) {
-        InvokeableMethod invokable = findMethod(Iterable.class);
-        return (List<T>) invoke(invokable, Sort.class, sort);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Page<T> findAll(Pageable pageable) {
-        InvokeableMethod invokable = findMethod(Page.class);
-        return (Page<T>) invoke(invokable, Pageable.class, pageable);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public Class<?> getEntityClass() {
-        return entityClass;
-    }
-    
     private static class InvokeableMethod {
         
         private final Object bean;

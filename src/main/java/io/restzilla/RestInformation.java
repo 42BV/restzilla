@@ -3,6 +3,8 @@
  */
 package io.restzilla;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
@@ -106,19 +108,9 @@ public class RestInformation {
      * @return the result type
      */
     public Class<?> getResultType(RestConfig config) {
-        return getResultInfo(config).getResultType();
+        return getResultInfo(config).getType();
     }
-    
-    /**
-     * Determine the result type.
-     * 
-     * @param query the query
-     * @return the result type
-     */
-    public Class<?> getResultType(RestQuery query) {
-        return isCustom(query.resultType()) ? query.resultType() : this.entityClass;
-    }
-    
+
     /**
      * Determine the result type.
      * 
@@ -145,15 +137,13 @@ public class RestInformation {
         return !Object.class.equals(clazz);
     }
     
-    public RestQuery findCustomQuery(Map<String, String[]> requestParameters) {
-        RestQuery result = null;
+    public QueryInformation findCustomQuery(Map<String, String[]> requestParameters) {
         for (RestQuery query : annotation.queries()) {
             if (isMatchingParameters(query.parameters(), requestParameters)) {
-                result = query;
-                break;
+                return new QueryInformation(query);
             }
         }
-        return result;
+        return null;
     }
     
     private boolean isMatchingParameters(String[] parameters, Map<String, String[]> requestParameters) {
@@ -237,21 +227,65 @@ public class RestInformation {
      */
     public static class ResultInformation {
         
-        private final Class<?> resultType;
+        private final Class<?> type;
         
-        private final boolean resultByQuery;
+        private final boolean byQuery;
+        
+        private ResultInformation(Class<?> type, boolean byQuery) {
+            this.type = type;
+            this.byQuery = byQuery;
+        }
+        
+        public Class<?> getType() {
+            return type;
+        }
+        
+        public boolean isByQuery() {
+            return byQuery;
+        }
+        
+    }
+    
+    /**
+     * Information about the REST query.
+     *
+     * @author Jeroen van Schagen
+     * @since Dec 10, 2015
+     */
+    public class QueryInformation {
+        
+        private final RestQuery annotation;
 
-        private ResultInformation(Class<?> resultType, boolean resultByQuery) {
-            this.resultType = resultType;
-            this.resultByQuery = resultByQuery;
+        public QueryInformation(RestQuery annotation) {
+            this.annotation = annotation;
         }
         
+        public String getMethodName() {
+            return annotation.method();
+        }
+
+        public List<String> getParameterNames() {
+            List<String> parameterNames = new ArrayList<String>();
+            for (String parameter : annotation.parameters()) {
+                if (!parameter.contains("=")) {
+                    parameterNames.add(parameter);
+                }
+            }
+            return parameterNames;
+        }
+        
+        /**
+         * Determine the result type.
+         * 
+         * @param query the query
+         * @return the result type
+         */
         public Class<?> getResultType() {
-            return resultType;
-        }
-        
-        public boolean isResultByQuery() {
-            return resultByQuery;
+            if (isCustom(annotation.resultType())) {
+                return annotation.resultType();
+            } else {
+                return entityClass;
+            }
         }
 
     }

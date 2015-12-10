@@ -12,8 +12,8 @@ import io.beanmapper.core.rule.MappableFields;
 import io.beanmapper.spring.Lazy;
 import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
+import io.restzilla.RestInformation.QueryInformation;
 import io.restzilla.RestInformation.ResultInformation;
-import io.restzilla.RestQuery;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
@@ -145,14 +145,13 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
 
         private Listable<?> resolveListable(HttpServletRequest request) {
             ResultInformation result = information.getResultInfo(information.findAll());
-            RestQuery query = information.findCustomQuery(request.getParameterMap());
+            QueryInformation query = information.findCustomQuery(request.getParameterMap());
             if (query != null) {
-                return new RepositoryMethodListable(crudServiceRegistry, conversionService, information.getResultType(query), query, request.getParameterMap());
-            } else if (result.isResultByQuery()) {
-                return new ReadServiceListableAdapter(readService, result.getResultType());
+                return new RepositoryMethodListable(crudServiceRegistry, conversionService, information, query, request.getParameterMap());
+            } else if (result.isByQuery()) {
+                return new ReadServiceListableAdapter(readService, result.getType());
             } else {
-                Class<?> resultType = information.getResultInfo(information.findAll()).getResultType();
-                return new BeanMappingListable(entityService, beanMapper, resultType);
+                return new BeanMappingListable(entityService, beanMapper, result.getType());
             }
         }
 
@@ -176,10 +175,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
 
         private Object mapIdToResult(Serializable id) {
             ResultInformation result = information.getResultInfo(information.findOne());
-            if (result.isResultByQuery()) {
-                return readService.getOne((Class) result.getResultType(), id);
+            if (result.isByQuery()) {
+                return readService.getOne((Class) result.getType(), id);
             } else {
-                return beanMapper.map(entityService.getOne(id), result.getResultType());
+                return beanMapper.map(entityService.getOne(id), result.getType());
             }
         }
 
@@ -248,10 +247,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         private Object mapEntityToResult(Persistable<?> entity, RestConfig config) {
             ResultInformation result = information.getResultInfo(config);
-            if (result.isResultByQuery()) {
-                return readService.getOne((Class) result.getResultType(), entity.getId());
+            if (result.isByQuery()) {
+                return readService.getOne((Class) result.getType(), entity.getId());
             } else {
-                return convertToType(entity, result.getResultType());
+                return convertToType(entity, result.getType());
             }
         }
 
