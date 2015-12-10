@@ -1,4 +1,4 @@
-package io.restzilla.config.registry;
+package io.restzilla.service.impl;
 
 import io.restzilla.service.CrudService;
 

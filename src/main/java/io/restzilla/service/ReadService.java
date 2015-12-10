@@ -3,8 +3,6 @@
  */
 package io.restzilla.service;
 
-import io.restzilla.config.registry.CrudServiceRegistry;
-
 import java.io.Serializable;
 import java.util.List;
 
@@ -30,10 +28,10 @@ public class ReadService {
      * Registry containing all service instanced. Note that this
      * variable is not final as it can be injected dynamically.
      */
-    private final CrudServiceRegistry serviceRegistry;
+    private final CrudServiceRegistry crudServiceRegistry;
     
-    public ReadService(CrudServiceRegistry serviceRegistry) {
-        this.serviceRegistry = Preconditions.checkNotNull(serviceRegistry, "Service registry is required.");
+    public ReadService(CrudServiceRegistry crudServiceRegistry) {
+        this.crudServiceRegistry = Preconditions.checkNotNull(crudServiceRegistry, "Service registry is required.");
     }
 
     /**
@@ -70,8 +68,7 @@ public class ReadService {
     }
     
     private <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> getService(Class<T> entityClass) {
-        CrudService<T, ID> service = serviceRegistry.getService(entityClass);
-        return Preconditions.checkNotNull(service, "No service registered for: " + entityClass.getName());
+        return crudServiceRegistry.getService(entityClass);
     }
 
 }

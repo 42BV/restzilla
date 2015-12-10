@@ -5,7 +5,7 @@ package io.restzilla.handler.query;
 
 import io.restzilla.RestInformation;
 import io.restzilla.RestInformation.QueryInformation;
-import io.restzilla.config.registry.CrudServiceRegistry;
+import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.Listable;
 
 import java.lang.reflect.InvocationTargetException;

@@ -31,7 +31,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
 
     /**
      * Class reference to the type of entities that we manage
-     * in this service isntance.
+     * in this service instance.
      */
     private final Class<T> entityClass;
 

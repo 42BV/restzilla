@@ -3,12 +3,12 @@
  */
 package io.restzilla.config;
 
-import io.restzilla.config.registry.CrudServiceRegistry;
-import io.restzilla.config.registry.LazyRetrievalFactory;
 import io.restzilla.handler.RestHandlerMapping;
 import io.restzilla.service.CrudServiceFactory;
+import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
 import io.restzilla.service.impl.DefaultServiceFactory;
+import io.restzilla.service.impl.LazyRetrievalFactory;
 
 import java.util.Map;
 

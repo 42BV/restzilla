@@ -8,7 +8,6 @@ import io.beanmapper.BeanMapper;
 import io.beanmapper.utils.Classes;
 import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
-import io.restzilla.config.registry.CrudServiceRegistry;
 import io.restzilla.handler.DefaultHandlerMappingFactory;
 import io.restzilla.handler.EntityHandlerMappingFactory;
 import io.restzilla.handler.RestHandlerMapping;
@@ -16,6 +15,7 @@ import io.restzilla.handler.naming.CaseFormatNamingStrategy;
 import io.restzilla.handler.naming.RestNamingStrategy;
 import io.restzilla.handler.security.AlwaysSecurityProvider;
 import io.restzilla.handler.security.SecurityProvider;
+import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.util.NoOpValidator;
 
 import java.util.HashSet;
