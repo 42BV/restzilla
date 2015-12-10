@@ -11,6 +11,7 @@ import io.restzilla.service.Listable;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -62,7 +63,9 @@ public class RepositoryMethodListable<T> implements Listable<T> {
     @Override
     public List<T> findAll(Sort sort) {
         InvokeableMethod invokable = findInvokableMethod(Iterable.class, Sort.class);
-        return (List<T>) invoke(invokable, Sort.class, sort);
+        Map<Class<?>, Object> providedValues = new HashMap<Class<?>, Object>();
+        providedValues.put(Sort.class, sort);
+        return (List<T>) invoke(invokable, providedValues);
     }
     
     /**
@@ -71,7 +74,10 @@ public class RepositoryMethodListable<T> implements Listable<T> {
     @Override
     public Page<T> findAll(Pageable pageable) {
         InvokeableMethod invokable = findInvokableMethod(Page.class, Pageable.class, Sort.class);
-        return (Page<T>) invoke(invokable, Pageable.class, pageable);
+        Map<Class<?>, Object> providedValues = new HashMap<Class<?>, Object>();
+        providedValues.put(Pageable.class, pageable);
+        providedValues.put(Sort.class, pageable.getSort());
+        return (Page<T>) invoke(invokable, providedValues);
     }
     
     /**
@@ -86,9 +92,13 @@ public class RepositoryMethodListable<T> implements Listable<T> {
 
     private InvokeableMethod findInvokableMethod(Class<?> returnType, Class<?>... preferredTypes) {
         final Class entityClass = entityInfo.getEntityClass();
-        InvokeableMethod method = findInvokableMethod(crudServiceRegistry.getService(entityClass), returnType, preferredTypes);
+
+        final Object service = crudServiceRegistry.getService(entityClass, false);
+        final Object repository = crudServiceRegistry.getRepository((Class) queryInfo.getResultType());
+
+        InvokeableMethod method = findInvokableMethod(service, returnType, preferredTypes);
         if (method == null) {
-            method = findInvokableMethod(crudServiceRegistry.getRepository((Class) queryInfo.getResultType()), returnType, preferredTypes);
+            method = findInvokableMethod(repository, returnType, preferredTypes);
         }
         return Preconditions.checkNotNull(method, "Could not find custom finder method '" + queryInfo.getMethodName() + "' for " + entityClass.getName());
     }
@@ -145,8 +155,8 @@ public class RepositoryMethodListable<T> implements Listable<T> {
     
     // Method invocation
 
-    private <P> Object invoke(InvokeableMethod invokable, Class<P> parameterType, P parameterValue) {
-        Object[] args = buildArguments(invokable, parameterType, parameterValue);
+    private Object invoke(InvokeableMethod invokable, Map<Class<?>, Object> providedValues) {
+        Object[] args = buildArguments(invokable, providedValues);
 
         try {
             return invokable.invoke(args);
@@ -157,7 +167,7 @@ public class RepositoryMethodListable<T> implements Listable<T> {
         }
     }
 
-    private <P> Object[] buildArguments(InvokeableMethod invokable, Class<P> parameterType, P parameterValue) {
+    private <P> Object[] buildArguments(InvokeableMethod invokable, Map<Class<?>, Object> providedValues) {
         Class<?>[] parameterTypes = invokable.method.getParameterTypes();
         List<String> parameterNames = queryInfo.getParameterNames();
         
@@ -169,8 +179,8 @@ public class RepositoryMethodListable<T> implements Listable<T> {
             
             if (StringUtils.isNotBlank(currentName)) {
                 currentValue = conversionService.convert(parameterValues.get(currentName), currentType);
-            } else if (currentType.equals(parameterType)) {
-                currentValue = parameterValue;
+            } else if (providedValues.containsKey(currentType)) {
+                currentValue = providedValues.get(currentType);
             }
 
             args[index] = currentValue;

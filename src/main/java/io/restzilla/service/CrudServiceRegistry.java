@@ -55,8 +55,21 @@ public class CrudServiceRegistry {
      */
     @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> getService(Class<T> entityClass) {
+        return getService(entityClass, true);
+    }
+    
+    /**
+     * Retrieve the service for our entity. When no instance can be found we
+     * initialize and register a new service bean.
+     * 
+     * @param entityClass the entity class
+     * @param generate if the repositories should be generated
+     * @return the service bean
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> getService(Class<T> entityClass, boolean generate) {
         CrudService<T, ID> service = (CrudService<T, ID>) services.get(entityClass);
-        if (service == null) {
+        if (service == null && generate) {
             service = generateService(entityClass);
         }
         return service;
@@ -71,13 +84,26 @@ public class CrudServiceRegistry {
      */
     @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> getRepository(Class<T> entityClass) {
+        return getRepository(entityClass, true);
+    }
+    
+    /**
+     * Retrieve the repository for our entity. When no instance can be found we
+     * initialize and register a new repository bean.
+     * 
+     * @param entityClass the entity class
+     * @param generate if the repositories should be generated
+     * @return the repository bean
+     */
+    @SuppressWarnings("unchecked")
+    public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> getRepository(Class<T> entityClass, boolean generate) {
         PagingAndSortingRepository<T, ID> repository = (PagingAndSortingRepository<T, ID>) repositories.get(entityClass);
-        if (repository == null) {
+        if (repository == null && generate) {
             repository = generateRepository(entityClass);
         }
         return repository;
     }
-    
+
     // Registration
 
     /**
