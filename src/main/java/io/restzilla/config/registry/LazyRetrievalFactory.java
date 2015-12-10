@@ -8,6 +8,8 @@ import io.restzilla.service.CrudServiceFactory;
 
 import java.io.Serializable;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -23,6 +25,8 @@ import org.springframework.data.repository.support.Repositories;
 @SuppressWarnings("unchecked")
 public class LazyRetrievalFactory implements CrudServiceFactory {
     
+    private static final Logger LOGGER = LoggerFactory.getLogger(LazyRetrievalFactory.class);
+
     private final Repositories repositories;
     
     private final Services services;
@@ -44,6 +48,7 @@ public class LazyRetrievalFactory implements CrudServiceFactory {
         if (repository instanceof PagingAndSortingRepository) {
             return (PagingAndSortingRepository<T, ID>) repository;
         } else {
+            LOGGER.debug("Generating repository for {} as none is defined.", entityClass);
             return delegate.buildRepository(entityClass);
         }
     }
@@ -57,6 +62,7 @@ public class LazyRetrievalFactory implements CrudServiceFactory {
         if (service != null) {
             return (CrudService<T, ID>) service;
         } else {
+            LOGGER.debug("Generating service for {} as none is defined.", entityClass);
             return delegate.buildService(entityClass, repository);
         }
     }

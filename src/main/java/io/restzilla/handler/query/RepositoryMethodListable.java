@@ -100,14 +100,10 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
     // Method retrieval
 
     private InvokeableMethod findInvokableMethod(Class<?> returnType, Class<?>... preferredTypes) {
-        final Class entityClass = entityInfo.getEntityClass();
+        final Class entityClass = (Class) queryInfo.getEntityType();
 
-        Object service = crudServiceRegistry.getService(entityClass, false);
-        InvokeableMethod method = findInvokableMethod(service, returnType, preferredTypes);
-        if (method == null) {
-            Object repository = crudServiceRegistry.getRepository((Class) queryInfo.getEntityType());
-            method = findInvokableMethod(repository, returnType, preferredTypes);
-        }
+        Object repository = crudServiceRegistry.getRepository(entityClass);
+        InvokeableMethod method = findInvokableMethod(repository, returnType, preferredTypes);
         return Preconditions.checkNotNull(method, "Could not find custom finder method '" + queryInfo.getMethodName() + "' for " + entityClass.getName());
     }
     
@@ -198,17 +194,17 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
 
     private static class InvokeableMethod {
         
-        private final Object bean;
+        private final Object target;
         
         private final Method method;
         
-        public InvokeableMethod(Object bean, Method method) {
-            this.bean = bean;
+        public InvokeableMethod(Object target, Method method) {
+            this.target = target;
             this.method = method;
         }
         
         public Object invoke(Object... args) throws IllegalAccessException, InvocationTargetException {
-            return method.invoke(bean, args);
+            return ReflectionUtils.invokeMethod(method, target, args);
         }
         
     }

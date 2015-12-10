@@ -2,9 +2,12 @@ package io.restzilla.config.registry;
 
 import io.restzilla.service.CrudService;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -13,7 +16,10 @@ import org.springframework.context.ApplicationContext;
  * @author Jeroen van Schagen
  * @since Dec 10, 2015
  */
+@SuppressWarnings("rawtypes")
 class Services {
+    
+    private static final Logger LOGGER = LoggerFactory.getLogger(Services.class);
 
     private final ApplicationContext applicationContext;
     
@@ -23,15 +29,23 @@ class Services {
         this.applicationContext = applicationContext;
     }
     
-    @SuppressWarnings("rawtypes")
     private void init() {
         if (instances == null) {
             instances = new HashMap<Class<?>, CrudService<?, ?>>();
-            Map<String, CrudService> services = applicationContext.getBeansOfType(CrudService.class);
-            for (CrudService<?, ?> service : services.values()) {
+            LOGGER.debug("Scanning classpath for service beans...");
+            for (CrudService<?, ?> service : getAllServices(applicationContext)) {
                 instances.put(service.getEntityClass(), service);
             }
         }
+    }
+
+    private Collection<CrudService> getAllServices(ApplicationContext applicationContext) {
+        Map<String, CrudService> services = applicationContext.getBeansOfType(CrudService.class);
+        while (applicationContext.getParent() != null) {
+            applicationContext = applicationContext.getParent();
+            services.putAll(applicationContext.getBeansOfType(CrudService.class));
+        }
+        return services.values();
     }
     
     /**
