@@ -18,7 +18,7 @@ Add the dependency to your own project:
 <dependency>
   <groupId>io.restzilla</groupId>
   <artifactId>restzilla</artifactId>
-  <version>1.8.3-SNAPSHOT</version>
+  <version>1.9.1-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -199,12 +199,26 @@ Restzilla relies heavily on Spring Data JPA. Each Spring Data repository will au
 
 ```java
 public interface UserRepository extends CrudRepository<User, Long> {
+   List<User> findAllByActive(boolean active);
+}
+```
+
+#### Customer finders ####
+
+With the @RestQuery annotation it is also possible to configure custom finder queries. Whenever a GET request matches our specified parameters the call will be delegated to the selected method in either our service or repository bean. Resulting pages or arrays will automatically be converted into the desired result type when specified.
+
+```java
+@Entity
+@RestResource(queries = @RestQuery(parameters="active","custom=true", method="findAllByActive", resultType=UserActiveDto.class))
+public class User {
+ private String name;
+ private boolean active;
 }
 ```
 
 ### Service ###
 
-It is also possible to create a custom service. Services must implement the CrudService interface to be detected, but we also provide an DefaultCrudService template class:
+Services can have a custom implementation. By implemening the CrudService interface your services will automatically be detected. In the lines of convention of configuration we offer an extendable template class:
 
 ```java
 @Service
