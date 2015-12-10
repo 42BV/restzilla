@@ -1,4 +1,4 @@
-package io.restzilla.service.wrapper;
+package io.restzilla.handler.finder;
 
 public interface Finder<T> {
     
