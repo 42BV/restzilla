@@ -19,7 +19,7 @@ Add the dependency to your own project:
 <dependency>
   <groupId>io.restzilla</groupId>
   <artifactId>restzilla</artifactId>
-  <version>1.9.2-SNAPSHOT</version>
+  <version>1.9.3-SNAPSHOT</version>
 </dependency>
 ```
 
