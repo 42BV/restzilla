@@ -200,7 +200,9 @@ Restzilla relies heavily on Spring Data JPA. Each Spring Data repository will au
 
 ```java
 public interface UserRepository extends CrudRepository<User, Long> {
+   
    List<User> findAllByActive(boolean active);
+   
 }
 ```
 
@@ -213,6 +215,8 @@ With the @RestQuery annotation it is also possible to configure custom finder qu
 @RestResource(queries = @RestQuery(parameters="active","version=1", method="findAllByActive"))
 public class User {
 
+ @Id
+ private Long id;
  private String name;
  private boolean active;
  
