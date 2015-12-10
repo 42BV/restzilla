@@ -210,7 +210,9 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"My name\"}", response.getContentAsString());
     }
 
-    // Custom beans
+    /*
+     * Custom repositories
+     */
 
     @Test
     public void testCustomRepository() throws Exception {
@@ -229,6 +231,11 @@ public class RestTest extends AbstractControllerTest {
         jan.setName("Jan");
         jan.setActive(true);
         entityBuilder.save(jan);
+        
+        WithRepository henk = new WithRepository();
+        henk.setName("Henk");
+        henk.setActive(true);
+        entityBuilder.save(henk);
 
         WithRepository piet = new WithRepository();
         piet.setName("Piet");
@@ -241,9 +248,65 @@ public class RestTest extends AbstractControllerTest {
         
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[{\"id\":1,\"name\":\"Jan\",\"active\":true}]", response.getContentAsString());
+        Assert.assertEquals("[{\"name\":\"Henk\",\"active\":true},{\"name\":\"Jan\",\"active\":true}]", response.getContentAsString());
     }
     
+    @Test
+    public void testCustomRepositoryQuerySort() throws Exception {
+        WithRepository jan = new WithRepository();
+        jan.setName("Jan");
+        jan.setActive(true);
+        entityBuilder.save(jan);
+        
+        WithRepository henk = new WithRepository();
+        henk.setName("Henk");
+        henk.setActive(true);
+        entityBuilder.save(henk);
+
+        WithRepository piet = new WithRepository();
+        piet.setName("Piet");
+        entityBuilder.save(piet);
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withrepository");
+        request.setParameter("active", "true");
+        request.setParameter(PageableResolver.SORT_PARAMETER, "name,desc");
+        request.setMethod(RequestMethod.GET.name());
+        
+        // Returned in reverse order
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("[{\"name\":\"Jan\",\"active\":true},{\"name\":\"Henk\",\"active\":true}]", response.getContentAsString());
+    }
+    
+    @Test
+    public void testCustomRepositoryQueryPage() throws Exception {
+        WithRepository jan = new WithRepository();
+        jan.setName("Jan");
+        jan.setActive(true);
+        entityBuilder.save(jan);
+        
+        WithRepository piet = new WithRepository();
+        piet.setName("Piet");
+        entityBuilder.save(piet);
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withrepository");
+        request.setParameter("active", "true");
+        request.setParameter(PageableResolver.PAGE_PARAMETER, "0");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals(
+                "{\"content\":[{\"name\":\"Jan\",\"active\":true}],\"last\":true,\"totalPages\":1,\"totalElements\":1,\"size\":10,\"number\":0,\"sort\":[{\"direction\":\"ASC\",\"property\":\"name\",\"ignoreCase\":false,\"nullHandling\":\"NATIVE\",\"ascending\":true}],\"first\":true,\"numberOfElements\":1}",
+                response.getContentAsString());
+    }
+
+    /*
+     * Custom services
+     */
+
     @Test
     public void testCustomService() throws Exception {
         WithService entity = new WithService();
@@ -284,7 +347,9 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertEquals("Initial", result.getName());
     }
 
-    // Custom configuration
+    /*
+     * Additional configuration
+     */
 
     @Test
     public void testCustomBasePath() throws Exception {

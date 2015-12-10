@@ -12,16 +12,16 @@ import io.restzilla.service.ReadService;
  * @author Jeroen van Schagen
  * @since Nov 24, 2015
  */
-public class ReadServiceFinderAdapter implements EntityFinder {
+public class ReadServiceFinder implements EntityFinder {
     
     private final ReadService readService;
 
     /**
-     * Create a new {@link ReadServiceFinderAdapter} instance.
+     * Create a new {@link ReadServiceFinder} instance.
      * 
      * @param readService the read service
      */
-    public ReadServiceFinderAdapter(ReadService readService) {
+    public ReadServiceFinder(ReadService readService) {
         this.readService = readService;
     }
 

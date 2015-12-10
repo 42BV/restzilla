@@ -275,17 +275,24 @@ public class RestInformation {
         }
         
         /**
+         * Determine the entity type.
+         * 
+         * @return the entity type
+         */
+        public Class<?> getEntityType() {
+            return isCustom(annotation.entityType()) ? annotation.entityType() : entityClass;
+        }
+
+        /**
          * Determine the result type.
          * 
-         * @param query the query
          * @return the result type
          */
         public Class<?> getResultType() {
             if (isCustom(annotation.resultType())) {
                 return annotation.resultType();
-            } else {
-                return entityClass;
             }
+            return getEntityType();
         }
 
     }

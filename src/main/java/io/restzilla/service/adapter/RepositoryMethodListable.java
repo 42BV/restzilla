@@ -93,11 +93,10 @@ public class RepositoryMethodListable<T> implements Listable<T> {
     private InvokeableMethod findInvokableMethod(Class<?> returnType, Class<?>... preferredTypes) {
         final Class entityClass = entityInfo.getEntityClass();
 
-        final Object service = crudServiceRegistry.getService(entityClass, false);
-        final Object repository = crudServiceRegistry.getRepository((Class) queryInfo.getResultType());
-
+        Object service = crudServiceRegistry.getService(entityClass, false);
         InvokeableMethod method = findInvokableMethod(service, returnType, preferredTypes);
         if (method == null) {
+            Object repository = crudServiceRegistry.getRepository((Class) queryInfo.getEntityType());
             method = findInvokableMethod(repository, returnType, preferredTypes);
         }
         return Preconditions.checkNotNull(method, "Could not find custom finder method '" + queryInfo.getMethodName() + "' for " + entityClass.getName());

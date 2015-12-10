@@ -21,7 +21,7 @@ import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.Listable;
 import io.restzilla.service.ReadService;
 import io.restzilla.service.adapter.BeanMappingListable;
-import io.restzilla.service.adapter.ReadServiceListableAdapter;
+import io.restzilla.service.adapter.ReadServiceListable;
 import io.restzilla.service.adapter.RepositoryMethodListable;
 import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
@@ -146,13 +146,19 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         private Listable<?> resolveListable(HttpServletRequest request) {
             ResultInformation result = information.getResultInfo(information.findAll());
             QueryInformation query = information.findCustomQuery(request.getParameterMap());
+            
+            Listable<?> delegate = entityService;
+            Class<?> resultType = result.getType();
             if (query != null) {
-                return new RepositoryMethodListable(crudServiceRegistry, conversionService, information, query, request.getParameterMap());
+                // Retrieve by a custom finder method in either the service or repository bean
+                delegate = new RepositoryMethodListable(crudServiceRegistry, conversionService, information, query, request.getParameterMap());
+                resultType = query.getResultType();
             } else if (result.isByQuery()) {
-                return new ReadServiceListableAdapter(readService, result.getType());
-            } else {
-                return new BeanMappingListable(entityService, beanMapper, result.getType());
+                // Retrieve the custom entity type with a generic finder query
+                return new ReadServiceListable(readService, result.getType());
             }
+            // Performs bean mapping on the entities after retrieval
+            return new BeanMappingListable(delegate, beanMapper, resultType);
         }
 
         /**

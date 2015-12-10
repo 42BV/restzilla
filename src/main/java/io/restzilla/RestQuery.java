@@ -38,6 +38,13 @@ public @interface RestQuery {
     /**
      * Alternate entity type where the query can be found.
      * 
+     * @return the entity type
+     */
+    Class<?> entityType() default Object.class;
+
+    /**
+     * Alternate result type where the query can be found.
+     * 
      * @return the result type
      */
     Class<?> resultType() default Object.class;

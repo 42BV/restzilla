@@ -7,7 +7,7 @@ import io.restzilla.AbstractSpringTest;
 import io.restzilla.builder.UserBuilder;
 import io.restzilla.model.User;
 import io.restzilla.service.ReadService;
-import io.restzilla.service.adapter.ReadServiceFinderAdapter;
+import io.restzilla.service.adapter.ReadServiceFinder;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -22,11 +22,11 @@ public class ReadServiceFinderAdapterTest extends AbstractSpringTest {
     @Autowired
     private UserBuilder userBuilder;
 
-    private ReadServiceFinderAdapter adapter;
+    private ReadServiceFinder adapter;
     
     @Before
     public void setUp() {
-        adapter = new ReadServiceFinderAdapter(readService);
+        adapter = new ReadServiceFinder(readService);
     }
     
     @Test

@@ -2,15 +2,15 @@ package io.restzilla.model;
 
 import io.restzilla.RestQuery;
 import io.restzilla.RestResource;
+import io.restzilla.SortingDefault;
+import io.restzilla.model.dto.WithRepositoryDto;
 
 import javax.persistence.Entity;
 
 @Entity
+@SortingDefault("name")
 @RestResource(
-    // TODO: findAllByActive(b,c,a)
-    // TODO: Prefer page queries when paged, prefer sorted when sorted.
-    // TODO: Cache the found methods
-    queries = @RestQuery(parameters = "active", method = "findAllByActive")
+    queries = @RestQuery(parameters = "active", method = "findAllByActive", resultType = WithRepositoryDto.class)
 )
 public class WithRepository extends BaseEntity {
     

@@ -20,19 +20,19 @@ import org.springframework.data.domain.Sort;
  * @author Jeroen van Schagen
  * @since Nov 6, 2015
  */
-public class ReadServiceListableAdapter<T extends Persistable<ID>, ID extends Serializable> implements Listable<T> {
+public class ReadServiceListable<T extends Persistable<ID>, ID extends Serializable> implements Listable<T> {
     
     private final ReadService readService;
 
     private final Class<T> entityClass;
     
     /**
-     * Create a new {@link ReadServiceListableAdapter} instance.
+     * Create a new {@link ReadServiceListable} instance.
      * 
      * @param readService the read service
      * @param entityClass the entity class
      */
-    public ReadServiceListableAdapter(ReadService readService, Class<T> entityClass) {
+    public ReadServiceListable(ReadService readService, Class<T> entityClass) {
         this.readService = readService;
         this.entityClass = entityClass;
     }
