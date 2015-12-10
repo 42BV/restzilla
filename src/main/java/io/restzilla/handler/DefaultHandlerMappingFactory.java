@@ -14,6 +14,7 @@ import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
 import io.restzilla.RestInformation.QueryInformation;
 import io.restzilla.RestInformation.ResultInformation;
+import io.restzilla.config.registry.CrudServiceRegistry;
 import io.restzilla.handler.query.BeanMappingListable;
 import io.restzilla.handler.query.Finder;
 import io.restzilla.handler.query.ReadServiceListable;
@@ -21,7 +22,6 @@ import io.restzilla.handler.query.RepositoryMethodListable;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
-import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.Listable;
 import io.restzilla.service.ReadService;
 import io.restzilla.util.JsonUtil;
@@ -102,22 +102,24 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
      * {@inheritDoc}
      */
     @Override
-    public DefaultHandlerMapping build(CrudService<?, ?> service, RestInformation information) {
-        return new DefaultHandlerMapping(new DefaultCrudController(service, information));
+    public DefaultHandlerMapping build(RestInformation information) {
+        return new DefaultHandlerMapping(new DefaultCrudController(information));
     }
     
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private class DefaultCrudController {
-
-        private final CrudService entityService;
         
         private final RestInformation information;
         
-        public DefaultCrudController(CrudService entityService, RestInformation information) {
-            this.entityService = entityService;
+        /**
+         * Always access this field by {@code getEntityService()} as it is initialized lazy.
+         */
+        private CrudService entityService;
+        
+        public DefaultCrudController(RestInformation information) {
             this.information = information;
         }
-        
+
         /**
          * Retrieve all entities.
          * 
@@ -144,7 +146,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         }
 
         private Listable<?> buildListable(QueryInformation query, HttpServletRequest request) {
-            Listable<?> delegate = entityService;
+            Listable<?> delegate = getEntityService();
 
             ResultInformation result = information.getResultInfo(information.findAll());
             Class<?> resultType = result.getType();
@@ -193,7 +195,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             if (result.isByQuery()) {
                 return readService.getOne((Class) result.getType(), id);
             } else {
-                return beanMapper.map(entityService.getOne(id), result.getType());
+                return beanMapper.map(getEntityService().getOne(id), result.getType());
             }
         }
 
@@ -211,7 +213,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             checkIsAuthorized(information.create().secured(), request);
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
             Persistable<?> entity = beanMapper.map(validate(input), information.getEntityClass());
-            Persistable<?> output = entityService.save(entity);
+            Persistable<?> output = getEntityService().save(entity);
             return mapEntityToResult(output, information.create());
         }
         
@@ -236,7 +238,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             Serializable id = extractId(request);
             String json = CharStreams.toString(request.getReader());
             Object input = objectMapper.readValue(json, information.getInputType(information.update()));
-            Persistable<?> output = entityService.save(new LazyMappingEntity(id, validate(input), json));
+            Persistable<?> output = getEntityService().save(new LazyMappingEntity(id, validate(input), json));
             return mapEntityToResult(output, information.update());
         }
 
@@ -248,8 +250,8 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         @ResponseBody
         public Object delete(HttpServletRequest request) {
             checkIsAuthorized(information.delete().secured(), request);
-            Persistable<?> entity = entityService.getOne(extractId(request));
-            entityService.delete(entity);
+            Persistable<?> entity = getEntityService().getOne(extractId(request));
+            getEntityService().delete(entity);
             return mapEntityToResult(entity, information.delete());
         }
         
@@ -285,6 +287,18 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
                 return beanMapper.map(entity, resultType);
             }
         }
+        
+        /**
+         * Retrieve the entity service, and initialize it whenever needed.
+         * 
+         * @return the entity service
+         */
+        private CrudService getEntityService() {
+            if (entityService == null) {
+                entityService = crudServiceRegistry.getService((Class) information.getEntityClass());
+            }
+            return entityService;
+        }
 
         /**
          * Maps our input into the persisted entity on demand.
@@ -313,7 +327,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
              */
             @Override
             public Object get() {
-                Persistable<?> entity = entityService.getOne(id);
+                Persistable<?> entity = getEntityService().getOne(id);
                 if (information.isPatch()) {
                     Set<String> propertyNames = JsonUtil.getPropertyNamesFromJson(json, objectMapper);
                     beanMapper.map(input, entity, new MappableFields(propertyNames));

@@ -3,10 +3,10 @@
  */
 package io.restzilla.config;
 
+import io.restzilla.config.registry.CrudServiceRegistry;
+import io.restzilla.config.registry.LazyRetrievalFactory;
 import io.restzilla.handler.RestHandlerMapping;
 import io.restzilla.service.CrudServiceFactory;
-import io.restzilla.service.CrudServiceLocator;
-import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
 import io.restzilla.service.impl.DefaultServiceFactory;
 
@@ -44,11 +44,10 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
      */
     @Bean
     public CrudServiceRegistry crudServiceRegistry() {
-        CrudServiceLocator serviceLocator = new CrudServiceLocator(applicationContext);
         if (crudServiceFactory == null) {
             crudServiceFactory = new DefaultServiceFactory(applicationContext);
         }
-        return serviceLocator.buildRegistry(basePackage, crudServiceFactory);
+        return new CrudServiceRegistry(new LazyRetrievalFactory(applicationContext, crudServiceFactory));
     }
 
     /**

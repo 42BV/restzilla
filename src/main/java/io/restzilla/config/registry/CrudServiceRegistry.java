@@ -1,12 +1,15 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service;
+package io.restzilla.config.registry;
+
+import io.restzilla.service.CrudService;
+import io.restzilla.service.CrudServiceFactory;
+import io.restzilla.service.RepositoryAware;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -32,16 +35,7 @@ public class CrudServiceRegistry {
     private final CrudServiceFactory factory;
 
     public CrudServiceRegistry(CrudServiceFactory factory) {
-        this.factory = Preconditions.checkNotNull(factory, "Factory cannot be null");
-    }
-
-    /**
-     * Retrieve all entity classes.
-     * 
-     * @return the entity classes
-     */
-    public Set<Class<?>> getEntityClasses() {
-        return services.keySet();
+        this.factory = Preconditions.checkNotNull(factory, "Factory is required.");
     }
 
     // Lookup

@@ -3,6 +3,8 @@
  */
 package io.restzilla.service;
 
+import io.restzilla.config.registry.CrudServiceRegistry;
+
 import java.io.Serializable;
 import java.util.List;
 

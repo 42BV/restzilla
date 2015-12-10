@@ -5,8 +5,10 @@ package io.restzilla.config;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.beanmapper.BeanMapper;
+import io.beanmapper.utils.Classes;
 import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
+import io.restzilla.config.registry.CrudServiceRegistry;
 import io.restzilla.handler.DefaultHandlerMappingFactory;
 import io.restzilla.handler.EntityHandlerMappingFactory;
 import io.restzilla.handler.RestHandlerMapping;
@@ -14,17 +16,22 @@ import io.restzilla.handler.naming.CaseFormatNamingStrategy;
 import io.restzilla.handler.naming.RestNamingStrategy;
 import io.restzilla.handler.security.AlwaysSecurityProvider;
 import io.restzilla.handler.security.SecurityProvider;
-import io.restzilla.service.CrudService;
-import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.util.NoOpValidator;
+
+import java.util.HashSet;
+import java.util.Set;
 
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
+import org.springframework.core.type.filter.AnnotationTypeFilter;
+import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.validation.Validator;
 import org.springframework.web.servlet.HandlerMapping;
@@ -58,7 +65,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     /**
      * Registry used to retrieve the underlying services.
      */
-    private final CrudServiceRegistry serviceRegistry;
+    private final CrudServiceRegistry crudServiceRegistry;
     
     /**
      * Application context used to retrieve and create beans.
@@ -105,7 +112,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * @param serviceRegistry the service registry
      */
     public RestHandlerMappingFactoryBean(CrudServiceRegistry serviceRegistry) {
-        this.serviceRegistry = Preconditions.checkNotNull(serviceRegistry, "Service registry is required.");
+        this.crudServiceRegistry = Preconditions.checkNotNull(serviceRegistry, "Service registry is required.");
     }
     
     /**
@@ -117,18 +124,27 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         afterPropertiesSet();
 
         RestHandlerMapping restHandlerMapping = new RestHandlerMapping(applicationContext);
-
-        // Register handler mapping per entity type
-        EntityHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(serviceRegistry);
-        for (Class entityClass : serviceRegistry.getEntityClasses()) {
+        EntityHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(crudServiceRegistry);
+        for (Class entityClass : getEntityClasses()) {
             RestInformation entityInfo = buildInformation(entityClass);
-            CrudService service = serviceRegistry.getService(entityClass);
-            restHandlerMapping.registerHandler(handlerMappingFactory.build(service, entityInfo));
+            restHandlerMapping.registerHandler(handlerMappingFactory.build(entityInfo));
         }
-
         return restHandlerMapping;
     }
     
+    private Set<Class<?>> getEntityClasses() {
+        Assert.notNull(basePackage, "Base package is required.");
+        
+        Set<Class<?>> entityClasses = new HashSet<Class<?>>();
+        ClassPathScanningCandidateComponentProvider provider = new ClassPathScanningCandidateComponentProvider(false);
+        provider.addIncludeFilter(new AnnotationTypeFilter(RestResource.class));
+        Set<BeanDefinition> components = provider.findCandidateComponents(basePackage);
+        for (BeanDefinition component : components) {
+            entityClasses.add(Classes.forName(component.getBeanClassName()));
+        }
+        return entityClasses;
+    }
+
     /**
      * Create a new factory, responsible for creating entity handler mappings.
      * 
