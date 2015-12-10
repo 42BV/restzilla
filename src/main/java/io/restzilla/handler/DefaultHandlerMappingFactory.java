@@ -1,6 +1,3 @@
-/*
- * (C) 2014 42 bv (www.42.nl). All rights reserved.
- */
 package io.restzilla.handler;
 
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
@@ -127,14 +124,14 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
-            checkIsAuthorized(information.findAll().secured(), request);
-            
             QueryInformation query = information.findCustomQuery(request.getParameterMap());
             Listable<?> listable = buildListable(query, request);
 
             if (query != null && query.isUnique()) {
+                checkIsAuthorized(query.getSecured(), request);
                 return ((Finder) listable).findOne();
             } else {
+                checkIsAuthorized(information.findAll().secured(), request);
                 return findAll(listable, request);
             }
         }

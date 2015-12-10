@@ -55,5 +55,11 @@ public @interface RestQuery {
      * @return {@code true} when single result, else {@code false}
      */
     boolean unique() default false;
+    
+    /**
+     * (Optional) the security that are allowed to perform this functionality
+     * @return the security
+     */
+    String[] secured() default {};
 
 }

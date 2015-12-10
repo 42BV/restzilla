@@ -303,6 +303,15 @@ public class RestInformation {
         public boolean isUnique() {
             return annotation.unique();
         }
+        
+        /**
+         * Retrieve the security rules for this particular finder.
+         * 
+         * @return the security rules
+         */
+        public String[] getSecured() {
+            return annotation.secured();
+        }
 
     }
 
