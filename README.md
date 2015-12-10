@@ -212,8 +212,10 @@ With the @RestQuery annotation it is also possible to configure custom finder qu
 @Entity
 @RestResource(queries = @RestQuery(parameters="active","version=1", method="findAllByActive"))
 public class User {
+
  private String name;
  private boolean active;
+ 
 }
 ```
 
