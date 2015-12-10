@@ -6,6 +6,7 @@ The purpose of [Restzilla](https://github.com/42BV/restzilla) is to dynamically 
 
 * Generates (CRUD) REST endpoints, requiring only a JPA entity class
 * Overwrite posibilities on each layer: Controller, Service, Repository
+* Custom finder queries
 * Swagger support
 
 ## Quick Start ##
@@ -205,16 +206,19 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
 #### Customer finders ####
 
-With the @RestQuery annotation it is also possible to configure custom finder queries. Whenever a GET request matches our specified parameters the call will be delegated to the selected method in either our service or repository bean. Resulting pages or arrays will automatically be converted into the desired result type when specified.
+With the @RestQuery annotation it is also possible to configure custom finder queries. Whenever a GET request matches our specified parameters, the call will be delegated to the selected method in either our service or repository bean. Resulting pages or arrays will automatically be converted into the desired result type when specified. Paging and sorting is also supported by default, whenever the target  method has a Sort or Pageable parameter type.
 
 ```java
 @Entity
-@RestResource(queries = @RestQuery(parameters="active","custom=true", method="findAllByActive", resultType=UserActiveDto.class))
+@RestResource(queries = @RestQuery(parameters="active","version=1", method="findAllByActive", resultType=UserActiveDto.class))
 public class User {
  private String name;
  private boolean active;
 }
 ```
+
+To query all active users, we perform the following request:
+* GET /user?version=1&active=true
 
 ### Service ###
 
