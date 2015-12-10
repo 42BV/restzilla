@@ -396,6 +396,22 @@ public class RestTest extends AbstractControllerTest {
         WithRollback result = entityBuilder.get(WithRollback.class, entity.getId());
         Assert.assertEquals("Initial", result.getName());
     }
+    
+    @Test
+    public void testCustomServiceWithFinder() throws Exception {
+        WithService entity = new WithService();
+        entity.setName("Test");
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-service");
+        request.setMethod(RequestMethod.GET.name());
+        request.setParameter("custom", "true");
+        setContentAsJson(request, entity);
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"id\":42,\"name\":\"Service generated\"}", response.getContentAsString());
+    }
 
     /*
      * Additional configuration

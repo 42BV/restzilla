@@ -3,12 +3,13 @@
  */
 package io.restzilla.model;
 
+import io.restzilla.RestQuery;
 import io.restzilla.RestResource;
 
 import javax.persistence.Entity;
 
 @Entity
-@RestResource
+@RestResource(queries = @RestQuery(parameters = "custom=true", method = "findAllByService"))
 public class WithService extends BaseEntity {
     
     private String name;

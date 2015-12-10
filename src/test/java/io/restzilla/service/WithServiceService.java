@@ -8,6 +8,9 @@ import io.restzilla.model.User;
 import io.restzilla.model.WithService;
 import io.restzilla.service.impl.DefaultCrudService;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
@@ -28,6 +31,20 @@ public class WithServiceService extends DefaultCrudService<WithService, Long> {
         return super.save(entity);
     }
     
+    /**
+     * Finder method on service level.
+     * @return the users
+     */
+    @Transactional(readOnly = true)
+    public List<WithService> findAllByService() {
+        List<WithService> entities = new ArrayList<WithService>();
+        WithService entity = new WithService();
+        entity.setId(42L);
+        entity.setName("Service generated");
+        entities.add(entity);
+        return entities;
+    }
+
     /**
      * Configure the user service. This is merely a check to ensure
      * that generated services can also be injected.
