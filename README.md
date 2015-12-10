@@ -167,7 +167,7 @@ public class CreateUserForm {
 }
 ```
 
-Create request bodies will now be unmarshalled into a CreateUserForm object. Then our form is mapped to a User entity and persisted in the database. Afterwards our persisted entity is mapped to the result type and returned in our response body.
+Create request bodies will now be unmarshalled into a CreateUserForm object. The form is mapped to a User entity and persisted in the database. After persistence our entity is mapped to the result type and placed in the response body.
 
 Mapping between beans is automatically handled by the [BeanMapper](https://github.com/42BV/beanmapper) dependency.
 
