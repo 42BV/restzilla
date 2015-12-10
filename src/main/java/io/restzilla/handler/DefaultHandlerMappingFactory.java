@@ -62,13 +62,13 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
     private final ConversionService conversionService;
     
     private final BeanMapper beanMapper;
-    
-    private final ReadService readService;
-    
+
     private final SecurityProvider securityProvider;
     
     private final Validator validator;
     
+    private ReadService readService;
+
     private ApplicationContext applicationContext;
 
     /**
@@ -80,8 +80,6 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
      *              the {@link ConversionService} for converting between types
      * @param beanMapper
      *              the {@link BeanMapper} for mapping between beans
-     * @param readService
-     *              the {@link ReadService} for querying result entities
      * @param securityProvider
      *              the {@link SecurityProvider} checking the authorization
      * @param validator
@@ -90,13 +88,11 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
     public DefaultHandlerMappingFactory(ObjectMapper objectMapper,
                                    ConversionService conversionService,
                                           BeanMapper beanMapper,
-                                         ReadService readService,
                                     SecurityProvider securityProvider,
                                            Validator validator) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
         this.beanMapper = beanMapper;
-        this.readService = readService;
         this.securityProvider = securityProvider;
         this.validator = validator;
     }
@@ -527,6 +523,11 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             return io.restzilla.handler.swagger.SwaggerUtils.newDescription(description, path, method);
         }
 
+    }
+    
+    @Autowired
+    public void setReadService(ReadService readService) {
+        this.readService = readService;
     }
     
     @Autowired

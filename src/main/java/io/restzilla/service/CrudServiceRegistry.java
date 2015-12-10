@@ -20,11 +20,7 @@ import com.google.common.base.Preconditions;
  * @since Aug 21, 2015
  */
 public class CrudServiceRegistry {
-
-    private final CrudServiceFactory serviceFactory;
     
-    // Caches instances
-
     private final Map<Class<?>, PagingAndSortingRepository<?, ?>> repositories;
     private final Map<Class<?>, CrudService<?, ?>> services;
     
@@ -33,14 +29,10 @@ public class CrudServiceRegistry {
         services = new HashMap<Class<?>, CrudService<?, ?>>();
     }
 
-    /**
-     * Create a new instance of the {@link CrudServiceRegistry}.
-     * 
-     * @param serviceFactory the service factory, used to instantiate new instances
-     */
-    public CrudServiceRegistry(CrudServiceFactory serviceFactory) {
-        Preconditions.checkNotNull(serviceFactory, "Service factory cannot be null.");
-        this.serviceFactory = serviceFactory;
+    private final CrudServiceFactory factory;
+
+    public CrudServiceRegistry(CrudServiceFactory factory) {
+        this.factory = Preconditions.checkNotNull(factory, "Factory cannot be null");
     }
 
     /**
@@ -117,7 +109,7 @@ public class CrudServiceRegistry {
      * @param repository the repository instance
      */
     <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
-        CrudService<T, ID> service = serviceFactory.buildService(entityClass, repository);
+        CrudService<T, ID> service = factory.buildService(entityClass, repository);
         return registerService(entityClass, service);
     }
 
@@ -149,7 +141,7 @@ public class CrudServiceRegistry {
      * @param entityClass the entity class
      */
     <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> generateRepository(Class<T> entityClass) {
-        PagingAndSortingRepository<T, ID> repository = serviceFactory.buildRepository(entityClass);
+        PagingAndSortingRepository<T, ID> repository = factory.buildRepository(entityClass);
         return registerRepository(entityClass, repository);
     }
 

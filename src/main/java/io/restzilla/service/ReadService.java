@@ -11,6 +11,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
 
+import com.google.common.base.Preconditions;
+
 /**
  * Service capable of reading any type of entity.
  * <br/><br/>
@@ -26,7 +28,11 @@ public class ReadService {
      * Registry containing all service instanced. Note that this
      * variable is not final as it can be injected dynamically.
      */
-    private CrudServiceRegistry serviceRegistry;
+    private final CrudServiceRegistry serviceRegistry;
+    
+    public ReadService(CrudServiceRegistry serviceRegistry) {
+        this.serviceRegistry = Preconditions.checkNotNull(serviceRegistry, "Service registry is required.");
+    }
 
     /**
      * Retrieve all entities with a certain sort.
@@ -36,7 +42,7 @@ public class ReadService {
      * @return the sorted entities
      */
     public <T extends Persistable<ID>, ID extends Serializable> List<T> findAll(Class<T> entityClass, Sort sort) {
-        return serviceRegistry.getService(entityClass).findAll(sort);
+        return getService(entityClass).findAll(sort);
     }
 
     /**
@@ -47,7 +53,7 @@ public class ReadService {
      * @return the page of entities
      */
     public <T extends Persistable<ID>, ID extends Serializable> Page<T> findAll(Class<T> entityClass, Pageable pageable) {
-        return serviceRegistry.getService(entityClass).findAll(pageable);
+        return getService(entityClass).findAll(pageable);
     }
 
     /**
@@ -58,17 +64,12 @@ public class ReadService {
      * @return the result entity, if any
      */
     public <T extends Persistable<ID>, ID extends Serializable> T getOne(Class<T> entityClass, ID id) {
-        return serviceRegistry.getService(entityClass).getOne(id);
+        return getService(entityClass).getOne(id);
     }
-
-    /**
-     * Configure the CRUD service registry. Inside the registry we
-     * hold an instance of each detected CRUD service instance.
-     * 
-     * @param serviceRegistry the registry
-     */
-    public void setServiceRegistry(CrudServiceRegistry serviceRegistry) {
-        this.serviceRegistry = serviceRegistry;
+    
+    private <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> getService(Class<T> entityClass) {
+        CrudService<T, ID> service = serviceRegistry.getService(entityClass);
+        return Preconditions.checkNotNull(service, "No service registered for: " + entityClass.getName());
     }
 
 }
