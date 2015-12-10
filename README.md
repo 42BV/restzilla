@@ -19,7 +19,7 @@ Add the dependency to your own project:
 <dependency>
   <groupId>io.restzilla</groupId>
   <artifactId>restzilla</artifactId>
-  <version>1.9.1-SNAPSHOT</version>
+  <version>1.9.2-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -226,6 +226,12 @@ public class User {
 
 To query all active users, we perform the following request:
 * GET /user?version=1&active=true
+
+Whenever the query always returns a single result, it can be marked as unique. This way the result will be an object, rather than an array or page.
+
+```java
+@RestQuery(parameters="active", method="findAllByActive", unique=true))
+```
 
 ### Service ###
 

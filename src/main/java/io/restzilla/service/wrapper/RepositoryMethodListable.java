@@ -1,7 +1,7 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service.adapter;
+package io.restzilla.service.wrapper;
 
 import io.restzilla.RestInformation;
 import io.restzilla.RestInformation.QueryInformation;
@@ -33,7 +33,7 @@ import com.google.common.base.Preconditions;
  * @since Dec 9, 2015
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class RepositoryMethodListable<T> implements Listable<T> {
+public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
     
     private final CrudServiceRegistry crudServiceRegistry;
     
@@ -57,6 +57,11 @@ public class RepositoryMethodListable<T> implements Listable<T> {
         this.parameterValues = parameterValues;
     }
     
+    public T findOne() {
+        InvokeableMethod invokable = findInvokableMethod((Class) queryInfo.getEntityType());
+        return (T) invoke(invokable, new HashMap<Class<?>, Object>());
+    }
+
     /**
      * {@inheritDoc}
      */

@@ -20,16 +20,16 @@ import io.restzilla.service.CrudService;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.Listable;
 import io.restzilla.service.ReadService;
-import io.restzilla.service.adapter.BeanMappingListable;
-import io.restzilla.service.adapter.ReadServiceListable;
-import io.restzilla.service.adapter.RepositoryMethodListable;
+import io.restzilla.service.wrapper.BeanMappingListable;
+import io.restzilla.service.wrapper.Finder;
+import io.restzilla.service.wrapper.ReadServiceListable;
+import io.restzilla.service.wrapper.RepositoryMethodListable;
 import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
-import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -132,7 +132,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             Sort sort = PageableResolver.getSort(request, listable.getEntityClass());
 
             if (query != null && query.isUnique()) {
-                return toSingleResult(listable.findAll(sort));
+                return ((Finder) listable).findOne();
             } else {
                 if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
                     Pageable pageable = PageableResolver.getPageable(request, sort);
@@ -164,15 +164,6 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             }
             // Performs bean mapping on the entities after retrieval
             return new BeanMappingListable(delegate, beanMapper, resultType);
-        }
-
-        private Object toSingleResult(List list) {
-            if (list.isEmpty()) {
-                return null;
-            } else if (list.size() == 1) {
-                return list.get(0);
-            }
-            return list;
         }
 
         /**

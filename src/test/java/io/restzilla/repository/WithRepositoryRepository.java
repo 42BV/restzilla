@@ -11,7 +11,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 
 public interface WithRepositoryRepository extends PagingAndSortingRepository<WithRepository, Long> {
 
-    List<WithRepository> findAllByActive(boolean active);
+    WithRepository findByActive(boolean active);
     
     List<WithRepository> findAllByActive(boolean active, Sort sort);
     

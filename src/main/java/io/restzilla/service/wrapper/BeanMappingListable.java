@@ -1,7 +1,4 @@
-/*
- * (C) 2014 42 bv (www.42.nl). All rights reserved.
- */
-package io.restzilla.service.adapter;
+package io.restzilla.service.wrapper;
 
 import io.beanmapper.BeanMapper;
 import io.beanmapper.spring.PageableMapper;
@@ -20,7 +17,7 @@ import org.springframework.data.domain.Sort;
  * @author Jeroen van Schagen
  * @since Dec 9, 2015
  */
-public class BeanMappingListable<T> implements Listable<T> {
+public class BeanMappingListable<T> implements Listable<T>, Finder<T> {
     
     private final Listable<?> delegate;
     
@@ -34,6 +31,15 @@ public class BeanMappingListable<T> implements Listable<T> {
         this.delegate = delegate;
     }
 
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public T findOne() {
+        Object entity = ((Finder<?>) delegate).findOne();
+        return beanMapper.map(entity, resultType);
+    }
+    
     /**
      * {@inheritDoc}
      */
