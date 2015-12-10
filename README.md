@@ -209,7 +209,7 @@ public interface UserRepository extends CrudRepository<User, Long> {
 
 #### Customer finders ####
 
-With the @RestQuery annotation it is also possible to configure custom finder queries. Whenever a GET request matches our specified parameters, the call will be delegated to the selected method in either our service or repository bean. Paging and sorting is also supported by default, whenever the target method has a Sort or Pageable parameter type. Also, when a result type is specified the resulting array or page will automatically be mapped to that type.
+With the @RestQuery annotation it is also possible to configure custom finder queries. Whenever a GET request matches our specified parameters, the call will be delegated to the selected method in our repository bean. Paging and sorting is also supported by default, whenever the target method has a Sort or Pageable parameter type. Also, when a result type is specified the resulting array or page will automatically be mapped to that type.
 
 ```java
 @Entity
