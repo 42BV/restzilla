@@ -410,7 +410,7 @@ public class RestTest extends AbstractControllerTest {
         
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"id\":42,\"name\":\"Service generated\"}", response.getContentAsString());
+        Assert.assertEquals("[{\"id\":42,\"name\":\"Service generated\"}]", response.getContentAsString());
     }
 
     /*

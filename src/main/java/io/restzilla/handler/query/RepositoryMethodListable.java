@@ -1,6 +1,3 @@
-/*
- * (C) 2014 42 bv (www.42.nl). All rights reserved.
- */
 package io.restzilla.handler.query;
 
 import io.restzilla.RestInformation;
@@ -100,10 +97,14 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
     // Method retrieval
 
     private InvokeableMethod findInvokableMethod(Class<?> returnType, Class<?>... preferredTypes) {
-        final Class entityClass = (Class) queryInfo.getEntityType();
-
-        Object repository = crudServiceRegistry.getRepository(entityClass);
-        InvokeableMethod method = findInvokableMethod(repository, returnType, preferredTypes);
+        final Class entityClass = entityInfo.getEntityClass();
+        
+        Object service = crudServiceRegistry.getService(entityClass);
+        InvokeableMethod method = findInvokableMethod(service, returnType, preferredTypes);
+        if (method == null) {
+            Object repository = crudServiceRegistry.getRepository((Class) queryInfo.getEntityType());
+            method = findInvokableMethod(repository, returnType, preferredTypes);
+        }
         return Preconditions.checkNotNull(method, "Could not find custom finder method '" + queryInfo.getMethodName() + "' for " + entityClass.getName());
     }
     
@@ -127,13 +128,19 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
         Method[] methods = ReflectionUtils.getAllDeclaredMethods(candidateClass);
         List<Method> found = new ArrayList<Method>();
         for (Method method : methods) {
-            if (method.getName().equals(queryInfo.getMethodName()) && returnType.isAssignableFrom(method.getReturnType())) {
+            if (!isProxyClass(method.getDeclaringClass()) &&
+                method.getName().equals(queryInfo.getMethodName()) && 
+                returnType.isAssignableFrom(method.getReturnType())) {
                 found.add(method);
             }
         }
         return findMethodWithPreferredParameterTypes(found, preferredTypes);
     }
-    
+
+    private boolean isProxyClass(Class<?> declaringClass) {
+        return declaringClass.getSimpleName().contains("$$");
+    }
+
     /**
      * Return the first method with a preferred parameter type. Whenever no
      * method is preferred we just return the first method.
