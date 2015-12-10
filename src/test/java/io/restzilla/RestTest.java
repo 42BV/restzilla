@@ -241,7 +241,7 @@ public class RestTest extends AbstractControllerTest {
         
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[{\"id\":1,\"name\":\"Jan\",\"active\":true},{\"id\":2,\"name\":\"Piet\",\"active\":false}]", response.getContentAsString());
+        Assert.assertEquals("[{\"id\":1,\"name\":\"Jan\",\"active\":true}]", response.getContentAsString());
     }
     
     @Test

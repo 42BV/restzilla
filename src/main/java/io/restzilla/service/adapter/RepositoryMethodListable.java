@@ -62,12 +62,27 @@ public class RepositoryMethodListable<T> implements Listable<T> {
         return Preconditions.checkNotNull(method, "Could not find custom finder method '" + annotation.method() + "' for " + entityClass.getName());
     }
     
-    private InvokeableMethod findMethod(Object candidate, Class<?> returnType) {
-        Class<?> beanClass = AopUtils.getTargetClass(candidate);
-        Method[] methods = ReflectionUtils.getAllDeclaredMethods(beanClass);
+    private InvokeableMethod findMethod(Object bean, Class<?> returnType) {
+        List<Class<?>> candidateClasses = new ArrayList<Class<?>>();
+        candidateClasses.add(AopUtils.getTargetClass(bean));
+        for (Class<?> interfaceClass : bean.getClass().getInterfaces()) {
+            candidateClasses.add(interfaceClass);
+        }
+
+        for (Class<?> candidateClass : candidateClasses) {
+            Method method = findMethod(bean, candidateClass, returnType);
+            if (method != null) {
+                return new InvokeableMethod(bean, method);
+            }
+        }
+        return null;
+    }
+    
+    private Method findMethod(Object bean, Class<?> candidateClass, Class<?> returnType) {
+        Method[] methods = ReflectionUtils.getAllDeclaredMethods(candidateClass);
         for (Method method : methods) {
-            if (method.getName().equals(annotation.method()) && method.getReturnType().equals(returnType)) {
-                return new InvokeableMethod(candidate, method);
+            if (method.getName().equals(annotation.method()) && returnType.isAssignableFrom(method.getReturnType())) {
+                return method;
             }
         }
         return null;
