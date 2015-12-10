@@ -3,6 +3,9 @@
  */
 package io.restzilla;
 
+import java.util.Map;
+
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Persistable;
 
 /**
@@ -103,7 +106,7 @@ public class RestInformation {
      * @return the result type
      */
     public Class<?> getResultType(RestConfig config) {
-        return getResultInfo(config).getType();
+        return getResultInfo(config).getResultType();
     }
     
     /**
@@ -140,6 +143,45 @@ public class RestInformation {
 
     private static boolean isCustom(Class<?> clazz) {
         return !Object.class.equals(clazz);
+    }
+    
+    public RestQuery findCustomQuery(Map<String, String[]> requestParameters) {
+        RestQuery result = null;
+        for (RestQuery query : annotation.queries()) {
+            if (isMatchingParameters(query.parameters(), requestParameters)) {
+                result = query;
+                break;
+            }
+        }
+        return result;
+    }
+    
+    private boolean isMatchingParameters(String[] parameters, Map<String, String[]> requestParameters) {
+        for (String parameter : parameters) {
+            if (parameter.contains("=")) {
+                String name = StringUtils.substringBefore(parameter, "=");
+                String expected = StringUtils.substringAfter(parameter, "=");
+                String value = getSingleParameterValue(name, requestParameters);
+                if (!expected.equals(value)) {
+                    return false;
+                }
+            } else {
+                String value = getSingleParameterValue(parameter, requestParameters);
+                if (StringUtils.isBlank(value)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+    
+    private String getSingleParameterValue(String parameterName, Map<String, String[]> requestParameters) {
+        String[] values = requestParameters.get(parameterName);
+        if (values == null || values.length == 0) {
+            return "";
+        } else {
+            return StringUtils.defaultString(values[0], "");
+        }
     }
 
     /**
@@ -187,23 +229,29 @@ public class RestInformation {
         return annotation.delete();
     }
     
+    /**
+     * Information about the REST result.
+     *
+     * @author Jeroen van Schagen
+     * @since Dec 10, 2015
+     */
     public static class ResultInformation {
         
-        private final Class<?> type;
+        private final Class<?> resultType;
         
-        private final boolean query;
+        private final boolean resultByQuery;
 
-        private ResultInformation(Class<?> type, boolean query) {
-            this.type = type;
-            this.query = query;
+        private ResultInformation(Class<?> resultType, boolean resultByQuery) {
+            this.resultType = resultType;
+            this.resultByQuery = resultByQuery;
         }
         
-        public Class<?> getType() {
-            return type;
+        public Class<?> getResultType() {
+            return resultType;
         }
         
-        public boolean isQuery() {
-            return query;
+        public boolean isResultByQuery() {
+            return resultByQuery;
         }
 
     }

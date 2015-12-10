@@ -17,6 +17,7 @@ import io.restzilla.RestQuery;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
+import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.Listable;
 import io.restzilla.service.ReadService;
 import io.restzilla.service.adapter.BeanMappingListable;
@@ -34,7 +35,6 @@ import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
@@ -69,7 +69,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
     
     private ReadService readService;
 
-    private ApplicationContext applicationContext;
+    private CrudServiceRegistry crudServiceRegistry;
 
     /**
      * Instantiate a new {@link DefaultHandlerMappingFactory}.
@@ -145,19 +145,15 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
 
         private Listable<?> resolveListable(HttpServletRequest request) {
             ResultInformation result = information.getResultInfo(information.findAll());
-            RestQuery query = findCustomQuery(request);
+            RestQuery query = information.findCustomQuery(request.getParameterMap());
             if (query != null) {
-                return new RepositoryMethodListable(applicationContext, information.getResultType(query), query.method(), request.getParameterMap());
-            } else if (result.isQuery()) {
-                return new ReadServiceListableAdapter(readService, result.getType());
+                return new RepositoryMethodListable(crudServiceRegistry, conversionService, information.getResultType(query), query, request.getParameterMap());
+            } else if (result.isResultByQuery()) {
+                return new ReadServiceListableAdapter(readService, result.getResultType());
             } else {
-                Class<?> resultType = information.getResultInfo(information.findAll()).getType();
+                Class<?> resultType = information.getResultInfo(information.findAll()).getResultType();
                 return new BeanMappingListable(entityService, beanMapper, resultType);
             }
-        }
-        
-        private RestQuery findCustomQuery(HttpServletRequest request) {
-            return null; // TODO: Implement this
         }
 
         /**
@@ -180,10 +176,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
 
         private Object mapIdToResult(Serializable id) {
             ResultInformation result = information.getResultInfo(information.findOne());
-            if (result.isQuery()) {
-                return readService.getOne((Class) result.getType(), id);
+            if (result.isResultByQuery()) {
+                return readService.getOne((Class) result.getResultType(), id);
             } else {
-                return beanMapper.map(entityService.getOne(id), result.getType());
+                return beanMapper.map(entityService.getOne(id), result.getResultType());
             }
         }
 
@@ -252,10 +248,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         private Object mapEntityToResult(Persistable<?> entity, RestConfig config) {
             ResultInformation result = information.getResultInfo(config);
-            if (result.isQuery()) {
-                return readService.getOne((Class) result.getType(), entity.getId());
+            if (result.isResultByQuery()) {
+                return readService.getOne((Class) result.getResultType(), entity.getId());
             } else {
-                return convertToType(entity, result.getType());
+                return convertToType(entity, result.getResultType());
             }
         }
 
@@ -531,8 +527,8 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
     }
     
     @Autowired
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    public void setCrudServiceRegistry(CrudServiceRegistry crudServiceRegistry) {
+        this.crudServiceRegistry = crudServiceRegistry;
     }
 
 }
