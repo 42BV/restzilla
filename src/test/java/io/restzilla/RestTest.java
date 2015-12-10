@@ -330,6 +330,28 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
         Assert.assertEquals("[{\"name\":\"Henk\"},{\"name\":\"Jan\"}]", response.getContentAsString());
     }
+    
+    @Test
+    public void testCustomRepositoryQuerySingleResult() throws Exception {
+        WithRepository jan = new WithRepository();
+        jan.setName("Jan");
+        jan.setActive(true);
+        entityBuilder.save(jan);
+        
+        WithRepository piet = new WithRepository();
+        piet.setName("Piet");
+        entityBuilder.save(piet);
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/withrepository");
+        request.setParameter("active", "true");
+        request.setParameter("unique", "true");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"name\":\"Jan\"}", response.getContentAsString());
+    }
 
     /*
      * Custom services

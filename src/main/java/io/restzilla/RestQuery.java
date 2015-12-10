@@ -48,5 +48,12 @@ public @interface RestQuery {
      * @return the result type
      */
     Class<?> resultType() default Object.class;
+    
+    /**
+     * Determines if the query returns in a single result.
+     * 
+     * @return {@code true} when single result, else {@code false}
+     */
+    boolean unique() default false;
 
 }

@@ -12,6 +12,7 @@ import javax.persistence.Entity;
 @SortingDefault("name")
 @RestResource(queries = {
   @RestQuery(parameters = { "active", "type=name" }, method = "findAllByActive", resultType = WithRepositoryNameOnlyDto.class),
+  @RestQuery(parameters = { "active", "unique=true" }, method = "findAllByActive", unique = true, resultType = WithRepositoryNameOnlyDto.class),
   @RestQuery(parameters = "active", method = "findAllByActive", resultType = WithRepositoryDto.class)
 })
 public class WithRepository extends BaseEntity {

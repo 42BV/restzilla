@@ -295,6 +295,15 @@ public class RestInformation {
             return getEntityType();
         }
 
+        /**
+         * Determine if the finder results in a single result.
+         * 
+         * @return {@code true} when unique
+         */
+        public boolean isUnique() {
+            return annotation.unique();
+        }
+
     }
 
 }

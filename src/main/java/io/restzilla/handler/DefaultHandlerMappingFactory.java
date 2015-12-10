@@ -29,6 +29,7 @@ import io.restzilla.util.UrlUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -126,14 +127,19 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         public Object findAll(HttpServletRequest request) {
             checkIsAuthorized(information.findAll().secured(), request);
             
-            Listable<?> listable = resolveListable(request);
+            QueryInformation query = information.findCustomQuery(request.getParameterMap());
+            Listable<?> listable = buildListable(query, request);
             Sort sort = PageableResolver.getSort(request, listable.getEntityClass());
 
-            if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
-                Pageable pageable = PageableResolver.getPageable(request, sort);
-                return listable.findAll(pageable);
+            if (query != null && query.isUnique()) {
+                return toSingleResult(listable.findAll(sort));
             } else {
-                return listable.findAll(sort);
+                if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
+                    Pageable pageable = PageableResolver.getPageable(request, sort);
+                    return listable.findAll(pageable);
+                } else {
+                    return listable.findAll(sort);
+                }
             }
         }
 
@@ -143,9 +149,8 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             }
         }
 
-        private Listable<?> resolveListable(HttpServletRequest request) {
+        private Listable<?> buildListable(QueryInformation query, HttpServletRequest request) {
             ResultInformation result = information.getResultInfo(information.findAll());
-            QueryInformation query = information.findCustomQuery(request.getParameterMap());
             
             Listable<?> delegate = entityService;
             Class<?> resultType = result.getType();
@@ -159,6 +164,15 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             }
             // Performs bean mapping on the entities after retrieval
             return new BeanMappingListable(delegate, beanMapper, resultType);
+        }
+
+        private Object toSingleResult(List list) {
+            if (list.isEmpty()) {
+                return null;
+            } else if (list.size() == 1) {
+                return list.get(0);
+            }
+            return list;
         }
 
         /**
