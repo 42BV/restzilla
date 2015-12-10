@@ -1,4 +1,4 @@
-package io.restzilla.handler.finder;
+package io.restzilla.handler.query;
 
 import io.beanmapper.BeanMapper;
 import io.beanmapper.spring.PageableMapper;

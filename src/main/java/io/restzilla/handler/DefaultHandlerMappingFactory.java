@@ -14,10 +14,10 @@ import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
 import io.restzilla.RestInformation.QueryInformation;
 import io.restzilla.RestInformation.ResultInformation;
-import io.restzilla.handler.finder.BeanMappingListable;
-import io.restzilla.handler.finder.Finder;
-import io.restzilla.handler.finder.ReadServiceListable;
-import io.restzilla.handler.finder.RepositoryMethodListable;
+import io.restzilla.handler.query.BeanMappingListable;
+import io.restzilla.handler.query.Finder;
+import io.restzilla.handler.query.ReadServiceListable;
+import io.restzilla.handler.query.RepositoryMethodListable;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
@@ -129,17 +129,11 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             
             QueryInformation query = information.findCustomQuery(request.getParameterMap());
             Listable<?> listable = buildListable(query, request);
-            Sort sort = PageableResolver.getSort(request, listable.getEntityClass());
 
             if (query != null && query.isUnique()) {
                 return ((Finder) listable).findOne();
             } else {
-                if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
-                    Pageable pageable = PageableResolver.getPageable(request, sort);
-                    return listable.findAll(pageable);
-                } else {
-                    return listable.findAll(sort);
-                }
+                return findAll(listable, request);
             }
         }
 
@@ -150,9 +144,9 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         }
 
         private Listable<?> buildListable(QueryInformation query, HttpServletRequest request) {
-            ResultInformation result = information.getResultInfo(information.findAll());
-            
             Listable<?> delegate = entityService;
+
+            ResultInformation result = information.getResultInfo(information.findAll());
             Class<?> resultType = result.getType();
             if (query != null) {
                 // Retrieve by a custom finder method in either the service or repository bean
@@ -160,10 +154,20 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
                 resultType = query.getResultType();
             } else if (result.isByQuery()) {
                 // Retrieve the custom entity type with a generic finder query
-                return new ReadServiceListable(readService, result.getType());
+                return new ReadServiceListable(readService, resultType);
             }
             // Performs bean mapping on the entities after retrieval
             return new BeanMappingListable(delegate, beanMapper, resultType);
+        }
+
+        private Object findAll(Listable<?> listable, HttpServletRequest request) {
+            Sort sort = PageableResolver.getSort(request, listable.getEntityClass());
+            if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
+                Pageable pageable = PageableResolver.getPageable(request, sort);
+                return listable.findAll(pageable);
+            } else {
+                return listable.findAll(sort);
+            }
         }
 
         /**

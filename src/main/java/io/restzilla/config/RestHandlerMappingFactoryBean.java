@@ -10,7 +10,7 @@ import io.restzilla.RestResource;
 import io.restzilla.handler.DefaultHandlerMappingFactory;
 import io.restzilla.handler.EntityHandlerMappingFactory;
 import io.restzilla.handler.RestHandlerMapping;
-import io.restzilla.handler.naming.DefaultRestNamingStrategy;
+import io.restzilla.handler.naming.CaseFormatNamingStrategy;
 import io.restzilla.handler.naming.RestNamingStrategy;
 import io.restzilla.handler.security.AlwaysSecurityProvider;
 import io.restzilla.handler.security.SecurityProvider;
@@ -30,6 +30,7 @@ import org.springframework.validation.Validator;
 import org.springframework.web.servlet.HandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 
 /**
@@ -67,7 +68,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     /**
      * Generates the base paths per entity.
      */
-    private RestNamingStrategy namingStrategy = new DefaultRestNamingStrategy();
+    private RestNamingStrategy namingStrategy = new CaseFormatNamingStrategy(CaseFormat.LOWER_HYPHEN);
 
     /**
      * Base package of the entities to scan.

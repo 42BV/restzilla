@@ -175,7 +175,7 @@ public class RestTest extends AbstractControllerTest {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withotherentity");
+        request.setRequestURI("/with-other-entity");
         request.setMethod(RequestMethod.GET.name());
         
         MockHttpServletResponse response = call(request);
@@ -188,7 +188,7 @@ public class RestTest extends AbstractControllerTest {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withotherentity/" + entity.getId());
+        request.setRequestURI("/with-other-entity/" + entity.getId());
         request.setMethod(RequestMethod.GET.name());
 
         MockHttpServletResponse response = call(request);
@@ -201,7 +201,7 @@ public class RestTest extends AbstractControllerTest {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withotherentity/" + entity.getId());
+        request.setRequestURI("/with-other-entity/" + entity.getId());
         request.setMethod(RequestMethod.PUT.name());
         setContentAsJson(request, entity);
 
@@ -217,7 +217,7 @@ public class RestTest extends AbstractControllerTest {
     @Test
     public void testCustomRepository() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withrepository");
+        request.setRequestURI("/with-repository");
         request.setMethod(RequestMethod.GET.name());
         
         MockHttpServletResponse response = call(request);
@@ -242,7 +242,7 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(piet);
 
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withrepository");
+        request.setRequestURI("/with-repository");
         request.setParameter("active", "true");
         request.setMethod(RequestMethod.GET.name());
         
@@ -268,7 +268,7 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(piet);
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withrepository");
+        request.setRequestURI("/with-repository");
         request.setParameter("active", "true");
         request.setParameter(PageableResolver.SORT_PARAMETER, "name,desc");
         request.setMethod(RequestMethod.GET.name());
@@ -291,7 +291,7 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(piet);
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withrepository");
+        request.setRequestURI("/with-repository");
         request.setParameter("active", "true");
         request.setParameter(PageableResolver.PAGE_PARAMETER, "0");
         request.setMethod(RequestMethod.GET.name());
@@ -321,7 +321,7 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(piet);
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withrepository");
+        request.setRequestURI("/with-repository");
         request.setParameter("active", "true");
         request.setParameter("type", "name");
         request.setMethod(RequestMethod.GET.name());
@@ -343,7 +343,7 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(piet);
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withrepository");
+        request.setRequestURI("/with-repository");
         request.setParameter("active", "true");
         request.setParameter("unique", "true");
         request.setMethod(RequestMethod.GET.name());
@@ -363,7 +363,7 @@ public class RestTest extends AbstractControllerTest {
         entity.setName("Test");
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withservice");
+        request.setRequestURI("/with-service");
         request.setMethod(RequestMethod.POST.name());
         setContentAsJson(request, entity);
         
@@ -381,7 +381,7 @@ public class RestTest extends AbstractControllerTest {
 
         // Change name, and enforce rollback
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withrollback/" + entity.getId());
+        request.setRequestURI("/with-rollback/" + entity.getId());
         request.setMethod(RequestMethod.PUT.name());
         setValueAsJson(request, "{\"name\":\"Updated\"}");
         
@@ -431,7 +431,7 @@ public class RestTest extends AbstractControllerTest {
     @Test
     public void testDisabled() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withdisabled");
+        request.setRequestURI("/with-disabled");
         request.setMethod(RequestMethod.GET.name());
         
         Assert.assertNull(getHandlerChain(request));
@@ -443,7 +443,7 @@ public class RestTest extends AbstractControllerTest {
         entity.setName("Test");
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withreadonly");
+        request.setRequestURI("/with-read-only");
         request.setMethod(RequestMethod.POST.name());
         setContentAsJson(request, entity);
         
@@ -453,7 +453,7 @@ public class RestTest extends AbstractControllerTest {
     @Test
     public void testPagedOnly() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withpagedonly");
+        request.setRequestURI("/with-paged-only");
         request.setMethod(RequestMethod.GET.name());
         
         MockHttpServletResponse response = call(request);
@@ -475,7 +475,7 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(entity);
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withpatch/" + entity.getId());
+        request.setRequestURI("/with-patch/" + entity.getId());
         request.setMethod(RequestMethod.PUT.name());
         
         setValueAsJson(request, "{\"name\":\"New name\",\"nested\":{\"nestedName\":\"New nested name\"}}");
@@ -496,7 +496,7 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(entity);
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withoutpatch/" + entity.getId());
+        request.setRequestURI("/without-patch/" + entity.getId());
         request.setMethod(RequestMethod.PUT.name());
         
         setValueAsJson(request, "{\"name\":\"New name\"}");
@@ -513,7 +513,7 @@ public class RestTest extends AbstractControllerTest {
 
         try {
             MockHttpServletRequest request = new MockHttpServletRequest();
-            request.setRequestURI("/withsecurity");
+            request.setRequestURI("/with-security");
             request.setMethod(RequestMethod.GET.name());
             
             MockHttpServletResponse response = call(request);
@@ -526,7 +526,7 @@ public class RestTest extends AbstractControllerTest {
     @Test(expected = SecurityException.class)
     public void testSecuredWithoutRoleNotLoggedIn() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withsecurity");
+        request.setRequestURI("/with-security");
         request.setMethod(RequestMethod.GET.name());
         
         call(request);
@@ -539,7 +539,7 @@ public class RestTest extends AbstractControllerTest {
         dto.street = "Teststreet 42";
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withvalidation");
+        request.setRequestURI("/with-validation");
         request.setMethod(RequestMethod.POST.name());
         setContentAsJson(request, dto);
         
@@ -555,7 +555,7 @@ public class RestTest extends AbstractControllerTest {
         dto.name = "Henk";
         
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withvalidation");
+        request.setRequestURI("/with-validation");
         request.setMethod(RequestMethod.POST.name());
         setContentAsJson(request, dto);
         
