@@ -57,6 +57,10 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
         this.parameterValues = parameterValues;
     }
     
+    /**
+     * {@inheritDoc}
+     */
+    @Override
     public T findOne() {
         InvokeableMethod invokable = findInvokableMethod((Class) queryInfo.getEntityType());
         return (T) invoke(invokable, new HashMap<Class<?>, Object>());
