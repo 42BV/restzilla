@@ -210,9 +210,174 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"My name\"}", response.getContentAsString());
     }
 
-    /*
-     * Custom repositories
-     */
+    //
+    // Alternate configuration
+    //
+    
+    @Test
+    public void testCustomBasePath() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/MyBasePath");
+        request.setMethod(RequestMethod.GET.name());
+        
+        Assert.assertNotNull(getHandlerChain(request));
+    }
+    
+    @Test
+    public void testNestedBasePath() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/mybase/path");
+        request.setMethod(RequestMethod.GET.name());
+        
+        Assert.assertNull(getHandlerChain(request));
+    }
+    
+    @Test
+    public void testDuplicate() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-duplicate");
+        request.setMethod(RequestMethod.GET.name());
+        
+        Assert.assertNotNull(getHandlerChain(request));
+    }
+    
+    @Test
+    public void testDisabled() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-disabled");
+        request.setMethod(RequestMethod.GET.name());
+        
+        Assert.assertNull(getHandlerChain(request));
+    }
+    
+    @Test
+    public void testReadOnly() throws Exception {
+        WithReadOnly entity = new WithReadOnly();
+        entity.setName("Test");
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-read-only");
+        request.setMethod(RequestMethod.POST.name());
+        setContentAsJson(request, entity);
+        
+        Assert.assertNull(getHandlerChain(request));
+    }
+    
+    @Test
+    public void testPagedOnly() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-paged-only");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        String contents = response.getContentAsString();
+        Assert.assertTrue(contents.contains("\"content\":[]"));
+        Assert.assertTrue(contents.contains("\"number\":0"));
+        Assert.assertTrue(contents.contains("\"size\":10"));
+    }
+    
+    @Test
+    @Transactional
+    public void testPatch() throws Exception {
+        WithPatch entity = new WithPatch();
+        entity.setName("My name");
+        entity.setEmail("email@42.nl");
+        entity.setNested(new WithPatchNested());
+        entity.getNested().setNestedName("My nested name");
+        entity.getNested().setNestedOther("My nested other");
+        entityBuilder.save(entity);
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-patch/" + entity.getId());
+        request.setMethod(RequestMethod.PUT.name());
+        
+        setValueAsJson(request, "{\"name\":\"New name\",\"nested\":{\"nestedName\":\"New nested name\"}}");
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"id\":" + entity.getId()
+                + ",\"name\":\"New name\",\"email\":\"email@42.nl\",\"nested\":{\"nestedName\":\"New nested name\",\"nestedOther\":\"My nested other\"}}",
+                response.getContentAsString());
+    }
+    
+    @Test
+    @Transactional
+    public void testNoPatch() throws Exception {
+        WithoutPatch entity = new WithoutPatch();
+        entity.setName("My name");
+        entity.setName("email@42.nl");
+        entityBuilder.save(entity);
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/without-patch/" + entity.getId());
+        request.setMethod(RequestMethod.PUT.name());
+        
+        setValueAsJson(request, "{\"name\":\"New name\"}");
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"New name\",\"email\":null}", response.getContentAsString());
+    }
+    
+    @Test
+    public void testSecuredHasRole() throws Exception {
+        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(admin);
+        
+        try {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/with-security");
+            request.setMethod(RequestMethod.GET.name());
+            
+            MockHttpServletResponse response = call(request);
+            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        } finally {
+            SecurityContextHolder.getContext().setAuthentication(null);
+        }
+    }
+    
+    @Test(expected = SecurityException.class)
+    public void testSecuredWithoutRoleNotLoggedIn() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-security");
+        request.setMethod(RequestMethod.GET.name());
+        
+        call(request);
+    }
+    
+    @Test
+    public void testValidation() throws Exception {
+        ValidationDto dto = new ValidationDto();
+        dto.name = "Henk";
+        dto.street = "Teststreet 42";
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-validation");
+        request.setMethod(RequestMethod.POST.name());
+        setContentAsJson(request, dto);
+        
+        MockHttpServletResponse response = call(request);
+        String contents = response.getContentAsString();
+        Assert.assertTrue(contents.contains("\"name\":\"Henk\""));
+        Assert.assertTrue(contents.contains("\"street\":\"Teststreet 42\""));
+    }
+    
+    @Test(expected = BindException.class)
+    public void testValidationFail() throws Exception {
+        ValidationDto dto = new ValidationDto();
+        dto.name = "Henk";
+        
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-validation");
+        request.setMethod(RequestMethod.POST.name());
+        setContentAsJson(request, dto);
+        
+        call(request);
+    }
+    
+    //
+    // Custom beans
+    //
 
     @Test
     public void testCustomRepository() throws Exception {
@@ -353,10 +518,6 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertEquals("{\"name\":\"Jan\"}", response.getContentAsString());
     }
 
-    /*
-     * Custom services
-     */
-
     @Test
     public void testCustomService() throws Exception {
         WithService entity = new WithService();
@@ -412,170 +573,16 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
         Assert.assertEquals("[{\"id\":42,\"name\":\"Service generated\"}]", response.getContentAsString());
     }
-
-    /*
-     * Additional configuration
-     */
-
-    @Test
-    public void testCustomBasePath() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/MyBasePath");
-        request.setMethod(RequestMethod.GET.name());
-        
-        Assert.assertNotNull(getHandlerChain(request));
-    }
     
     @Test
-    public void testNestedBasePath() throws Exception {
+    public void testCustomController() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/mybase/path");
+        request.setRequestURI("/with-controller");
         request.setMethod(RequestMethod.GET.name());
-        
-        Assert.assertNull(getHandlerChain(request));
-    }
-    
-    @Test
-    public void testDuplicate() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/withduplicate");
-        request.setMethod(RequestMethod.GET.name());
-        
-        Assert.assertNotNull(getHandlerChain(request));
-    }
-    
-    @Test
-    public void testDisabled() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-disabled");
-        request.setMethod(RequestMethod.GET.name());
-        
-        Assert.assertNull(getHandlerChain(request));
-    }
-
-    @Test
-    public void testReadOnly() throws Exception {
-        WithReadOnly entity = new WithReadOnly();
-        entity.setName("Test");
-        
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-read-only");
-        request.setMethod(RequestMethod.POST.name());
-        setContentAsJson(request, entity);
-        
-        Assert.assertNull(getHandlerChain(request));
-    }
-    
-    @Test
-    public void testPagedOnly() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-paged-only");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        String contents = response.getContentAsString();
-        Assert.assertTrue(contents.contains("\"content\":[]"));
-        Assert.assertTrue(contents.contains("\"number\":0"));
-        Assert.assertTrue(contents.contains("\"size\":10"));
-    }
-    
-    @Test
-    @Transactional
-    public void testPatch() throws Exception {
-        WithPatch entity = new WithPatch();
-        entity.setName("My name");
-        entity.setEmail("email@42.nl");
-        entity.setNested(new WithPatchNested());
-        entity.getNested().setNestedName("My nested name");
-        entity.getNested().setNestedOther("My nested other");
-        entityBuilder.save(entity);
-        
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-patch/" + entity.getId());
-        request.setMethod(RequestMethod.PUT.name());
-        
-        setValueAsJson(request, "{\"name\":\"New name\",\"nested\":{\"nestedName\":\"New nested name\"}}");
         
         MockHttpServletResponse response = call(request);
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"id\":" + entity.getId()
-                + ",\"name\":\"New name\",\"email\":\"email@42.nl\",\"nested\":{\"nestedName\":\"New nested name\",\"nestedOther\":\"My nested other\"}}",
-                response.getContentAsString());
-    }
-    
-    @Test
-    @Transactional
-    public void testNoPatch() throws Exception {
-        WithoutPatch entity = new WithoutPatch();
-        entity.setName("My name");
-        entity.setName("email@42.nl");
-        entityBuilder.save(entity);
-        
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/without-patch/" + entity.getId());
-        request.setMethod(RequestMethod.PUT.name());
-        
-        setValueAsJson(request, "{\"name\":\"New name\"}");
-
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"New name\",\"email\":null}", response.getContentAsString());
-    }
-    
-    @Test
-    public void testSecuredHasRole() throws Exception {
-        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_ADMIN");
-        SecurityContextHolder.getContext().setAuthentication(admin);
-
-        try {
-            MockHttpServletRequest request = new MockHttpServletRequest();
-            request.setRequestURI("/with-security");
-            request.setMethod(RequestMethod.GET.name());
-            
-            MockHttpServletResponse response = call(request);
-            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        } finally {
-            SecurityContextHolder.getContext().setAuthentication(null);
-        }
-    }
-    
-    @Test(expected = SecurityException.class)
-    public void testSecuredWithoutRoleNotLoggedIn() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-security");
-        request.setMethod(RequestMethod.GET.name());
-        
-        call(request);
-    }
-    
-    @Test
-    public void testValidation() throws Exception {
-        ValidationDto dto = new ValidationDto();
-        dto.name = "Henk";
-        dto.street = "Teststreet 42";
-        
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-validation");
-        request.setMethod(RequestMethod.POST.name());
-        setContentAsJson(request, dto);
-        
-        MockHttpServletResponse response = call(request);
-        String contents = response.getContentAsString();
-        Assert.assertTrue(contents.contains("\"name\":\"Henk\""));
-        Assert.assertTrue(contents.contains("\"street\":\"Teststreet 42\""));
-    }
-    
-    @Test(expected = BindException.class)
-    public void testValidationFail() throws Exception {
-        ValidationDto dto = new ValidationDto();
-        dto.name = "Henk";
-        
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-validation");
-        request.setMethod(RequestMethod.POST.name());
-        setContentAsJson(request, dto);
-        
-        call(request);
+        Assert.assertEquals("[]", response.getContentAsString());
     }
 
 }

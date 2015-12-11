@@ -170,6 +170,9 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
         if (isBlank(basePath)) {
             basePath = namingStrategy.getBasePath(entityClass);
         }
+        if (!annotation.entityClass().equals(Object.class)) {
+            entityClass = annotation.entityClass();
+        }
         return new RestInformation(entityClass, basePath, annotation);
     }
     

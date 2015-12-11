@@ -8,7 +8,7 @@ import io.restzilla.RestResource;
 import javax.persistence.Entity;
 
 @Entity
-@RestResource(basePath = "/withduplicate")
+@RestResource(basePath = "/with-duplicate")
 public class WithDuplicate extends BaseEntity {
     
 }

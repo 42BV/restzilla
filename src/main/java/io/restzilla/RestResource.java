@@ -42,6 +42,12 @@ public @interface RestResource {
     String basePath() default "";
     
     /**
+     * (Optional) alternative entity class.
+     * @return the entity class
+     */
+    Class<?> entityClass() default Object.class;
+    
+    /**
      * (Optional) the custom result type, when empty we just return the entity.
      * @return the result type
      */
