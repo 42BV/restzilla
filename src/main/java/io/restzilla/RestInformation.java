@@ -25,19 +25,19 @@ public class RestInformation {
     
     private final Class<?> identifierClass;
     
-    private final RestResource annotation;
+    private final RestResource entityAnnotation;
     
     private final String basePath;
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public RestInformation(Class<?> entityClass, String basePath, RestResource annotation) throws NoSuchMethodException {
+    public RestInformation(Class<?> entityClass, String basePath, RestResource entityAnnotation) throws NoSuchMethodException {
         if (!(Persistable.class.isAssignableFrom(entityClass))) {
             throw new IllegalStateException("Entity does not extend from Persistable");
         }
         this.entityClass = (Class) entityClass;
         this.identifierClass = entityClass.getMethod("getId").getReturnType();
         this.basePath = UrlUtils.stripSlashes(basePath);
-        this.annotation = annotation;
+        this.entityAnnotation = entityAnnotation;
     }
 
     /**
@@ -55,7 +55,7 @@ public class RestInformation {
      * @return the read only
      */
     public boolean isReadOnly() {
-        return annotation.readOnly();
+        return entityAnnotation.readOnly();
     }
     
     /**
@@ -64,7 +64,7 @@ public class RestInformation {
      * @return the paged only
      */
     public boolean isPagedOnly() {
-        return annotation.pagedOnly();
+        return entityAnnotation.pagedOnly();
     }
     
     /**
@@ -73,7 +73,7 @@ public class RestInformation {
      * @return the patch
      */
     public boolean isPatch() {
-        return annotation.patch();
+        return entityAnnotation.patch();
     }
     
     /**
@@ -129,8 +129,8 @@ public class RestInformation {
     }
     
     private ResultInformation getResultInfo() {
-        if (isCustom(annotation.resultType())) {
-            return new ResultInformation(annotation.resultType(), annotation.resultByQuery());
+        if (isCustom(entityAnnotation.resultType())) {
+            return new ResultInformation(entityAnnotation.resultType(), entityAnnotation.resultByQuery());
         } else {
             return new ResultInformation(entityClass, false);
         } 
@@ -142,14 +142,14 @@ public class RestInformation {
     
     public List<QueryInformation> getQueries() {
         List<QueryInformation> queries = new ArrayList<QueryInformation>();
-        for (RestQuery annotation : annotation.queries()) {
+        for (RestQuery annotation : entityAnnotation.queries()) {
             queries.add(new QueryInformation(annotation));
         }
         return queries;
     }
 
     public QueryInformation findQuery(Map<String, String[]> requestParameters) {
-        for (RestQuery query : annotation.queries()) {
+        for (RestQuery query : entityAnnotation.queries()) {
             if (isMatchingParameters(query.parameters(), requestParameters)) {
                 return new QueryInformation(query);
             }
@@ -191,7 +191,7 @@ public class RestInformation {
      * @return the configuration
      */
     public RestConfig findAll() {
-        return annotation.findAll();
+        return entityAnnotation.findAll();
     }
     
     /**
@@ -200,7 +200,7 @@ public class RestInformation {
      * @return the configuration
      */
     public RestConfig findOne() {
-        return annotation.findOne();
+        return entityAnnotation.findOne();
     }
     
     /**
@@ -209,7 +209,7 @@ public class RestInformation {
      * @return the configuration
      */
     public RestConfig create() {
-        return annotation.create();
+        return entityAnnotation.create();
     }
     
     /**
@@ -218,7 +218,7 @@ public class RestInformation {
      * @return the configuration
      */
     public RestConfig update() {
-        return annotation.update();
+        return entityAnnotation.update();
     }
     
     /**
@@ -227,7 +227,7 @@ public class RestInformation {
      * @return the configuration
      */
     public RestConfig delete() {
-        return annotation.delete();
+        return entityAnnotation.delete();
     }
     
     /**
@@ -265,18 +265,18 @@ public class RestInformation {
      */
     public class QueryInformation {
         
-        private final RestQuery annotation;
+        private final RestQuery queryAnnotation;
 
-        public QueryInformation(RestQuery annotation) {
-            this.annotation = annotation;
+        public QueryInformation(RestQuery queryAnnotation) {
+            this.queryAnnotation = queryAnnotation;
         }
         
         public String getMethodName() {
-            return annotation.method();
+            return queryAnnotation.method();
         }
         
         public List<String> getRawParameters() {
-            return Arrays.asList(annotation.parameters());
+            return Arrays.asList(queryAnnotation.parameters());
         }
 
         /**
@@ -286,7 +286,7 @@ public class RestInformation {
          */
         public List<String> getParameterNames() {
             List<String> parameterNames = new ArrayList<String>();
-            for (String parameter : annotation.parameters()) {
+            for (String parameter : queryAnnotation.parameters()) {
                 if (!parameter.contains("=")) {
                     parameterNames.add(parameter);
                 }
@@ -300,7 +300,13 @@ public class RestInformation {
          * @return the entity type
          */
         public Class<?> getEntityType() {
-            return isCustom(annotation.entityType()) ? annotation.entityType() : entityClass;
+            if (isCustom(queryAnnotation.entityType())) {
+                return queryAnnotation.entityType();
+            } else if (entityAnnotation.resultByQuery()) {
+                return entityAnnotation.resultType();
+            } else {
+                return entityClass;
+            }
         }
 
         /**
@@ -309,8 +315,8 @@ public class RestInformation {
          * @return the result type
          */
         public Class<?> getResultType() {
-            if (isCustom(annotation.resultType())) {
-                return annotation.resultType();
+            if (isCustom(queryAnnotation.resultType())) {
+                return queryAnnotation.resultType();
             }
             return getEntityType();
         }
@@ -321,7 +327,7 @@ public class RestInformation {
          * @return {@code true} when unique
          */
         public boolean isSingleResult() {
-            return annotation.unique();
+            return queryAnnotation.unique();
         }
         
         /**
@@ -330,7 +336,7 @@ public class RestInformation {
          * @return the security rules
          */
         public String[] getSecured() {
-            return annotation.secured();
+            return queryAnnotation.secured();
         }
 
     }
