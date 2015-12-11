@@ -3,7 +3,10 @@
  */
 package io.restzilla;
 
+import io.restzilla.util.UrlUtils;
+
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -33,7 +36,7 @@ public class RestInformation {
         }
         this.entityClass = (Class) entityClass;
         this.identifierClass = entityClass.getMethod("getId").getReturnType();
-        this.basePath = basePath;
+        this.basePath = UrlUtils.stripSlashes(basePath);
         this.annotation = annotation;
     }
 
@@ -137,7 +140,15 @@ public class RestInformation {
         return !Object.class.equals(clazz);
     }
     
-    public QueryInformation findCustomQuery(Map<String, String[]> requestParameters) {
+    public List<QueryInformation> getQueries() {
+        List<QueryInformation> queries = new ArrayList<QueryInformation>();
+        for (RestQuery annotation : annotation.queries()) {
+            queries.add(new QueryInformation(annotation));
+        }
+        return queries;
+    }
+
+    public QueryInformation findQuery(Map<String, String[]> requestParameters) {
         for (RestQuery query : annotation.queries()) {
             if (isMatchingParameters(query.parameters(), requestParameters)) {
                 return new QueryInformation(query);
@@ -263,7 +274,16 @@ public class RestInformation {
         public String getMethodName() {
             return annotation.method();
         }
+        
+        public List<String> getRawParameters() {
+            return Arrays.asList(annotation.parameters());
+        }
 
+        /**
+         * Retrieve the variable parameter names.
+         * 
+         * @return the parameter names
+         */
         public List<String> getParameterNames() {
             List<String> parameterNames = new ArrayList<String>();
             for (String parameter : annotation.parameters()) {
@@ -300,7 +320,7 @@ public class RestInformation {
          * 
          * @return {@code true} when unique
          */
-        public boolean isUnique() {
+        public boolean isSingleResult() {
             return annotation.unique();
         }
         

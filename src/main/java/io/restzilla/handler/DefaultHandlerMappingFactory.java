@@ -1,5 +1,6 @@
 package io.restzilla.handler;
 
+import static org.springframework.util.StringUtils.collectionToDelimitedString;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
@@ -27,11 +28,13 @@ import io.restzilla.util.UrlUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
+import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
@@ -124,10 +127,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
-            QueryInformation query = information.findCustomQuery(request.getParameterMap());
+            QueryInformation query = information.findQuery(request.getParameterMap());
             Listable<?> listable = buildListable(query, request);
 
-            if (query != null && query.isUnique()) {
+            if (isSingleResult(query)) {
                 checkIsAuthorized(query.getSecured(), request);
                 return ((Finder) listable).findOne();
             } else {
@@ -157,6 +160,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             }
             // Performs bean mapping on the entities after retrieval
             return new BeanMappingListable(delegate, beanMapper, resultType);
+        }
+
+        private boolean isSingleResult(QueryInformation query) {
+            return query != null && query.isSingleResult();
         }
 
         private Object findAll(Listable<?> listable, HttpServletRequest request) {
@@ -428,6 +435,33 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             new DefaultSwaggerDescriber(modelProvider, getInformation()).enhance(listing);
         }
         
+        /**
+         * {@inheritDoc}
+         */
+        @Override
+        public void describe(Logger logger) {
+            final String basePath = controller.information.getBasePath();
+            
+            logIf(controller.information.findAll(), logger, "Mapped \"[/{}],methods=[GET],params=[]\"", basePath);
+            for (QueryInformation query : controller.information.getQueries()) {
+                List<String> parameters = query.getRawParameters();
+                logger.info("Mapped \"[/{}],methods=[GET],params=[{}]\"", basePath, collectionToDelimitedString(parameters, ","));
+            }
+            logIf(controller.information.findOne(), logger, "Mapped \"[/{}/{id}],methods=[GET],params=[]\"", basePath);
+            
+            if (!controller.information.isReadOnly()) {
+                logIf(controller.information.create(), logger, "Mapped \"[/{}],methods=[POST],params=[]\"", basePath);
+                logIf(controller.information.update(), logger, "Mapped \"[/{}/{id}],methods=[PUT],params=[]\"", basePath);
+                logIf(controller.information.delete(), logger, "Mapped \"[/{}/{id}],methods=[DELETE],params=[]\"", basePath);
+            }
+        }
+        
+        private void logIf(RestConfig config, Logger logger, String msg, Object... args) {
+            if (config.enabled()) {
+                logger.info(msg, args);
+            }
+        }
+
     }
     
     /**

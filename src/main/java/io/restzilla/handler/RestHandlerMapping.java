@@ -127,14 +127,14 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
      */
     public void registerHandler(EntityHandlerMapping handlerMapping) {
         RestInformation information = handlerMapping.getInformation();
-        String basePath = UrlUtils.stripSlashes(information.getBasePath());
+        String basePath = information.getBasePath();
         if (basePath.contains(UrlUtils.SLASH)) {
             LOGGER.warn("Overlooked REST resource /{}, because multiple slashes are not supported.", basePath);
         } else if (handlerMappings.containsKey(basePath.toUpperCase())) {
             LOGGER.warn("Duplicated REST resource /{}", basePath);
         } else {
             handlerMappings.put(basePath.toUpperCase(), handlerMapping);
-            LOGGER.info("Registered REST resource /{} [{}]", basePath, information.getEntityClass().getName());
+            handlerMapping.describe(LOGGER);
         }
     }
     

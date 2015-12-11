@@ -4,6 +4,7 @@ import io.restzilla.RestInformation;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
 import org.springframework.web.servlet.handler.AbstractHandlerMapping;
 
 /**
@@ -41,6 +42,15 @@ public abstract class EntityHandlerMapping extends AbstractHandlerMapping {
      */
     public RestInformation getInformation() {
         return information;
+    }
+
+    /**
+     * Describe the generated REST mappings.
+     * 
+     * @param logger the logger to output our description
+     */
+    public void describe(Logger logger) {
+        logger.info("Registered REST resource /{} [{}]", information.getBasePath(), information.getEntityClass().getName());
     }
 
 }
