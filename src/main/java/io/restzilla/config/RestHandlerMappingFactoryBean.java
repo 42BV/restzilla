@@ -166,8 +166,8 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     private RestInformation buildInformation(Class<?> entityClass) throws NoSuchMethodException {
         RestResource annotation = entityClass.getAnnotationsByType(RestResource.class)[0];
-        if (!annotation.entityClass().equals(Object.class)) {
-            entityClass = annotation.entityClass();
+        if (!annotation.value().equals(Object.class)) {
+            entityClass = annotation.value();
         }
         String basePath = annotation.basePath();
         if (isBlank(basePath)) {

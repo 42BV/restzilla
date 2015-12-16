@@ -3,12 +3,10 @@
  */
 package io.restzilla.model;
 
-import io.restzilla.RestResource;
-
 import javax.persistence.Entity;
 
 @Entity
-@RestResource
+// REST resource is defined in the controller class.
 public class WithController extends BaseEntity {
     
     private String name;

@@ -40,13 +40,13 @@ public @interface RestConfig {
     Class<?> resultType() default Object.class;
     
     /**
-     * Whether the result value should be queried. Otherwise
-     * we just perform a mapping.
+     * Whether the result value should be queried, otherwise a mapping is performed.
+     * @return if the result should be queried
      */
     boolean resultByQuery() default false;
 
     /**
-     * (Optional) the security that are allowed to perform this functionality
+     * (Optional) security expression for performing this function,
      * @return the security
      */
     String[] secured() default {};

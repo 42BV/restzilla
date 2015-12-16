@@ -10,7 +10,9 @@ import javax.persistence.Entity;
 
 @Entity
 @RestResource(
-    findAll = @RestConfig(secured = "hasRole('ROLE_ADMIN')")
+    reader = "hasRole('ROLE_READER')",
+    modifier = "hasRole('ROLE_CHANGER')",
+    delete = @RestConfig(secured = "hasRole('ROLE_ADMIN')")
 )
 public class WithSecurity extends BaseEntity {
     

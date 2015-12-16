@@ -5,6 +5,7 @@ package io.restzilla.handler.security;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
@@ -40,9 +41,11 @@ public class SpelSecurityProvider implements SecurityProvider {
             FilterInvocation invocation = new FilterInvocation(request.getServletPath(), request.getMethod());
             EvaluationContext context = handler.createEvaluationContext(authentication, invocation);
             for (String expression : expressions) {
-                ExpressionParser parser = handler.getExpressionParser();
-                if (!ExpressionUtils.evaluateAsBoolean(parser.parseExpression(expression), context)) {
-                    return false;
+                if (StringUtils.isNotBlank(expression)) {
+                    ExpressionParser parser = handler.getExpressionParser();
+                    if (!ExpressionUtils.evaluateAsBoolean(parser.parseExpression(expression), context)) {
+                        return false;
+                    }
                 }
             }
         }

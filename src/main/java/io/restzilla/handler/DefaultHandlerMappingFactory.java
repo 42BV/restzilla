@@ -131,17 +131,34 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             Listable<?> listable = buildListable(query, request);
 
             if (isSingleResult(query)) {
-                checkIsAuthorized(query.getSecured(), request);
+                checkIsReadable(query.getSecured(), request);
                 return ((Finder) listable).findOne();
             } else {
-                checkIsAuthorized(information.findAll().secured(), request);
+                checkIsReadable(information.findAll().secured(), request);
                 return findAll(listable, request);
             }
         }
+        
+        private void checkIsReadable(String[] expressions, HttpServletRequest request) {
+            if (!isSecured(expressions)) {
+                expressions = information.getReadSecured();
+            }
+            checkIsAuthorized(expressions, request);
+        }
 
-        private void checkIsAuthorized(String[] roles, HttpServletRequest request) {
-            if (!securityProvider.isAuthorized(roles, request)) {
-                throw new SecurityException("Not authorized, should be one of: " + StringUtils.join(roles, ", "));
+        private boolean isSecured(String[] expressions) {
+            boolean result = false;
+            for (String expression : expressions) {
+                if (StringUtils.isNotBlank(expression)) {
+                    result = true;
+                }
+            }
+            return result;
+        }
+
+        private void checkIsAuthorized(String[] expressions, HttpServletRequest request) {
+            if (!securityProvider.isAuthorized(expressions, request)) {
+                throw new SecurityException("Not authorized, should be one of: " + StringUtils.join(expressions, ", "));
             }
         }
 
@@ -151,14 +168,15 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             ResultInformation result = information.getResultInfo(information.findAll());
             Class<?> resultType = result.getType();
             if (query != null) {
-                // Retrieve by a custom finder method in either the service or repository bean
+                // Retrieve by custom query method
                 delegate = new RepositoryMethodListable(crudServiceRegistry, conversionService, information, query, request.getParameterMap());
                 resultType = query.getResultType();
             } else if (result.isByQuery()) {
-                // Retrieve the custom entity type with a generic finder query
+                // Retrieve by global find all query
                 return new ReadServiceListable(readService, resultType);
             }
-            // Performs bean mapping on the entities after retrieval
+
+            // Retrieve entities and perform mapping
             return new BeanMappingListable(delegate, beanMapper, resultType);
         }
 
@@ -184,7 +202,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
-            checkIsAuthorized(information.findOne().secured(), request);
+            checkIsReadable(information.findOne().secured(), request);
             return mapIdToResult(extractId(request));
         }
         
@@ -214,13 +232,20 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
-            checkIsAuthorized(information.create().secured(), request);
+            checkIsModifiable(information.create().secured(), request);
             Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
             Persistable<?> entity = beanMapper.map(validate(input), information.getEntityClass());
             Persistable<?> output = getEntityService().save(entity);
             return mapEntityToResult(output, information.create());
         }
         
+        private void checkIsModifiable(String[] expressions, HttpServletRequest request) {
+            if (!isSecured(expressions)) {
+                expressions = information.getModifySecured();
+            }
+            checkIsAuthorized(expressions, request);
+        }
+
         // Ensure that our input is valid, otherwise return with an exception
         private Object validate(Object input) throws BindException {
             BeanPropertyBindingResult errors = new BeanPropertyBindingResult(input, "input");
@@ -238,7 +263,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
-            checkIsAuthorized(information.update().secured(), request);
+            checkIsModifiable(information.update().secured(), request);
             Serializable id = extractId(request);
             String json = CharStreams.toString(request.getReader());
             Object input = objectMapper.readValue(json, information.getInputType(information.update()));
@@ -253,7 +278,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @ResponseBody
         public Object delete(HttpServletRequest request) {
-            checkIsAuthorized(information.delete().secured(), request);
+            checkIsModifiable(information.delete().secured(), request);
             Persistable<?> entity = getEntityService().getOne(extractId(request));
             getEntityService().delete(entity);
             return mapEntityToResult(entity, information.delete());

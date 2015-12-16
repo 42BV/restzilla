@@ -13,6 +13,7 @@ import io.restzilla.model.WithPatchNested;
 import io.restzilla.model.WithReadOnly;
 import io.restzilla.model.WithRepository;
 import io.restzilla.model.WithRollback;
+import io.restzilla.model.WithSecurity;
 import io.restzilla.model.WithService;
 import io.restzilla.model.WithoutPatch;
 import io.restzilla.model.dto.ValidationDto;
@@ -168,7 +169,9 @@ public class RestTest extends AbstractControllerTest {
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user WHERE id = " + henk.getId(), Long.class));
     }
     
+    //
     // Query
+    //
     
     @Test
     public void testFindAllWithQuery() throws Exception {
@@ -319,10 +322,14 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"New name\",\"email\":null}", response.getContentAsString());
     }
     
+    //
+    // Security
+    //
+    
     @Test
-    public void testSecuredHasRole() throws Exception {
-        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_ADMIN");
-        SecurityContextHolder.getContext().setAuthentication(admin);
+    public void testSecuredReader() throws Exception {
+        TestingAuthenticationToken user = new TestingAuthenticationToken("user", "user", "ROLE_READER");
+        SecurityContextHolder.getContext().setAuthentication(user);
         
         try {
             MockHttpServletRequest request = new MockHttpServletRequest();
@@ -337,10 +344,71 @@ public class RestTest extends AbstractControllerTest {
     }
     
     @Test(expected = SecurityException.class)
-    public void testSecuredWithoutRoleNotLoggedIn() throws Exception {
+    public void testSecuredReaderFail() throws Exception {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setRequestURI("/with-security");
         request.setMethod(RequestMethod.GET.name());
+        
+        call(request);
+    }
+    
+    @Test
+    public void testSecuredModify() throws Exception {
+        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_CHANGER");
+        SecurityContextHolder.getContext().setAuthentication(admin);
+        
+        try {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/with-security");
+            request.setMethod(RequestMethod.POST.name());
+            
+            WithSecurity piet = new WithSecurity();
+            piet.setName("Piet");
+            setContentAsJson(request, piet);
+
+            MockHttpServletResponse response = call(request);
+            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        } finally {
+            SecurityContextHolder.getContext().setAuthentication(null);
+        }
+    }
+    
+    @Test(expected = SecurityException.class)
+    public void testSecuredModifyFail() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-security");
+        request.setMethod(RequestMethod.GET.name());
+        
+        call(request);
+    }
+
+    @Test
+    @Transactional
+    public void testSecuredCustom() throws Exception {
+        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(admin);
+        
+        WithSecurity piet = new WithSecurity();
+        piet.setName("Piet");
+        entityBuilder.save(piet);
+
+        try {
+            MockHttpServletRequest request = new MockHttpServletRequest();
+            request.setRequestURI("/with-security/" + piet.getId());
+            request.setMethod(RequestMethod.DELETE.name());
+            
+            MockHttpServletResponse response = call(request);
+            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        } finally {
+            SecurityContextHolder.getContext().setAuthentication(null);
+        }
+    }
+    
+    @Test(expected = SecurityException.class)
+    public void testSecuredCustomFail() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-security/1");
+        request.setMethod(RequestMethod.DELETE.name());
         
         call(request);
     }

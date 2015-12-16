@@ -36,17 +36,27 @@ import java.lang.annotation.Target;
 public @interface RestResource {
     
     /**
+     * (Optional) alternative entity class.
+     * @return the entity class
+     */
+    Class<?> value() default Object.class;
+    
+    /**
      * (Optional) the base path, when empty we use the entity name.
      * @return the base path
      */
     String basePath() default "";
     
-    /**
-     * (Optional) alternative entity class.
-     * @return the entity class
-     */
-    Class<?> entityClass() default Object.class;
+    //
+    // Query
+    //
     
+    /**
+     * (Optional) security expression for retrieving data.
+     * @return the read security
+     */
+    String[] reader() default "";
+
     /**
      * (Optional) the custom result type, when empty we just return the entity.
      * @return the result type
@@ -54,8 +64,7 @@ public @interface RestResource {
     Class<?> resultType() default Object.class;
     
     /**
-     * Whether the result value should be queried. Otherwise
-     * we just perform a mapping.
+     * Whether the result value should be queried, otherwise a mapping is performed.
      * @return if the result should be queried
      */
     boolean resultByQuery() default false;
@@ -71,21 +80,33 @@ public @interface RestResource {
      * @return the paged only
      */
     boolean pagedOnly() default false;
+
+    /**
+     * Finder queries that should be supported by our resource.
+     * @return the queries
+     */
+    RestQuery[] queries() default {};
     
+    //
+    // Modification
+    //
+
+    /**
+     * (Optional) security expression for modifying data.
+     * @return the modification security
+     */
+    String[] modifier() default "";
+
     /**
      * Determines if update requests can be considered as patch.
      * When a patch occurs we only update the provided properties.
      * @return the patch
      */
     boolean patch() default true;
-    
-    /**
-     * Finder queries that should be supported by our resource.
-     * @return the queries
-     */
-    RestQuery[] queries() default {};
 
-    // Function based configuration
+    //
+    // Functions
+    //
 
     /**
      * (Optional) the configuration of our {@code findAll}

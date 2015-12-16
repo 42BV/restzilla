@@ -76,6 +76,10 @@ public class RestInformation {
         return entityAnnotation.patch();
     }
     
+    //
+    // Typing
+    //
+
     /**
      * Retrieve the entity class.
      * 
@@ -140,6 +144,10 @@ public class RestInformation {
         return !Object.class.equals(clazz);
     }
     
+    //
+    // Queries
+    //
+
     public List<QueryInformation> getQueries() {
         List<QueryInformation> queries = new ArrayList<QueryInformation>();
         for (RestQuery annotation : entityAnnotation.queries()) {
@@ -184,6 +192,32 @@ public class RestInformation {
             return StringUtils.defaultString(values[0], "");
         }
     }
+    
+    //
+    // Security
+    //
+    
+    /**
+     * Retrieve the security expressions to read data.
+     * 
+     * @return the read expressions
+     */
+    public String[] getReadSecured() {
+        return entityAnnotation.reader();
+    }
+    
+    /**
+     * Retrieve the security expressions to modify data.
+     * 
+     * @return the modify expressions
+     */
+    public String[] getModifySecured() {
+        return entityAnnotation.modifier();
+    }
+    
+    //
+    // Custom configuration
+    //
 
     /**
      * Retrieve the {@code findAll} configuration.
