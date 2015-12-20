@@ -105,7 +105,13 @@ public class RestInformation {
      * @return the input type
      */
     public Class<?> getInputType(RestConfig config) {
-        return isCustom(config.inputType()) ? config.inputType() : entityClass;
+        Class<?> inputType = entityClass;
+        if (isCustom(config.inputType())) {
+            inputType = config.inputType();
+        } else if (isCustom(entityAnnotation.inputType())) {
+            inputType = entityAnnotation.inputType();
+        }
+        return inputType;
     }
 
     /**

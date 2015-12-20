@@ -19,7 +19,8 @@ import javax.persistence.Entity;
 @Entity
 @RestResource(
     resultType = UserModel.class,
-    create = @RestConfig(inputType = CreateUserModel.class, resultType = Long.class),
+    inputType = CreateUserModel.class,
+    create = @RestConfig(resultType = Long.class),
     update = @RestConfig(inputType = UpdateUserModel.class),
     delete = @RestConfig(resultType = Void.class)
 )

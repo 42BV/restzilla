@@ -103,6 +103,13 @@ public @interface RestResource {
      * @return the patch
      */
     boolean patch() default true;
+    
+    /**
+     * (Optional) the custom input type. Default format for create/update calls,
+     * when left empty we expect the entity type.
+     * @return the input type
+     */
+    Class<?> inputType() default Object.class;
 
     //
     // Functions
