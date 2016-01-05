@@ -28,6 +28,7 @@ import io.restzilla.util.UrlUtils;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -58,6 +59,8 @@ import com.google.common.io.CharStreams;
  */
 public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory {
     
+    private static final String ARRAY_JSON_START = "[";
+
     private final ObjectMapper objectMapper;
     
     private final ConversionService conversionService;
@@ -119,6 +122,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         public DefaultCrudController(RestInformation information) {
             this.information = information;
         }
+        
+        //
+        // Read queries
+        //
 
         /**
          * Retrieve all entities.
@@ -130,23 +137,26 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             QueryInformation query = information.findQuery(request.getParameterMap());
             Listable<?> listable = buildListable(query, request);
 
-            if (isSingleResult(query)) {
-                checkIsReadable(query.getSecured(), request);
-                return ((Finder) listable).findOne();
+            if (query != null) {
+                ensureIsReadable(query.getSecured(), request);
+                if (query.isSingleResult()) {
+                    return ((Finder) listable).findOne();
+                }
             } else {
-                checkIsReadable(information.findAll().secured(), request);
-                return findAll(listable, request);
+                ensureIsReadable(information.findAll().secured(), request);
             }
-        }
-        
-        private void checkIsReadable(String[] expressions, HttpServletRequest request) {
-            if (!isSecured(expressions)) {
-                expressions = information.getReadSecured();
-            }
-            checkIsAuthorized(expressions, request);
+            
+            return findAll(listable, request);
         }
 
-        private boolean isSecured(String[] expressions) {
+        private void ensureIsReadable(String[] expressions, HttpServletRequest request) {
+            if (!hasAnyNotBlank(expressions)) {
+                expressions = information.getReadSecured();
+            }
+            ensureIsAuthorized(expressions, request);
+        }
+
+        private boolean hasAnyNotBlank(String[] expressions) {
             boolean result = false;
             for (String expression : expressions) {
                 if (StringUtils.isNotBlank(expression)) {
@@ -156,32 +166,24 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             return result;
         }
 
-        private void checkIsAuthorized(String[] expressions, HttpServletRequest request) {
+        private void ensureIsAuthorized(String[] expressions, HttpServletRequest request) {
             if (!securityProvider.isAuthorized(expressions, request)) {
                 throw new SecurityException("Not authorized, should be one of: " + StringUtils.join(expressions, ", "));
             }
         }
 
         private Listable<?> buildListable(QueryInformation query, HttpServletRequest request) {
-            Listable<?> delegate = getEntityService();
+            Listable<?> delegate = entityService;
 
             ResultInformation result = information.getResultInfo(information.findAll());
             Class<?> resultType = result.getType();
             if (query != null) {
-                // Retrieve by custom query method
                 delegate = new RepositoryMethodListable(crudServiceRegistry, conversionService, information, query, request.getParameterMap());
                 resultType = query.getResultType();
             } else if (result.isByQuery()) {
-                // Retrieve by global find all query
                 return new ReadServiceListable(readService, resultType);
             }
-
-            // Retrieve entities and perform mapping
             return new BeanMappingListable(delegate, beanMapper, resultType);
-        }
-
-        private boolean isSingleResult(QueryInformation query) {
-            return query != null && query.isSingleResult();
         }
 
         private Object findAll(Listable<?> listable, HttpServletRequest request) {
@@ -202,7 +204,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @ResponseBody
         public Object findOne(HttpServletRequest request) {
-            checkIsReadable(information.findOne().secured(), request);
+            ensureIsReadable(information.findOne().secured(), request);
             return mapIdToResult(extractId(request));
         }
         
@@ -217,7 +219,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             if (result.isByQuery()) {
                 return readService.getOne((Class) result.getType(), id);
             } else {
-                return beanMapper.map(getEntityService().getOne(id), result.getType());
+                return beanMapper.map(entityService.getOne(id), result.getType());
             }
         }
 
@@ -226,27 +228,42 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
         //
 
         /**
-         * Creates a new entity. Any content is retrieved from the request body.
+         * Saves an entity. Any content is retrieved from the request body.
          * 
          * @return the entity
          */
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
-            checkIsModifiable(information.create().secured(), request);
-            Object input = objectMapper.readValue(request.getReader(), information.getInputType(information.create()));
-            Persistable<?> entity = beanMapper.map(validate(input), information.getEntityClass());
-            Persistable<?> output = getEntityService().save(entity);
-            return mapEntityToResult(output, information.create());
+            ensureIsModifiable(information.create().secured(), request);
+            String json = CharStreams.toString(request.getReader()).trim();
+            Class<?> inputType = information.getInputType(information.create());
+
+            if (json.startsWith(ARRAY_JSON_START)) {
+                List<Object> inputs = objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, inputType));
+                List<Object> results = new ArrayList<Object>();
+                for (Object input : inputs) {
+                    results.add(doCreate(input, json));
+                }
+                return results;
+            } else {
+                Object input = objectMapper.readValue(json, inputType);
+                return doCreate(input, json);
+            }
         }
         
-        private void checkIsModifiable(String[] expressions, HttpServletRequest request) {
-            if (!isSecured(expressions)) {
+        private void ensureIsModifiable(String[] expressions, HttpServletRequest request) {
+            if (!hasAnyNotBlank(expressions)) {
                 expressions = information.getModifySecured();
             }
-            checkIsAuthorized(expressions, request);
+            ensureIsAuthorized(expressions, request);
+        }
+        
+        private Object doCreate(Object input, String json) throws BindException {
+            Persistable<?> entity = beanMapper.map(validate(input), information.getEntityClass());
+            Persistable<?> output = entityService.save(entity);
+            return mapToResult(output, information.create());
         }
 
-        // Ensure that our input is valid, otherwise return with an exception
         private Object validate(Object input) throws BindException {
             BeanPropertyBindingResult errors = new BeanPropertyBindingResult(input, "input");
             validator.validate(input, errors);
@@ -263,12 +280,15 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
-            checkIsModifiable(information.update().secured(), request);
             Serializable id = extractId(request);
             String json = CharStreams.toString(request.getReader());
             Object input = objectMapper.readValue(json, information.getInputType(information.update()));
-            Persistable<?> output = getEntityService().save(new LazyMappingEntity(id, validate(input), json));
-            return mapEntityToResult(output, information.update());
+            return doUpdate(id, json, validate(input));
+        }
+        
+        private Object doUpdate(Serializable id, String json, Object input) throws BindException {
+            Persistable<?> output = entityService.save(new LazyMergingEntity(id, input, json));
+            return mapToResult(output, information.update());
         }
 
         /**
@@ -278,10 +298,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @ResponseBody
         public Object delete(HttpServletRequest request) {
-            checkIsModifiable(information.delete().secured(), request);
-            Persistable<?> entity = getEntityService().getOne(extractId(request));
-            getEntityService().delete(entity);
-            return mapEntityToResult(entity, information.delete());
+            ensureIsModifiable(information.delete().secured(), request);
+            Persistable<?> entity = entityService.getOne(extractId(request));
+            entityService.delete(entity);
+            return mapToResult(entity, information.delete());
         }
         
         /**
@@ -291,7 +311,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          * @param config the configuration
          * @return the entity in its result type
          */
-        private Object mapEntityToResult(Persistable<?> entity, RestConfig config) {
+        private Object mapToResult(Persistable<?> entity, RestConfig config) {
             ResultInformation result = information.getResultInfo(config);
             if (result.isByQuery()) {
                 return readService.getOne((Class) result.getType(), entity.getId());
@@ -317,16 +337,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             }
         }
         
-        /**
-         * Retrieve the entity service, and initialize it whenever needed.
-         * 
-         * @return the entity service
-         */
-        private CrudService getEntityService() {
+        private void init() {
             if (entityService == null) {
                 entityService = crudServiceRegistry.getService((Class) information.getEntityClass());
             }
-            return entityService;
         }
 
         /**
@@ -337,7 +351,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          * @author Jeroen van Schagen
          * @since Nov 13, 2015
          */
-        private class LazyMappingEntity implements Lazy<Object> {
+        private class LazyMergingEntity implements Lazy<Object> {
             
             private final Serializable id;
             
@@ -345,7 +359,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
             
             private final String json;
             
-            public LazyMappingEntity(Serializable id, Object input, String json) {
+            public LazyMergingEntity(Serializable id, Object input, String json) {
                 this.id = id;
                 this.input = input;
                 this.json = json;
@@ -356,7 +370,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
              */
             @Override
             public Object get() {
-                Persistable<?> entity = getEntityService().getOne(id);
+                Persistable<?> entity = entityService.getOne(id);
                 if (information.isPatch()) {
                     Set<String> propertyNames = JsonUtil.getPropertyNamesFromJson(json, objectMapper);
                     beanMapper.map(input, entity, new MappableFields(propertyNames));
@@ -396,6 +410,8 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
          */
         @Override
         public Object getHandlerInternal(HttpServletRequest request) throws Exception {
+            controller.init(); // Lazy initialization
+
             Object result = null;
             Method method = findMethod(request);
             if (method != null) {

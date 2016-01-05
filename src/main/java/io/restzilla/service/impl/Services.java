@@ -25,10 +25,21 @@ class Services {
     
     private Map<Class<?>, CrudService<?, ?>> instances;
 
-    public Services(ApplicationContext applicationContext) {
+    Services(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
     
+    /**
+     * Retrieves the service by entity class.
+     * 
+     * @param entityClass the entity class
+     * @return the retrieved entity class
+     */
+    CrudService<?, ?> getByEntityClass(Class<?> entityClass) {
+        init(); // Lazy initialization
+        return instances.get(entityClass);
+    }
+
     private void init() {
         if (instances == null) {
             instances = new HashMap<Class<?>, CrudService<?, ?>>();
@@ -48,15 +59,4 @@ class Services {
         return services.values();
     }
     
-    /**
-     * Retrieves the entity class.
-     * 
-     * @param entityClass the entity class
-     * @return the retrieved entity class
-     */
-    CrudService<?, ?> getByEntityClass(Class<?> entityClass) {
-        init(); // Lazy initialization
-        return instances.get(entityClass);
-    }
-
 }

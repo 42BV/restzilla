@@ -1,10 +1,9 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service.impl;
+package io.restzilla.service;
 
 import io.beanmapper.spring.web.EntityFinder;
-import io.restzilla.service.ReadService;
 
 import com.google.common.base.Preconditions;
 

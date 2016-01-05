@@ -19,6 +19,8 @@ import io.restzilla.model.WithoutPatch;
 import io.restzilla.model.dto.ValidationDto;
 import io.restzilla.util.PageableResolver;
 
+import java.util.Arrays;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -130,6 +132,28 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertTrue(response.getContentAsString().matches("\\d+"));
         
         Assert.assertEquals(Long.valueOf(1), 
+                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
+    }
+    
+    @Test
+    public void testCreateAsArray() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/user");
+        request.setMethod(RequestMethod.POST.name());
+        
+        User piet = new User();
+        piet.setName("Piet");
+        User jan = new User();
+        jan.setName("Jan");
+        setContentAsJson(request, Arrays.asList(piet, jan));
+
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        String[] contentsAsString = response.getContentAsString().split(",");
+        Assert.assertEquals(2, contentsAsString.length);
+        Assert.assertTrue(response.getContentAsString().matches("\\[\\d+\\,\\d+\\]"));
+        
+        Assert.assertEquals(Long.valueOf(2),
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
     }
     

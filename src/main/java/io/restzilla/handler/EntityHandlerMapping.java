@@ -22,7 +22,6 @@ public abstract class EntityHandlerMapping extends AbstractHandlerMapping {
     
     /**
      * Construct a new entity handler mapping.
-     * 
      * @param information the REST information
      */
     public EntityHandlerMapping(RestInformation information) {
@@ -36,21 +35,19 @@ public abstract class EntityHandlerMapping extends AbstractHandlerMapping {
     public abstract Object getHandlerInternal(HttpServletRequest request) throws Exception;
 
     /**
-     * Retrieve the REST information.
-     * 
-     * @return the REST information
-     */
-    public RestInformation getInformation() {
-        return information;
-    }
-
-    /**
      * Describe the generated REST mappings.
-     * 
      * @param logger the logger to output our description
      */
     public void describe(Logger logger) {
         logger.info("Registered REST resource /{} [{}]", information.getBasePath(), information.getEntityClass().getName());
+    }
+
+    /**
+     * Retrieve the REST information.
+     * @return the REST information
+     */
+    public RestInformation getInformation() {
+        return information;
     }
 
 }

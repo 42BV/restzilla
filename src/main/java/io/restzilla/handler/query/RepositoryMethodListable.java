@@ -24,7 +24,7 @@ import org.springframework.util.ReflectionUtils;
 import com.google.common.base.Preconditions;
 
 /**
- * Listable that performs a custom method by reflection. 
+ * Detects the query method and invokes it dynamically.
  *
  * @author Jeroen van Schagen
  * @since Dec 9, 2015
@@ -109,19 +109,23 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
     }
     
     private InvokeableMethod findInvokableMethod(Object bean, Class<?> returnType, Class<?>[] preferredTypes) {
-        List<Class<?>> candidateClasses = new ArrayList<Class<?>>();
-        candidateClasses.add(AopUtils.getTargetClass(bean));
-        for (Class<?> interfaceClass : bean.getClass().getInterfaces()) {
-            candidateClasses.add(interfaceClass);
-        }
-
-        for (Class<?> candidateClass : candidateClasses) {
-            Method method = findMethod(candidateClass, returnType, preferredTypes);
+        List<Class<?>> targetClasses = getAllTargetClasses(bean);
+        for (Class<?> targetClass : targetClasses) {
+            Method method = findMethod(targetClass, returnType, preferredTypes);
             if (method != null) {
                 return new InvokeableMethod(bean, method);
             }
         }
         return null;
+    }
+
+    private List<Class<?>> getAllTargetClasses(Object bean) {
+        List<Class<?>> candidateClasses = new ArrayList<Class<?>>();
+        candidateClasses.add(AopUtils.getTargetClass(bean));
+        for (Class<?> interfaceClass : bean.getClass().getInterfaces()) {
+            candidateClasses.add(interfaceClass);
+        }
+        return candidateClasses;
     }
     
     private Method findMethod(Class<?> candidateClass, Class<?> returnType, Class<?>[] preferredTypes) {
@@ -168,7 +172,6 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
 
     private Object invoke(InvokeableMethod invokable, Map<Class<?>, Object> providedValues) {
         Object[] args = buildArguments(invokable, providedValues);
-
         try {
             return invokable.invoke(args);
         } catch (IllegalAccessException e) {
@@ -179,21 +182,20 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
     }
 
     private <P> Object[] buildArguments(InvokeableMethod invokable, Map<Class<?>, Object> providedValues) {
-        Class<?>[] parameterTypes = invokable.method.getParameterTypes();
-        List<String> parameterNames = queryInfo.getParameterNames();
-        
+        final Class<?>[] parameterTypes = invokable.method.getParameterTypes();
+        final List<String> parameterNames = queryInfo.getParameterNames();
+
         Object[] args = new Object[parameterTypes.length];
         for (int index = 0; index < parameterTypes.length; index++) {
             String currentName = (parameterNames.size() - 1) >= index ? parameterNames.get(index) : "";
             Class<?> currentType = parameterTypes[index];
+
             Object currentValue = null;
-            
             if (StringUtils.isNotBlank(currentName)) {
                 currentValue = conversionService.convert(parameterValues.get(currentName), currentType);
             } else if (providedValues.containsKey(currentType)) {
                 currentValue = providedValues.get(currentType);
             }
-
             args[index] = currentValue;
         }
         return args;
@@ -211,6 +213,7 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
         }
         
         public Object invoke(Object... args) throws IllegalAccessException, InvocationTargetException {
+            // TODO: Handle exception when target is not the declarer of the method
             return ReflectionUtils.invokeMethod(method, target, args);
         }
         

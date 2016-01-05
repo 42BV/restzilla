@@ -183,8 +183,10 @@ public class SwaggerUtils {
     private static Set<String> getRequiredParameterNames(Operation operation) {
         Set<String> parameterNames = new HashSet<String>();
         for (Parameter parameter : operation.getParameters()) {
-            if (parameter.isRequired()) {
-                parameterNames.add(parameter.getName());
+            if (parameter != null) {
+                if (parameter.isRequired()) {
+                    parameterNames.add(parameter.getName());
+                }
             }
         }
         return parameterNames;
