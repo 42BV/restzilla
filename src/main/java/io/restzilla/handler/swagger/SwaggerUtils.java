@@ -13,6 +13,7 @@ import java.util.Set;
 
 import org.springframework.web.bind.annotation.RequestMethod;
 
+import com.google.common.base.Objects;
 import com.google.common.base.Optional;
 import com.mangofactory.swagger.models.ModelContext;
 import com.mangofactory.swagger.models.ModelProvider;
@@ -184,7 +185,7 @@ public class SwaggerUtils {
         Set<String> parameterNames = new HashSet<String>();
         for (Parameter parameter : operation.getParameters()) {
             if (parameter != null) {
-                if (parameter.isRequired()) {
+                if (Objects.equal(Boolean.TRUE, parameter.isRequired())) {
                     parameterNames.add(parameter.getName());
                 }
             }
