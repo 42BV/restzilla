@@ -5,6 +5,7 @@ package io.restzilla.config;
 
 import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.beanmapper.BeanMapper;
+import io.beanmapper.config.BeanMapperBuilder;
 import io.beanmapper.utils.Classes;
 import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
@@ -189,9 +190,9 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     }
     
     private BeanMapper buildBeanMapper() {
-        BeanMapper beanMapper = new BeanMapper();
-        beanMapper.addPackagePrefix(basePackage);
-        return beanMapper;
+        return new BeanMapperBuilder()
+                .addPackagePrefix(basePackage)
+                .build();
     }
     
     private SecurityProvider buildSecurityProvider() {

@@ -6,7 +6,6 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 import io.beanmapper.BeanMapper;
-import io.beanmapper.core.rule.MappableFields;
 import io.beanmapper.spring.Lazy;
 import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
@@ -373,7 +372,10 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
                 Persistable<?> entity = entityService.getOne(id);
                 if (information.isPatch()) {
                     Set<String> propertyNames = JsonUtil.getPropertyNamesFromJson(json, objectMapper);
-                    beanMapper.map(input, entity, new MappableFields(propertyNames));
+                    beanMapper.wrapConfig()
+                            .downsizeSource(new ArrayList<String>(propertyNames))
+                            .build()
+                            .map(input, entity);
                 } else {
                     beanMapper.map(input, entity);
                 }
