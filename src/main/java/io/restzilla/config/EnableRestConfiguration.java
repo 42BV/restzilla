@@ -8,7 +8,7 @@ import io.restzilla.service.CrudServiceFactory;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
 import io.restzilla.service.impl.DefaultServiceFactory;
-import io.restzilla.service.impl.MapCrudServiceRegistry;
+import io.restzilla.service.impl.AutoGenerateMapCrudServiceRegistry;
 import io.restzilla.service.impl.LazyRetrievalFactory;
 
 import java.util.Map;
@@ -48,7 +48,7 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
         if (crudServiceFactory == null) {
             crudServiceFactory = new DefaultServiceFactory(applicationContext);
         }
-        return new MapCrudServiceRegistry(new LazyRetrievalFactory(applicationContext, crudServiceFactory));
+        return new AutoGenerateMapCrudServiceRegistry(new LazyRetrievalFactory(applicationContext, crudServiceFactory));
     }
 
     /**
