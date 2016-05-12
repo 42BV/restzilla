@@ -57,7 +57,8 @@ public class RestInformation {
     }
 
     private static RestResource findAnnotation(Class<?> entityClass) {
-        return entityClass.getAnnotationsByType(RestResource.class)[0];
+        RestResource[] annotations = entityClass.getAnnotationsByType(RestResource.class);
+        return annotations.length > 0 ? annotations[0] : null;
     }
     
     public static boolean isSupported(Class<?> entityClass) {
