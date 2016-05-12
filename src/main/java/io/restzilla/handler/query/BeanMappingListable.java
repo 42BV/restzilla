@@ -2,7 +2,6 @@ package io.restzilla.handler.query;
 
 import io.beanmapper.BeanMapper;
 import io.beanmapper.spring.PageableMapper;
-import io.restzilla.service.Listable;
 
 import java.util.ArrayList;
 import java.util.List;

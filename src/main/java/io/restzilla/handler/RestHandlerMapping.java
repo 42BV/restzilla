@@ -29,9 +29,9 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DelegatingHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
+public class RestHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(DelegatingHandlerMapping.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RestHandlerMapping.class);
 
     /**
      * Handlers mapped per entity type.
@@ -69,7 +69,7 @@ public class DelegatingHandlerMapping extends AbstractHandlerMapping implements 
      * @param defaultHandlerMapping
      *            the default {@link HandlerMapping}
      */
-    public DelegatingHandlerMapping(HandlerMapping defaultHandlerMapping) {
+    public RestHandlerMapping(HandlerMapping defaultHandlerMapping) {
         this.defaultHandlerMapping = defaultHandlerMapping;
         this.applicationContext = null;
     }
@@ -80,7 +80,7 @@ public class DelegatingHandlerMapping extends AbstractHandlerMapping implements 
      * @param applicationContext
      *            the initialized {@link ApplicationContext}
      */
-    public DelegatingHandlerMapping(ApplicationContext applicationContext) {
+    public RestHandlerMapping(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
     }
 

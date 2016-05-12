@@ -3,7 +3,7 @@ package io.restzilla.test;
 import io.restzilla.RestInformation;
 import io.restzilla.handler.ResourceHandlerMapping;
 import io.restzilla.handler.ResourceHandlerMappingFactory;
-import io.restzilla.handler.DelegatingHandlerMapping;
+import io.restzilla.handler.RestHandlerMapping;
 
 import java.lang.reflect.Method;
 
@@ -26,7 +26,7 @@ public class RestStandaloneMockMvcBuilder extends StandaloneMockMvcBuilder {
     private final ResourceHandlerMappingFactory handlerMappingFactory;
     private final Object[] controllers;
     
-    protected RestStandaloneMockMvcBuilder(ResourceHandlerMappingFactory handlerMappingFactory, Object... controllers) {
+    public RestStandaloneMockMvcBuilder(ResourceHandlerMappingFactory handlerMappingFactory, Object... controllers) {
         super(controllers);
         this.handlerMappingFactory = handlerMappingFactory;
         this.controllers = controllers;
@@ -40,7 +40,7 @@ public class RestStandaloneMockMvcBuilder extends StandaloneMockMvcBuilder {
         WebApplicationContext wac = super.initWebAppContext();
 
         HandlerMapping defaultHandlerMapping = wac.getBean(HANDLER_MAPPING_BEAN_NAME, HandlerMapping.class);
-        DelegatingHandlerMapping restHandlerMapping = buildRestHandlerMapping(defaultHandlerMapping);
+        RestHandlerMapping restHandlerMapping = buildRestHandlerMapping(defaultHandlerMapping);
 
         Method method = ReflectionUtils.findMethod(wac.getClass(), ADD_BEAN_METHOD_NAME, String.class, Object.class);
         ReflectionUtils.makeAccessible(method);
@@ -49,8 +49,8 @@ public class RestStandaloneMockMvcBuilder extends StandaloneMockMvcBuilder {
         return wac;
     }
 
-    protected DelegatingHandlerMapping buildRestHandlerMapping(HandlerMapping defaultHandlerMapping) {
-        DelegatingHandlerMapping handlerMapping = new DelegatingHandlerMapping(defaultHandlerMapping);
+    protected RestHandlerMapping buildRestHandlerMapping(HandlerMapping defaultHandlerMapping) {
+        RestHandlerMapping handlerMapping = new RestHandlerMapping(defaultHandlerMapping);
         for (Object controller : controllers) {
             Class<?> controllerClass = controller.getClass();
             if (RestInformation.isSupported(controllerClass)) {

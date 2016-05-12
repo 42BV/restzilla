@@ -10,7 +10,7 @@ import io.restzilla.RestResource;
 import io.restzilla.handler.SimpleResourceHandlerMappingFactory;
 import io.restzilla.handler.ResourceHandlerMapping;
 import io.restzilla.handler.ResourceHandlerMappingFactory;
-import io.restzilla.handler.DelegatingHandlerMapping;
+import io.restzilla.handler.RestHandlerMapping;
 import io.restzilla.handler.security.AlwaysSecurityProvider;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.service.CrudServiceRegistry;
@@ -112,10 +112,10 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public final DelegatingHandlerMapping getObject() throws Exception {
+    public final RestHandlerMapping getObject() throws Exception {
         afterPropertiesSet();
 
-        DelegatingHandlerMapping handlerMapping = new DelegatingHandlerMapping(applicationContext);
+        RestHandlerMapping handlerMapping = new RestHandlerMapping(applicationContext);
         ResourceHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(crudServiceRegistry);
         for (Class resourceClass : getAllResourceClasses()) {
             RestInformation resourceInfo = new RestInformation(resourceClass);

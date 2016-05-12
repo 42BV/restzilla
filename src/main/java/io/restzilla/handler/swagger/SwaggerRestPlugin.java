@@ -4,7 +4,7 @@
 package io.restzilla.handler.swagger;
 
 import io.restzilla.RestInformation;
-import io.restzilla.handler.DelegatingHandlerMapping;
+import io.restzilla.handler.RestHandlerMapping;
 import io.restzilla.handler.ResourceHandlerMapping;
 
 import java.util.ArrayList;
@@ -35,13 +35,13 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
     
     private final SpringSwaggerConfig springSwaggerConfig;
         
-    private final DelegatingHandlerMapping crudHandlerMapping;
+    private final RestHandlerMapping crudHandlerMapping;
     
     private SwaggerPathProvider swaggerPathProvider;
     
     private String swaggerGroup = "default";
 
-    public SwaggerRestPlugin(SpringSwaggerConfig springSwaggerConfig, DelegatingHandlerMapping crudHandlerMapping) {
+    public SwaggerRestPlugin(SpringSwaggerConfig springSwaggerConfig, RestHandlerMapping crudHandlerMapping) {
         super(springSwaggerConfig);
         this.springSwaggerConfig = springSwaggerConfig;
         this.crudHandlerMapping = crudHandlerMapping;

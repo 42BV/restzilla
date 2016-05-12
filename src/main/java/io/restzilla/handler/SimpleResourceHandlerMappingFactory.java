@@ -13,14 +13,15 @@ import io.restzilla.RestInformation;
 import io.restzilla.RestInformation.QueryInformation;
 import io.restzilla.RestInformation.ResultInformation;
 import io.restzilla.handler.query.BeanMappingListable;
+import io.restzilla.handler.query.CrudServiceListable;
 import io.restzilla.handler.query.Finder;
+import io.restzilla.handler.query.Listable;
 import io.restzilla.handler.query.ReadServiceListable;
 import io.restzilla.handler.query.RepositoryMethodListable;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
 import io.restzilla.service.CrudServiceRegistry;
-import io.restzilla.service.Listable;
 import io.restzilla.service.ReadService;
 import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
@@ -173,16 +174,18 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         }
 
         private Listable<?> buildListable(QueryInformation query, HttpServletRequest request) {
-            Listable<?> delegate = entityService;
+            Listable<?> delegate = new CrudServiceListable(entityService, information.getEntityClass());
 
             ResultInformation result = information.getResultInfo(information.findAll());
             Class<?> resultType = result.getType();
+
             if (query != null) {
                 delegate = new RepositoryMethodListable(crudServiceRegistry, conversionService, information, query, request.getParameterMap());
                 resultType = query.getResultType();
             } else if (result.isByQuery()) {
                 return new ReadServiceListable(readService, resultType);
             }
+
             return new BeanMappingListable(delegate, beanMapper, resultType);
         }
 

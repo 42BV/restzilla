@@ -3,7 +3,6 @@
  */
 package io.restzilla.handler.query;
 
-import io.restzilla.service.Listable;
 import io.restzilla.service.ReadService;
 
 import java.io.Serializable;

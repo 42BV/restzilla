@@ -3,11 +3,12 @@
  */
 package io.restzilla.config;
 
-import io.restzilla.handler.DelegatingHandlerMapping;
+import io.restzilla.handler.RestHandlerMapping;
 import io.restzilla.service.CrudServiceFactory;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
 import io.restzilla.service.impl.DefaultServiceFactory;
+import io.restzilla.service.impl.MapCrudServiceRegistry;
 import io.restzilla.service.impl.LazyRetrievalFactory;
 
 import java.util.Map;
@@ -47,7 +48,7 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
         if (crudServiceFactory == null) {
             crudServiceFactory = new DefaultServiceFactory(applicationContext);
         }
-        return new CrudServiceRegistry(new LazyRetrievalFactory(applicationContext, crudServiceFactory));
+        return new MapCrudServiceRegistry(new LazyRetrievalFactory(applicationContext, crudServiceFactory));
     }
 
     /**
@@ -68,7 +69,7 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
      * @throws Exception whenever a problem occurs
      */
     @Bean
-    public DelegatingHandlerMapping restHandlerMapping() throws Exception {
+    public RestHandlerMapping restHandlerMapping() throws Exception {
         RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean(crudServiceRegistry());
         factoryBean.setBasePackage(basePackage);
         factoryBean.setApplicationContext(applicationContext);
