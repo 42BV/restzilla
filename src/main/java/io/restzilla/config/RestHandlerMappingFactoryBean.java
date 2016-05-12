@@ -3,16 +3,14 @@
  */
 package io.restzilla.config;
 
-import static org.apache.commons.lang3.StringUtils.isBlank;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.utils.Classes;
 import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
 import io.restzilla.handler.DefaultHandlerMappingFactory;
-import io.restzilla.handler.EntityHandlerMappingFactory;
+import io.restzilla.handler.ResourceHandlerMapping;
+import io.restzilla.handler.ResourceHandlerMappingFactory;
 import io.restzilla.handler.RestHandlerMapping;
-import io.restzilla.handler.naming.CaseFormatNamingStrategy;
-import io.restzilla.handler.naming.RestNamingStrategy;
 import io.restzilla.handler.security.AlwaysSecurityProvider;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.service.CrudServiceRegistry;
@@ -37,7 +35,6 @@ import org.springframework.validation.Validator;
 import org.springframework.web.servlet.HandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 
 /**
@@ -71,11 +68,6 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * Application context used to retrieve and create beans.
      */
     private ApplicationContext applicationContext;
-
-    /**
-     * Generates the base paths per entity.
-     */
-    private RestNamingStrategy namingStrategy = new CaseFormatNamingStrategy(CaseFormat.LOWER_HYPHEN);
 
     /**
      * Base package of the entities to scan.
@@ -123,16 +115,17 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     public final RestHandlerMapping getObject() throws Exception {
         afterPropertiesSet();
 
-        RestHandlerMapping restHandlerMapping = new RestHandlerMapping(applicationContext);
-        EntityHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(crudServiceRegistry);
-        for (Class entityClass : getEntityClasses()) {
-            RestInformation entityInfo = buildInformation(entityClass);
-            restHandlerMapping.registerHandler(handlerMappingFactory.build(entityInfo));
+        RestHandlerMapping handlerMapping = new RestHandlerMapping(applicationContext);
+        ResourceHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(crudServiceRegistry);
+        for (Class resourceClass : getAllResourceClasses()) {
+            RestInformation resourceInfo = new RestInformation(resourceClass);
+            ResourceHandlerMapping resourceHandlerMapping = handlerMappingFactory.build(resourceInfo);
+            handlerMapping.registerHandlerMapping(resourceHandlerMapping);
         }
-        return restHandlerMapping;
+        return handlerMapping;
     }
     
-    private Set<Class<?>> getEntityClasses() {
+    private Set<Class<?>> getAllResourceClasses() {
         Assert.notNull(basePackage, "Base package is required.");
         
         Set<Class<?>> entityClasses = new HashSet<Class<?>>();
@@ -151,31 +144,12 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * @param serviceRegistry the service registry
      * @return the created factory
      */
-    protected EntityHandlerMappingFactory buildHandlerMappingFactory(CrudServiceRegistry serviceRegistry) {
+    protected ResourceHandlerMappingFactory buildHandlerMappingFactory(CrudServiceRegistry serviceRegistry) {
         DefaultHandlerMappingFactory factory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider, validator);
         applicationContext.getAutowireCapableBeanFactory().autowireBean(factory);
         return factory;
     }
-    
-    /**
-     * Retrieve the information of an entity.
-     * 
-     * @param entityClass the entity class
-     * @return the entity REST meta data
-     * @throws NoSuchMethodException
-     */
-    private RestInformation buildInformation(Class<?> entityClass) throws NoSuchMethodException {
-        RestResource annotation = entityClass.getAnnotationsByType(RestResource.class)[0];
-        if (!annotation.value().equals(Object.class)) {
-            entityClass = annotation.value();
-        }
-        String basePath = annotation.basePath();
-        if (isBlank(basePath)) {
-            basePath = namingStrategy.getBasePath(entityClass);
-        }
-        return new RestInformation(entityClass, basePath, annotation);
-    }
-    
+
     /**
      * Lazy initialization of underlying beans.
      */
@@ -234,15 +208,6 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     public void setBasePackage(String basePackage) {
         this.basePackage = basePackage;
-    }
-    
-    /**
-     * <i>Optionally</i> configure the naming strategy.
-     * @param namingStrategy the namingStrategy to set
-     */
-    @Autowired(required = false)
-    public void setNamingStrategy(RestNamingStrategy namingStrategy) {
-        this.namingStrategy = namingStrategy;
     }
 
     /**

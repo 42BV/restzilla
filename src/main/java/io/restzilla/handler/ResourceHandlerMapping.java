@@ -13,7 +13,7 @@ import org.springframework.web.servlet.handler.AbstractHandlerMapping;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public abstract class EntityHandlerMapping extends AbstractHandlerMapping {
+public abstract class ResourceHandlerMapping extends AbstractHandlerMapping {
     
     /**
      * The REST information.
@@ -24,7 +24,7 @@ public abstract class EntityHandlerMapping extends AbstractHandlerMapping {
      * Construct a new entity handler mapping.
      * @param information the REST information
      */
-    public EntityHandlerMapping(RestInformation information) {
+    public ResourceHandlerMapping(RestInformation information) {
         this.information = information;
     }
 

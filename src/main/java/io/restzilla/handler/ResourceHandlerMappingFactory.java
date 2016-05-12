@@ -8,7 +8,7 @@ import io.restzilla.RestInformation;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public interface EntityHandlerMappingFactory {
+public interface ResourceHandlerMappingFactory {
     
     /**
      * Build a new handler mapping.
@@ -16,6 +16,6 @@ public interface EntityHandlerMappingFactory {
      * @param information the REST information
      * @return the handler mapping
      */
-    EntityHandlerMapping build(RestInformation information);
+    ResourceHandlerMapping build(RestInformation information);
     
 }

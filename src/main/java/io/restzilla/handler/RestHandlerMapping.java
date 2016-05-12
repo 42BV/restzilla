@@ -35,7 +35,7 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
     /**
      * Handlers mapped per entity type.
      */
-    private final Map<String, EntityHandlerMapping> handlerMappings = new HashMap<String, EntityHandlerMapping>();
+    private final Map<String, ResourceHandlerMapping> handlerMappings = new HashMap<String, ResourceHandlerMapping>();
     
     /**
      * Exceptions that should be skipped.
@@ -112,7 +112,7 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
     
     private Object findCrudHandler(HttpServletRequest request) throws Exception {
         String basePath = UrlUtils.getBasePath(request);
-        EntityHandlerMapping delegateHandler = handlerMappings.get(basePath.toUpperCase());
+        ResourceHandlerMapping delegateHandler = handlerMappings.get(basePath.toUpperCase());
         if (delegateHandler != null) {
             return delegateHandler.getHandlerInternal(request);
         }
@@ -125,7 +125,7 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
      * 
      * @param handlerMapping the handler mapping
      */
-    public void registerHandler(EntityHandlerMapping handlerMapping) {
+    public void registerHandlerMapping(ResourceHandlerMapping handlerMapping) {
         RestInformation information = handlerMapping.getInformation();
         String basePath = information.getBasePath();
         if (basePath.contains(UrlUtils.SLASH)) {
@@ -152,7 +152,7 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
      * 
      * @return the handler mappings
      */
-    public Collection<EntityHandlerMapping> getHandlerMappings() {
+    public Collection<ResourceHandlerMapping> getHandlerMappings() {
         return handlerMappings.values();
     }
 

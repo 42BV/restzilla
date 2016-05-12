@@ -52,12 +52,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 
 /**
- * Default implementation of the {@link EntityHandlerMappingFactory}.
+ * Default implementation of the {@link ResourceHandlerMappingFactory}.
  *
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory {
+public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFactory {
     
     private static final String ARRAY_JSON_START = "[";
 
@@ -390,7 +390,7 @@ public class DefaultHandlerMappingFactory implements EntityHandlerMappingFactory
      * @author Jeroen van Schagen
      * @since Sep 3, 2015
      */
-    private static class DefaultHandlerMapping extends EntityHandlerMapping implements SwaggerApiDescriptor {
+    private static class DefaultHandlerMapping extends ResourceHandlerMapping implements SwaggerApiDescriptor {
         
         private static final String FIND_ALL_NAME = "findAll";
         private static final String FIND_ONE_NAME = "findOne";

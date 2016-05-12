@@ -5,7 +5,7 @@ package io.restzilla.handler.swagger;
 
 import io.restzilla.RestInformation;
 import io.restzilla.handler.RestHandlerMapping;
-import io.restzilla.handler.EntityHandlerMapping;
+import io.restzilla.handler.ResourceHandlerMapping;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -74,7 +74,7 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
         super.initialize();
 
         SwaggerCache swaggerCache = springSwaggerConfig.swaggerCache();
-        for (EntityHandlerMapping handlerMapping : crudHandlerMapping.getHandlerMappings()) {
+        for (ResourceHandlerMapping handlerMapping : crudHandlerMapping.getHandlerMappings()) {
             String resourceName = addResourceListings(swaggerCache, handlerMapping.getInformation());
             addApiListings(swaggerCache, resourceName, handlerMapping);
         }
@@ -101,7 +101,7 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
         return false;
     }
 
-    private void addApiListings(SwaggerCache swaggerCache, String resourceName, EntityHandlerMapping handlerMapping) {
+    private void addApiListings(SwaggerCache swaggerCache, String resourceName, ResourceHandlerMapping handlerMapping) {
         ApiListing apiListing = getApiListing(swaggerCache, resourceName, handlerMapping.getInformation());
         if (handlerMapping instanceof SwaggerApiDescriptor) {
             ((SwaggerApiDescriptor) handlerMapping).enhance(apiListing, springSwaggerConfig.defaultModelProvider());
