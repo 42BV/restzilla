@@ -3,7 +3,7 @@
  */
 package io.restzilla.config;
 
-import io.restzilla.handler.RestHandlerMapping;
+import io.restzilla.handler.DelegatingHandlerMapping;
 import io.restzilla.service.CrudServiceFactory;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
@@ -68,7 +68,7 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
      * @throws Exception whenever a problem occurs
      */
     @Bean
-    public RestHandlerMapping restHandlerMapping() throws Exception {
+    public DelegatingHandlerMapping restHandlerMapping() throws Exception {
         RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean(crudServiceRegistry());
         factoryBean.setBasePackage(basePackage);
         factoryBean.setApplicationContext(applicationContext);

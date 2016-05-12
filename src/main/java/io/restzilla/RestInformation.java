@@ -14,6 +14,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Persistable;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Preconditions;
 
 /**
  * Shows all information of an entity.
@@ -32,25 +33,35 @@ public class RestInformation {
     private final String basePath;
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public RestInformation(Class<?> entityClass) throws NoSuchMethodException {
-        RestResource entityAnnotation = entityClass.getAnnotationsByType(RestResource.class)[0];
+    public RestInformation(Class<?> entityClass) {
+        RestResource entityAnnotation = findAnnotation(entityClass);
+        Preconditions.checkNotNull(entityAnnotation, "Missing @RestResource annotation for: " + entityClass.getName());
+        this.entityAnnotation = entityAnnotation;
+
         if (!entityAnnotation.value().equals(Object.class)) {
             entityClass = entityAnnotation.value();
         }
-
-        if (!(Persistable.class.isAssignableFrom(entityClass))) {
-            throw new IllegalStateException("Entity does not extend from Persistable");
-        }
         this.entityClass = (Class) entityClass;
-        this.identifierClass = entityClass.getMethod("getId").getReturnType();
+
+        try {
+            this.identifierClass = entityClass.getMethod("getId").getReturnType();
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("Could not find getId annotation, please implement Persistable", e);
+        }
         
         String basePath = entityAnnotation.basePath();
         if (StringUtils.isBlank(basePath)) {
             basePath = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, entityClass.getSimpleName());
         }
         this.basePath = UrlUtils.stripSlashes(basePath);
+    }
 
-        this.entityAnnotation = entityAnnotation;
+    private static RestResource findAnnotation(Class<?> entityClass) {
+        return entityClass.getAnnotationsByType(RestResource.class)[0];
+    }
+    
+    public static boolean isSupported(Class<?> entityClass) {
+        return findAnnotation(entityClass) != null;
     }
 
     /**

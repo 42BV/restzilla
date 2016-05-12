@@ -57,7 +57,7 @@ import com.google.common.io.CharStreams;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFactory {
+public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappingFactory {
     
     private static final String ARRAY_JSON_START = "[";
 
@@ -76,7 +76,7 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
     private CrudServiceRegistry crudServiceRegistry;
 
     /**
-     * Instantiate a new {@link DefaultHandlerMappingFactory}.
+     * Instantiate a new {@link SimpleResourceHandlerMappingFactory}.
      * 
      * @param objectMapper
      *              the {@link ObjectMapper} for JSON parsing and formatting
@@ -89,11 +89,11 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
      * @param validator
      *              the {@link Validator} for verifying the input
      */
-    public DefaultHandlerMappingFactory(ObjectMapper objectMapper,
-                                   ConversionService conversionService,
-                                          BeanMapper beanMapper,
-                                    SecurityProvider securityProvider,
-                                           Validator validator) {
+    public SimpleResourceHandlerMappingFactory(ObjectMapper objectMapper,
+                                          ConversionService conversionService,
+                                                 BeanMapper beanMapper,
+                                           SecurityProvider securityProvider,
+                                                  Validator validator) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
         this.beanMapper = beanMapper;

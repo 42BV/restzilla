@@ -19,6 +19,7 @@ import org.springframework.core.PriorityOrdered;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.servlet.HandlerExecutionChain;
+import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.handler.AbstractHandlerMapping;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
 
@@ -28,9 +29,9 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class RestHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
+public class DelegatingHandlerMapping extends AbstractHandlerMapping implements PriorityOrdered {
     
-    private static final Logger LOGGER = LoggerFactory.getLogger(RestHandlerMapping.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DelegatingHandlerMapping.class);
 
     /**
      * Handlers mapped per entity type.
@@ -43,32 +44,44 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
     private final Set<Class<?>> skippedExceptions = new HashSet<Class<?>>();
 
     /**
+     * Default request handler mapping, can be lazily initialized.
+     */
+    private HandlerMapping defaultHandlerMapping;
+    
+    /**
+     * Determines if this bean is fully initialized yet.
+     */
+    private final AtomicBoolean initialized = new AtomicBoolean(false);
+
+    /**
      * The application context.
      */
     private final ApplicationContext applicationContext;
 
-    /**
-     * Determines if this bean is fully initialized yet.
-     */
-    private AtomicBoolean initialized = new AtomicBoolean(false);
+    {
+        this.skippedExceptions.add(HttpRequestMethodNotSupportedException.class);
+        this.skippedExceptions.add(UnsatisfiedServletRequestParameterException.class);
+    }
 
     /**
-     * Delegate request handler mapping.
+     * Create a new handler mapping.
+     * 
+     * @param defaultHandlerMapping
+     *            the default {@link HandlerMapping}
      */
-    private RequestMappingHandlerMapping requestHandlerMapping;
-
+    public DelegatingHandlerMapping(HandlerMapping defaultHandlerMapping) {
+        this.defaultHandlerMapping = defaultHandlerMapping;
+        this.applicationContext = null;
+    }
+    
     /**
      * Create a new handler mapping.
      * 
      * @param applicationContext
      *            the initialized {@link ApplicationContext}
      */
-    public RestHandlerMapping(ApplicationContext applicationContext) {
+    public DelegatingHandlerMapping(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
-
-        // Register the exceptions from our request handler to skip
-        this.skippedExceptions.add(HttpRequestMethodNotSupportedException.class);
-        this.skippedExceptions.add(UnsatisfiedServletRequestParameterException.class);
     }
 
     /**
@@ -79,24 +92,28 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
         if (!initialized.getAndSet(true)) {
             init();
         }
+
         Object requestMappingHandler = findRequestMappingHandler(request);
         if (requestMappingHandler != null) {
             return requestMappingHandler;
         }
-        return findCrudHandler(request); // When no custom mapping exists
+        return findDelegateHandler(request); // When no custom mapping exists
     }
 
     private void init() {
-        String[] beanNames = applicationContext.getBeanNamesForType(RequestMappingHandlerMapping.class);
-        if (beanNames.length > 0) {
-            requestHandlerMapping = applicationContext.getBean(RequestMappingHandlerMapping.class);
+        // Lazily initialize the default handler mapping when not provided
+        if (defaultHandlerMapping == null) {
+            String[] beanNames = applicationContext.getBeanNamesForType(RequestMappingHandlerMapping.class);
+            if (beanNames.length > 0) {
+                defaultHandlerMapping = applicationContext.getBean(RequestMappingHandlerMapping.class);
+            }
         }
     }
 
     private Object findRequestMappingHandler(HttpServletRequest request) throws Exception {
-        if (requestHandlerMapping != null) {
+        if (defaultHandlerMapping != null) {
             try {
-                HandlerExecutionChain result = requestHandlerMapping.getHandler(request);
+                HandlerExecutionChain result = defaultHandlerMapping.getHandler(request);
                 if (result != null) {
                     return result.getHandler();
                 }
@@ -110,7 +127,7 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
         return null;
     }
     
-    private Object findCrudHandler(HttpServletRequest request) throws Exception {
+    private Object findDelegateHandler(HttpServletRequest request) throws Exception {
         String basePath = UrlUtils.getBasePath(request);
         ResourceHandlerMapping delegateHandler = handlerMappings.get(basePath.toUpperCase());
         if (delegateHandler != null) {
@@ -125,7 +142,7 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
      * 
      * @param handlerMapping the handler mapping
      */
-    public void registerHandlerMapping(ResourceHandlerMapping handlerMapping) {
+    public void registerCustomHandler(ResourceHandlerMapping handlerMapping) {
         RestInformation information = handlerMapping.getInformation();
         String basePath = information.getBasePath();
         if (basePath.contains(UrlUtils.SLASH)) {

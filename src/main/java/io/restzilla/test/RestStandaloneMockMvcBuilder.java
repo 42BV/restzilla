@@ -1,7 +1,16 @@
 package io.restzilla.test;
 
+import io.restzilla.RestInformation;
+import io.restzilla.handler.ResourceHandlerMapping;
+import io.restzilla.handler.ResourceHandlerMappingFactory;
+import io.restzilla.handler.DelegatingHandlerMapping;
+
+import java.lang.reflect.Method;
+
 import org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.servlet.HandlerMapping;
 
 /**
  * 
@@ -11,13 +20,46 @@ import org.springframework.web.context.WebApplicationContext;
  */
 public class RestStandaloneMockMvcBuilder extends StandaloneMockMvcBuilder {
     
+    private static final String HANDLER_MAPPING_BEAN_NAME = "requestMappingHandlerMapping";
+    private static final String ADD_BEAN_METHOD_NAME = "addBean";
+
+    private final ResourceHandlerMappingFactory handlerMappingFactory;
+    private final Object[] controllers;
+    
+    protected RestStandaloneMockMvcBuilder(ResourceHandlerMappingFactory handlerMappingFactory, Object... controllers) {
+        super(controllers);
+        this.handlerMappingFactory = handlerMappingFactory;
+        this.controllers = controllers;
+    }
+
     /* (non-Javadoc)
      * @see org.springframework.test.web.servlet.setup.StandaloneMockMvcBuilder#initWebAppContext()
      */
     @Override
     protected WebApplicationContext initWebAppContext() {
         WebApplicationContext wac = super.initWebAppContext();
+
+        HandlerMapping defaultHandlerMapping = wac.getBean(HANDLER_MAPPING_BEAN_NAME, HandlerMapping.class);
+        DelegatingHandlerMapping restHandlerMapping = buildRestHandlerMapping(defaultHandlerMapping);
+
+        Method method = ReflectionUtils.findMethod(wac.getClass(), ADD_BEAN_METHOD_NAME, String.class, Object.class);
+        ReflectionUtils.makeAccessible(method);
+        ReflectionUtils.invokeMethod(method, wac, HANDLER_MAPPING_BEAN_NAME, restHandlerMapping);
+
         return wac;
+    }
+
+    protected DelegatingHandlerMapping buildRestHandlerMapping(HandlerMapping defaultHandlerMapping) {
+        DelegatingHandlerMapping handlerMapping = new DelegatingHandlerMapping(defaultHandlerMapping);
+        for (Object controller : controllers) {
+            Class<?> controllerClass = controller.getClass();
+            if (RestInformation.isSupported(controllerClass)) {
+                RestInformation information = new RestInformation(controller.getClass());
+                ResourceHandlerMapping resourceHandler = handlerMappingFactory.build(information);
+                handlerMapping.registerCustomHandler(resourceHandler);
+            }
+        }
+        return handlerMapping;
     }
 
 }

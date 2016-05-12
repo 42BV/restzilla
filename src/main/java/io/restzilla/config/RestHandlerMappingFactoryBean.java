@@ -7,10 +7,10 @@ import io.beanmapper.BeanMapper;
 import io.beanmapper.utils.Classes;
 import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
-import io.restzilla.handler.DefaultHandlerMappingFactory;
+import io.restzilla.handler.SimpleResourceHandlerMappingFactory;
 import io.restzilla.handler.ResourceHandlerMapping;
 import io.restzilla.handler.ResourceHandlerMappingFactory;
-import io.restzilla.handler.RestHandlerMapping;
+import io.restzilla.handler.DelegatingHandlerMapping;
 import io.restzilla.handler.security.AlwaysSecurityProvider;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.service.CrudServiceRegistry;
@@ -112,15 +112,15 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public final RestHandlerMapping getObject() throws Exception {
+    public final DelegatingHandlerMapping getObject() throws Exception {
         afterPropertiesSet();
 
-        RestHandlerMapping handlerMapping = new RestHandlerMapping(applicationContext);
+        DelegatingHandlerMapping handlerMapping = new DelegatingHandlerMapping(applicationContext);
         ResourceHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(crudServiceRegistry);
         for (Class resourceClass : getAllResourceClasses()) {
             RestInformation resourceInfo = new RestInformation(resourceClass);
             ResourceHandlerMapping resourceHandlerMapping = handlerMappingFactory.build(resourceInfo);
-            handlerMapping.registerHandlerMapping(resourceHandlerMapping);
+            handlerMapping.registerCustomHandler(resourceHandlerMapping);
         }
         return handlerMapping;
     }
@@ -145,7 +145,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * @return the created factory
      */
     protected ResourceHandlerMappingFactory buildHandlerMappingFactory(CrudServiceRegistry serviceRegistry) {
-        DefaultHandlerMappingFactory factory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider, validator);
+        SimpleResourceHandlerMappingFactory factory = new SimpleResourceHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider, validator);
         applicationContext.getAutowireCapableBeanFactory().autowireBean(factory);
         return factory;
     }
