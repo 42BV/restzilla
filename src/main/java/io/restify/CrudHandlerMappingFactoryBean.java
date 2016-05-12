@@ -33,9 +33,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
  * the behaviour with a custom implementation. Otherwise, the default
  * implementation is injected.
  * 
- * <br/><br/>
+ * <br><br>
  * <b>For usage, just inject this factory bean to the application context</b>:
- * <br/><br/>
+ * <br><br>
  * 
  * <code>
  * public CrudHandlerMappingFactoryBean crudHandlerMapping() {

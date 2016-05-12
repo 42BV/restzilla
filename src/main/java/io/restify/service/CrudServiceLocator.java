@@ -82,6 +82,8 @@ public class CrudServiceLocator {
     /**
      * Build a new CrudRepository for the entity.
      * 
+     * @param <T> the type of entity
+     * @param <ID> the type of identifier
      * @param entityClass the entity class
      * @param beanFactory the bean factory, used for injecting dependencies
      * @return the repository bean
@@ -92,6 +94,9 @@ public class CrudServiceLocator {
     
     /**
      * Build a new CrudService for the entity.
+     * 
+     * @param <T> the type of entity
+     * @param <ID> the type of identifier
      * @param entityClass the entity class
      * @param repository the delegate repository
      * @param beanFactory the bean factory, used for injecting dependencies
