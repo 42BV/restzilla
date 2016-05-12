@@ -1,12 +1,11 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restify;
+package io.restzilla;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
 import io.beanmapper.BeanMapper;
-import io.beanmapper.spring.converter.BeanMapperConverterAdapter;
-import io.restify.handler.DefaultCrudHandlerMappingFactory;
+import io.restzilla.config.EnableRest;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -22,8 +21,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
@@ -32,6 +29,8 @@ import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import org.springframework.validation.Validator;
+import org.springframework.validation.beanvalidation.CustomValidatorBean;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
@@ -49,6 +48,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
     excludeFilters = {
         @Filter({ ControllerAdvice.class, Controller.class, RestController.class })
 })
+@EnableRest(basePackageClass = ApplicationConfig.class)
 @EnableTransactionManagement
 @EnableJpaRepositories(basePackageClasses = ApplicationConfig.class)
 @Configuration
@@ -90,11 +90,6 @@ public class ApplicationConfig {
         transactionManager.setEntityManagerFactory(entityManagerFactory().getObject());
         return transactionManager;
     }
-    
-    @Bean
-    public BeanMapper beanMapper() {
-        return new BeanMapper();
-    }
 
     @Bean
     public ObjectMapper objectMapper() {
@@ -102,19 +97,10 @@ public class ApplicationConfig {
         mapper.findAndRegisterModules();
         return mapper;
     }
-    
+
     @Bean
-    public CrudHandlerMappingFactoryBean enableRestHandlerMapping() {
-        CrudHandlerMappingFactoryBean enableRestFactoryBean = new CrudHandlerMappingFactoryBean();
-        enableRestFactoryBean.setBasePackageClass(ApplicationConfig.class);
-        enableRestFactoryBean.setHandlerMappingFactory(new DefaultCrudHandlerMappingFactory(objectMapper(), conversionService()));
-        return enableRestFactoryBean;
-    }
-    
-    private ConversionService conversionService() {
-        DefaultConversionService conversionService = new DefaultConversionService();
-        conversionService.addConverter(new BeanMapperConverterAdapter(beanMapper()));
-        return conversionService;
+    public BeanMapper beanMapper() {
+        return new BeanMapper();
     }
 
     @Bean
@@ -128,6 +114,11 @@ public class ApplicationConfig {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setObjectMapper(objectMapper());
         return converter;
+    }
+    
+    @Bean
+    public Validator validator() {
+        return new CustomValidatorBean();
     }
 
     public static class HsqlConfig {

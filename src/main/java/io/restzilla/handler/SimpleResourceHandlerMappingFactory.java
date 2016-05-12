@@ -331,8 +331,10 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
          * @return the converted object
          */
         private Object convertToType(Persistable<?> entity, Class<?> resultType) {
-            if (Void.class.equals(resultType)) {
+            if (entity == null || Void.class.equals(resultType)) {
                 return null;
+            } else if (entity.getClass().equals(resultType)) {
+                return entity;
             } else if (information.getIdentifierClass().equals(resultType)) {
                 return entity.getId();
             } else {

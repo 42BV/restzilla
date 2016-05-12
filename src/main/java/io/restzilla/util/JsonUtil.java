@@ -43,8 +43,13 @@ public class JsonUtil {
         while (iterator.hasNext()) {
             String fieldName = iterator.next();
             String propertyName = StringUtils.isEmpty(base) ? fieldName : base + "." + fieldName;
-            propertyNames.add(propertyName);
-            propertyNames.addAll(getPropertyNames(node.get(fieldName), propertyName));
+            Set<String> subPropertyNames = getPropertyNames(node.get(fieldName), propertyName);
+            
+            if (subPropertyNames.isEmpty()) {
+                propertyNames.add(propertyName);
+            } else {
+                propertyNames.addAll(subPropertyNames);
+            }
         }
         return propertyNames;
     }
