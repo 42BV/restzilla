@@ -27,8 +27,8 @@
         </dependency>
         <dependency>
             <groupId>io.beanmapper</groupId>
-            <artifactId>beanmapper</artifactId>
-            <version>0.2.13</version>
+            <artifactId>beanmapper-spring</artifactId>
+            <version>0.1.3</version>
             <scope>provided</scope>
         </dependency>
         

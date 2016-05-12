@@ -5,8 +5,7 @@ package io.restify;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
 import io.beanmapper.BeanMapper;
-import io.beanmapper.BeanMapperConverterAdapter;
-import io.restify.CrudHandlerMappingFactoryBean;
+import io.beanmapper.spring.converter.BeanMapperConverterAdapter;
 import io.restify.handler.DefaultCrudHandlerMappingFactory;
 
 import java.util.HashMap;
