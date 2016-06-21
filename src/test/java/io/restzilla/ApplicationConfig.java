@@ -5,6 +5,7 @@ package io.restzilla;
 
 import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
 import io.beanmapper.BeanMapper;
+import io.beanmapper.config.BeanMapperBuilder;
 import io.restzilla.config.EnableRest;
 
 import java.util.HashMap;
@@ -100,7 +101,7 @@ public class ApplicationConfig {
 
     @Bean
     public BeanMapper beanMapper() {
-        return new BeanMapper();
+        return new BeanMapperBuilder().build();
     }
 
     @Bean
