@@ -4,7 +4,7 @@
 
     <groupId>io.restzilla</groupId>
     <artifactId>restzilla</artifactId>
-    <version>1.10.2</version>
+    <version>1.10.3</version>
     <packaging>jar</packaging>
 
 	<properties>
@@ -27,24 +27,20 @@
             <scope>provided</scope>
         </dependency>
         
-        <!-- Web -->
-        <dependency>
-            <artifactId>spring-webmvc</artifactId>
-            <groupId>org.springframework</groupId>
-            <version>${spring.version}</version>
-        </dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.3.2</version>
 		</dependency>
 
+
+
 		<!-- Web -->
-		<dependency>
-			<groupId>org.springframework</groupId>
+        <dependency>
             <artifactId>spring-webmvc</artifactId>
-			<version>${spring.version}</version>
-		</dependency>
+            <groupId>org.springframework</groupId>
+            <version>${spring.version}</version>
+        </dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-validator</artifactId>

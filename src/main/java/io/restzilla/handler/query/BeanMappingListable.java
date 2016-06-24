@@ -1,12 +1,12 @@
 package io.restzilla.handler.query;
 
-import io.beanmapper.BeanMapper;
-import io.beanmapper.spring.PageableMapper;
+import io.restzilla.handler.RestResultMapper;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 
@@ -20,13 +20,13 @@ public class BeanMappingListable<T> implements Listable<T>, Finder<T> {
     
     private final Listable<?> delegate;
     
-    private final BeanMapper beanMapper;
+    private final RestResultMapper mapper;
     
     private final Class<T> resultType;
     
-    public BeanMappingListable(Listable<?> delegate, BeanMapper beanMapper, Class<T> resultType) {
+    public BeanMappingListable(Listable<?> delegate, RestResultMapper mapper, Class<T> resultType) {
         this.resultType = resultType;
-        this.beanMapper = beanMapper;
+        this.mapper = mapper;
         this.delegate = delegate;
     }
 
@@ -36,10 +36,7 @@ public class BeanMappingListable<T> implements Listable<T>, Finder<T> {
     @Override
     public T findOne() {
         Object entity = ((Finder<?>) delegate).findOne();
-        if (entity == null) {
-            return null;
-        }
-        return beanMapper.map(entity, resultType);
+        return mapper.map(entity, resultType);
     }
     
     /**
@@ -48,7 +45,22 @@ public class BeanMappingListable<T> implements Listable<T>, Finder<T> {
     @Override
     public List<T> findAll(Sort sort) {
         List<?> entities = delegate.findAll(sort);
-        return (List<T>) beanMapper.map(entities, resultType, ArrayList.class);
+        return mapList(entities);
+    }
+    
+    private List<T> mapList(List<?> entities) {
+        if (entities == null || entities.isEmpty()) {
+            return new ArrayList<T>(0);
+        }
+
+        List<T> results = new ArrayList<T>(entities.size());
+        for (Object entity : entities) {
+            T result = mapper.map(entity, resultType);
+            if (result != null) {
+                results.add(result);
+            }
+        }
+        return results;
     }
     
     /**
@@ -57,9 +69,10 @@ public class BeanMappingListable<T> implements Listable<T>, Finder<T> {
     @Override
     public Page<T> findAll(Pageable pageable) {
         Page<?> entities = delegate.findAll(pageable);
-        return PageableMapper.map(entities, resultType, beanMapper);
+        List<T> transformed = mapList(entities.getContent());
+        return new PageImpl<T>(transformed, pageable, entities.getTotalElements());
     }
-    
+
     /**
      * {@inheritDoc}
      */

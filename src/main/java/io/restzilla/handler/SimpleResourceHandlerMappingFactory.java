@@ -3,6 +3,7 @@ package io.restzilla.handler;
 import static org.springframework.util.StringUtils.collectionToDelimitedString;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
 import static org.springframework.web.bind.annotation.RequestMethod.POST;
 import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 import io.beanmapper.BeanMapper;
@@ -114,6 +115,8 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         
         private final RestInformation information;
         
+        private final RestResultMapper mapper;
+
         /**
          * Always access this field by {@code getEntityService()} as it is initialized lazy.
          */
@@ -121,6 +124,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         
         public DefaultCrudController(RestInformation information) {
             this.information = information;
+            this.mapper = new RestResultMapper(beanMapper, information);
         }
         
         //
@@ -184,8 +188,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             } else if (result.isByQuery()) {
                 return new ReadServiceListable(readService, resultType);
             }
-
-            return new BeanMappingListable(delegate, beanMapper, resultType);
+            return new BeanMappingListable(delegate, mapper, resultType);
         }
 
         private Object findAll(Listable<?> listable, HttpServletRequest request) {
@@ -221,7 +224,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             if (result.isByQuery()) {
                 return readService.getOne((Class) result.getType(), id);
             } else {
-                return beanMapper.map(entityService.getOne(id), result.getType());
+                return mapper.map(entityService.getOne(id), result.getType());
             }
         }
 
@@ -261,7 +264,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         }
         
         private Object doCreate(Object input, String json) throws BindException {
-            Persistable<?> entity = beanMapper.map(validate(input), information.getEntityClass());
+            Persistable<?> entity = mapper.map(validate(input), information.getEntityClass());
             Persistable<?> output = entityService.save(entity);
             return mapToResult(output, information.create());
         }
@@ -285,11 +288,12 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             Serializable id = extractId(request);
             String json = CharStreams.toString(request.getReader());
             Object input = objectMapper.readValue(json, information.getInputType(information.update()));
-            return doUpdate(id, json, validate(input));
+            boolean patch = request.getMethod().equals(PATCH.name());
+            return doUpdate(id, json, validate(input), patch);
         }
         
-        private Object doUpdate(Serializable id, String json, Object input) throws BindException {
-            Persistable<?> output = entityService.save(new LazyMergingEntity(id, input, json));
+        private Object doUpdate(Serializable id, String json, Object input, boolean patch) throws BindException {
+            Persistable<?> output = entityService.save(new LazyMergingEntity(id, input, json, patch));
             return mapToResult(output, information.update());
         }
 
@@ -307,7 +311,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         }
         
         /**
-         * Converst the entity into our desired result type.
+         * Convert the entity into our desired result type.
          * 
          * @param entity the entity
          * @param config the configuration
@@ -318,29 +322,10 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             if (result.isByQuery()) {
                 return readService.getOne((Class) result.getType(), entity.getId());
             } else {
-                return convertToType(entity, result.getType());
+                return mapper.map(entity, result.getType());
             }
         }
 
-        /**
-         * Enhances our bean mapper with some common non-bean types that can be returned. 
-         * 
-         * @param entity the entity
-         * @param resultType the result type
-         * @return the converted object
-         */
-        private Object convertToType(Persistable<?> entity, Class<?> resultType) {
-            if (entity == null || Void.class.equals(resultType)) {
-                return null;
-            } else if (entity.getClass().equals(resultType)) {
-                return entity;
-            } else if (information.getIdentifierClass().equals(resultType)) {
-                return entity.getId();
-            } else {
-                return beanMapper.map(entity, resultType);
-            }
-        }
-        
         private void init() {
             if (entityService == null) {
                 entityService = crudServiceRegistry.getService((Class) information.getEntityClass());
@@ -363,10 +348,13 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             
             private final String json;
             
-            public LazyMergingEntity(Serializable id, Object input, String json) {
+            private final boolean patch;
+            
+            public LazyMergingEntity(Serializable id, Object input, String json, boolean patch) {
                 this.id = id;
                 this.input = input;
                 this.json = json;
+                this.patch = patch;
             }
             
             /**
@@ -375,12 +363,12 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             @Override
             public Object get() {
                 Persistable<?> entity = entityService.getOne(id);
-                if (information.isPatch()) {
+                if (patch) {
                     Set<String> propertyNames = JsonUtil.getPropertyNamesFromJson(json, objectMapper);
                     beanMapper.wrapConfig()
-                            .downsizeSource(new ArrayList<String>(propertyNames))
-                            .build()
-                            .map(input, entity);
+                                .downsizeSource(new ArrayList<String>(propertyNames))
+                                .build()
+                                .map(input, entity);
                 } else {
                     beanMapper.map(input, entity);
                 }
@@ -450,7 +438,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             } else if (fragments == 2) {
                 if (hasRequestMethod(request, GET)) {
                     method = toMethodIfEnabled(FIND_ONE_NAME, getInformation().findOne());
-                } else if (hasRequestMethod(request, PUT)) {
+                } else if (hasRequestMethod(request, PUT) || (hasRequestMethod(request, PATCH) && getInformation().isPatch())) {
                     method = toMethodIfEnabled(UPDATE_NAME, getInformation().update());
                 } else if (hasRequestMethod(request, DELETE)) {
                     method = toMethodIfEnabled(DELETE_NAME, getInformation().delete());
@@ -458,7 +446,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             }
             return method;
         }
-        
+
         private boolean hasRequestMethod(HttpServletRequest request, RequestMethod method) {
             return method.name().equals(request.getMethod());
         }
