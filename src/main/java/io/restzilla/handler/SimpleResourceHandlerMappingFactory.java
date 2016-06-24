@@ -184,7 +184,6 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             } else if (result.isByQuery()) {
                 return new ReadServiceListable(readService, resultType);
             }
-
             return new BeanMappingListable(delegate, beanMapper, resultType);
         }
 
