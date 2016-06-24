@@ -221,7 +221,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             if (result.isByQuery()) {
                 return readService.getOne((Class) result.getType(), id);
             } else {
-                return beanMapper.map(entityService.getOne(id), result.getType());
+                return convertToType(entityService.getOne(id), result.getType());
             }
         }
 
@@ -261,7 +261,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         }
         
         private Object doCreate(Object input, String json) throws BindException {
-            Persistable<?> entity = beanMapper.map(validate(input), information.getEntityClass());
+            Persistable<?> entity = convertToType(validate(input), information.getEntityClass());
             Persistable<?> output = entityService.save(entity);
             return mapToResult(output, information.create());
         }
@@ -329,15 +329,18 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
          * @param resultType the result type
          * @return the converted object
          */
-        private Object convertToType(Persistable<?> entity, Class<?> resultType) {
-            if (entity == null || Void.class.equals(resultType)) {
+        private <T> T convertToType(Object source, Class<T> resultType) {
+            if (source == null || Void.class.equals(resultType)) {
                 return null;
-            } else if (entity.getClass().equals(resultType)) {
-                return entity;
-            } else if (information.getIdentifierClass().equals(resultType)) {
-                return entity.getId();
             } else {
-                return beanMapper.map(entity, resultType);
+                Class<?> beanClass = beanMapper.getConfiguration().getBeanUnproxy().unproxy(source.getClass());
+                if (resultType.isAssignableFrom(beanClass)) {
+                    return (T) source;
+                } else if (information.getIdentifierClass().equals(resultType) && source instanceof Persistable) {
+                    return (T) ((Persistable) source).getId();
+                } else {
+                    return beanMapper.map(source, resultType);
+                }
             }
         }
         

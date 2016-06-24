@@ -36,9 +36,6 @@ public class BeanMappingListable<T> implements Listable<T>, Finder<T> {
     @Override
     public T findOne() {
         Object entity = ((Finder<?>) delegate).findOne();
-        if (entity == null) {
-            return null;
-        }
         return beanMapper.map(entity, resultType);
     }
     
