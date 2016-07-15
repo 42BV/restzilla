@@ -19,6 +19,8 @@ public interface CrudServiceFactory {
     /**
      * Build a new repository.
      * 
+     * @param <T> the entity type
+     * @param <ID> the identifier type
      * @param entityClass the entity class
      * @return the repository
      */
@@ -27,6 +29,8 @@ public interface CrudServiceFactory {
     /**
      * Build a new service.
      * 
+     * @param <T> the entity type
+     * @param <ID> the identifier type
      * @param entityClass the entity class
      * @param repository the underlying repository
      * @return the service

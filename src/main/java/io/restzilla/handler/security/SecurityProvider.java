@@ -17,6 +17,7 @@ public interface SecurityProvider {
      * Determine if a user is authorized.
      * 
      * @param roles the roles
+     * @param request the request
      * @return {@code true} if authorized, else {@code false}
      */
     boolean isAuthorized(String[] roles, HttpServletRequest request);
