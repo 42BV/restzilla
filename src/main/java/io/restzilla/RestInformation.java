@@ -5,6 +5,7 @@ package io.restzilla;
 
 import io.restzilla.util.UrlUtils;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Map;
 
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Persistable;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
@@ -36,7 +38,7 @@ public class RestInformation {
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public RestInformation(Class<?> baseClass) {
-        RestResource annotation = findAnnotation(baseClass);
+        RestResource annotation = findAnnotation(baseClass, RestResource.class);
         Preconditions.checkNotNull(annotation, "Missing @RestResource annotation for: " + baseClass.getName());
         this.annotation = annotation;
 
@@ -48,21 +50,33 @@ public class RestInformation {
         }
         
         this.resultInfo = resolveResultInfo();
-
-        String basePath = annotation.basePath();
-        if (StringUtils.isBlank(basePath)) {
-            basePath = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, entityClass.getSimpleName());
-        }
-        this.basePath = UrlUtils.stripSlashes(basePath);
+        this.basePath = resolveBasePath(baseClass);
     }
 
-    private static RestResource findAnnotation(Class<?> entityClass) {
-        RestResource[] annotations = entityClass.getAnnotationsByType(RestResource.class);
+    private String resolveBasePath(Class<?> baseClass) {
+        // By default use the configured base path
+        String basePath = annotation.basePath();
+        if (StringUtils.isBlank(basePath)) {
+            // Use controller mappings whenever possible
+            RequestMapping mapping = findAnnotation(baseClass, RequestMapping.class);
+            if (mapping != null && mapping.value().length > 0) {
+                basePath = mapping.value()[0];
+            }
+            // Generate base path based on class name
+            if (StringUtils.isBlank(basePath)) {
+                basePath = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_HYPHEN, entityClass.getSimpleName());
+            }
+        }
+        return UrlUtils.stripSlashes(basePath);
+    }
+    
+    private static <T extends Annotation> T findAnnotation(Class<?> containerClass, Class<T> annotationType) {
+        T[] annotations = containerClass.getAnnotationsByType(annotationType);
         return annotations.length > 0 ? annotations[0] : null;
     }
     
     public static boolean isSupported(Class<?> entityClass) {
-        return findAnnotation(entityClass) != null;
+        return findAnnotation(entityClass, RestResource.class) != null;
     }
 
     /**
