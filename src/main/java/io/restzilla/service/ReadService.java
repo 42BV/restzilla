@@ -15,7 +15,7 @@ import com.google.common.base.Preconditions;
 
 /**
  * Service capable of reading any type of entity.
- * <br/><br/>
+ * <br><br>
  * <b>This service is strictly for internal usage and should
  * not be exposed to the outside.</b>
  *
@@ -37,6 +37,8 @@ public class ReadService {
     /**
      * Retrieve all entities with a certain sort.
      * 
+     * @param <T> the entity type
+     * @param <ID> the identifier type
      * @param entityClass the entity class
      * @param sort the sorting
      * @return the sorted entities
@@ -48,6 +50,8 @@ public class ReadService {
     /**
      * Retrieve a page of entities.
      * 
+     * @param <T> the entity type
+     * @param <ID> the identifier type
      * @param entityClass the entity class
      * @param pageable the pageable
      * @return the page of entities
@@ -59,6 +63,8 @@ public class ReadService {
     /**
      * Retrieve a specific entity, with an identifier.
      * 
+     * @param <T> the entity type
+     * @param <ID> the identifier type
      * @param entityClass the entity class
      * @param id the identifier
      * @return the result entity, if any

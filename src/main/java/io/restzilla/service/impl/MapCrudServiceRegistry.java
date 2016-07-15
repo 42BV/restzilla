@@ -26,12 +26,18 @@ public class MapCrudServiceRegistry implements CrudServiceRegistry {
         services = new HashMap<Class<?>, CrudService<?, ?>>();
     }
 
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> getService(Class<T> entityClass) {
         return (CrudService<T, ID>) services.get(entityClass);
     }
     
+    /**
+     * {@inheritDoc}
+     */
     @Override
     @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> getRepository(Class<T> entityClass) {
@@ -41,8 +47,11 @@ public class MapCrudServiceRegistry implements CrudServiceRegistry {
     /**
      * Register a new service instance.
      * 
+     * @param <T> the entity type
+     * @param <ID> the identifier type
      * @param entityClass the entity class
      * @param service the instance
+     * @return the registered service
      */
     @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> registerService(Class<T> entityClass, CrudService<T, ID> service) {
@@ -53,8 +62,11 @@ public class MapCrudServiceRegistry implements CrudServiceRegistry {
     /**
      * Register a new repository instance.
      * 
+     * @param <T> the entity type
+     * @param <ID> the identifier type
      * @param entityClass the entity class
      * @param repository the instance
+     * @return the registered repository
      */
     public <T, ID extends Serializable> PagingAndSortingRepository<T, ID> registerRepository(Class<?> entityClass, PagingAndSortingRepository<T, ID> repository) {
         repositories.put(entityClass, repository);

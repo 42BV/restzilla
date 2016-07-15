@@ -41,6 +41,7 @@ public class SwaggerUtils {
      * @param name the name of the API call
      * @param path the path to call
      * @param method the request method
+     * @return the description builder
      */
     public static DescriptionBuilder newDescription(String name, String path, RequestMethod method) {
         return new DescriptionBuilder(name, path, method);
