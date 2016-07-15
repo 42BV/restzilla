@@ -51,6 +51,7 @@ public class MapCrudServiceRegistry implements CrudServiceRegistry {
      * @param <ID> the identifier type
      * @param entityClass the entity class
      * @param service the instance
+     * @return the registered service
      */
     @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> registerService(Class<T> entityClass, CrudService<T, ID> service) {
@@ -65,6 +66,7 @@ public class MapCrudServiceRegistry implements CrudServiceRegistry {
      * @param <ID> the identifier type
      * @param entityClass the entity class
      * @param repository the instance
+     * @return the registered repository
      */
     public <T, ID extends Serializable> PagingAndSortingRepository<T, ID> registerRepository(Class<?> entityClass, PagingAndSortingRepository<T, ID> repository) {
         repositories.put(entityClass, repository);
