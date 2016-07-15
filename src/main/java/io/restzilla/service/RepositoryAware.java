@@ -20,6 +20,7 @@ public interface RepositoryAware<T extends Persistable<ID>, ID extends Serializa
     
     /**
      * Retrieve the current repository.
+     * @return the repository
      */
     PagingAndSortingRepository<T, ID> getRepository();
     

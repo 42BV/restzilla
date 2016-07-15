@@ -685,5 +685,27 @@ public class RestTest extends AbstractControllerTest {
         Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
         Assert.assertEquals("[]", response.getContentAsString());
     }
+    
+    @Test
+    public void testCustomControllerEmptyMapping() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-controller-empty-mapping");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("[]", response.getContentAsString());
+    }
+    
+    @Test
+    public void testCustomControllerCustomMapping() throws Exception {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setRequestURI("/with-controller-custom-test");
+        request.setMethod(RequestMethod.GET.name());
+        
+        MockHttpServletResponse response = call(request);
+        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
+        Assert.assertEquals("[]", response.getContentAsString());
+    }
 
 }

@@ -36,10 +36,11 @@ import java.lang.annotation.Target;
 public @interface RestResource {
     
     /**
-     * (Optional) alternative entity class.
+     * (Optional) the entity type. When this annotation is placed on
+     * the entity itself we fallback on that class.
      * @return the entity class
      */
-    Class<?> value() default Object.class;
+    Class<?> entityType() default Object.class;
     
     /**
      * (Optional) the base path, when empty we use the entity name.
@@ -56,18 +57,18 @@ public @interface RestResource {
      * @return the read security
      */
     String[] reader() default "";
+    
+    /**
+     * (Optional) the default query type. When undefined we use the entity type.
+     * @return the query class
+     */
+    Class<?> queryType() default Object.class;
 
     /**
      * (Optional) the custom result type, when empty we just return the entity.
      * @return the result type
      */
     Class<?> resultType() default Object.class;
-    
-    /**
-     * Whether the result value should be queried, otherwise a mapping is performed.
-     * @return if the result should be queried
-     */
-    boolean resultByQuery() default false;
     
     /**
      * Enable this if you only want to handle {@code GET} requests.

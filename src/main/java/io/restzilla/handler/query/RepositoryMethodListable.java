@@ -34,11 +34,13 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
     private final CrudServiceRegistry crudServiceRegistry;
     
     private final ConversionService conversionService;
-
-    private final RestInformation entityInfo;
+    
+    private final Class entityType;
+    
+    private final Class queryType;
     
     private final QueryInformation queryInfo;
-    
+
     private final Map<String, String[]> parameterValues;
 
     public RepositoryMethodListable(CrudServiceRegistry crudServiceRegistry, 
@@ -48,7 +50,8 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
                                   Map<String, String[]> parameterValues) {
         this.crudServiceRegistry = crudServiceRegistry;
         this.conversionService = conversionService;
-        this.entityInfo = entityInfo;
+        this.entityType = entityInfo.getEntityClass();
+        this.queryType = queryInfo.getResultInfo().getQueryType();
         this.queryInfo = queryInfo;
         this.parameterValues = parameterValues;
     }
@@ -58,7 +61,7 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
      */
     @Override
     public T findOne() {
-        InvokeableMethod invokable = findInvokableMethod((Class) queryInfo.getEntityType());
+        InvokeableMethod invokable = findInvokableMethod(queryType);
         return (T) invoke(invokable, new HashMap<Class<?>, Object>());
     }
 
@@ -90,21 +93,19 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
      */
     @Override
     public Class<?> getEntityClass() {
-        return entityInfo.getEntityClass();
+        return entityType;
     }
     
     // Method retrieval
 
-    private InvokeableMethod findInvokableMethod(Class<?> returnType, Class<?>... preferredTypes) {
-        final Class entityClass = entityInfo.getEntityClass();
-        
-        Object service = crudServiceRegistry.getService(entityClass);
-        InvokeableMethod method = findInvokableMethod(service, returnType, preferredTypes);
+    private InvokeableMethod findInvokableMethod(Class<?> resultType, Class<?>... preferredTypes) {
+        Object service = crudServiceRegistry.getService(entityType);
+        InvokeableMethod method = findInvokableMethod(service, resultType, preferredTypes);
         if (method == null) {
-            Object repository = crudServiceRegistry.getRepository((Class) queryInfo.getEntityType());
-            method = findInvokableMethod(repository, returnType, preferredTypes);
+            Object repository = crudServiceRegistry.getRepository(queryType);
+            method = findInvokableMethod(repository, resultType, preferredTypes);
         }
-        return Preconditions.checkNotNull(method, "Could not find custom finder method '" + queryInfo.getMethodName() + "' for " + entityClass.getName());
+        return Preconditions.checkNotNull(method, "Could not find custom finder method '" + queryInfo.getMethodName() + "' for " + entityType);
     }
     
     private InvokeableMethod findInvokableMethod(Object bean, Class<?> returnType, Class<?>[] preferredTypes) {
@@ -212,7 +213,6 @@ public class RepositoryMethodListable<T> implements Listable<T>, Finder<T> {
         }
         
         public Object invoke(Object... args) throws IllegalAccessException, InvocationTargetException {
-            // TODO: Handle exception when target is not the declarer of the method
             return ReflectionUtils.invokeMethod(method, target, args);
         }
         

@@ -14,7 +14,6 @@ import java.util.List;
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -91,20 +90,28 @@ public class PageableResolver {
      * @return the resolved pageable
      */
     public static Sort getSort(HttpServletRequest request, Class<?> entityClass) {
-        String sort = request.getParameter(SORT_PARAMETER);
-        if (StringUtils.isNotBlank(sort)) {
-            Direction direction = Direction.ASC;
-            
-            String[] properties = sort.split(SORT_DELIMITER);
-            if (properties.length > 1) {
-                direction = Direction.fromStringOrNull(properties[properties.length - 1]);
-                properties = ArrayUtils.remove(properties, properties.length - 1);
-            }
-            
-            return new Sort(direction, properties);
-        } else {
+        String[] sorts = request.getParameterValues(SORT_PARAMETER);
+        if (sorts == null) {
             return getDefaultSort(entityClass);
         }
+        
+        Sort result = parseSort(sorts[0]);
+        for (int index = 1; index < sorts.length; index++) {
+            result = result.and(parseSort(sorts[index]));
+        }
+        return result;
+    }
+
+    private static Sort parseSort(String sort) {
+        Direction direction = Direction.ASC;
+        
+        String[] properties = sort.split(SORT_DELIMITER);
+        if (properties.length > 1) {
+            direction = Direction.fromStringOrNull(properties[properties.length - 1]);
+            properties = ArrayUtils.remove(properties, properties.length - 1);
+        }
+        
+        return new Sort(direction, properties);
     }
 
     private static Sort getDefaultSort(Class<?> entityClass) {
