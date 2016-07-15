@@ -10,9 +10,9 @@ import javax.persistence.Entity;
 
 @Entity
 @RestResource(
-    findAll = @RestConfig(resultType = OtherEntity.class, resultByQuery = true),
-    findOne = @RestConfig(resultType = OtherEntity.class, resultByQuery = true),
-    update = @RestConfig(resultType = OtherEntity.class, resultByQuery = true)
+    findAll = @RestConfig(queryType = OtherEntity.class),
+    findOne = @RestConfig(queryType = OtherEntity.class),
+    update = @RestConfig(queryType = OtherEntity.class)
 )
 public class WithOtherEntity extends BaseEntity {
     

@@ -22,36 +22,31 @@ import java.lang.annotation.Target;
 public @interface RestQuery {
 
     /**
-     * Parameters that our request must contain
-     * 
+     * Parameters that our request must contain.
      * @return the parameter names
      */
     String[] parameters();
     
     /**
      * Name of the repository finder method that must be used.
-     * 
      * @return the method
      */
     String method();
     
     /**
-     * Alternate entity type where the query can be found.
-     * 
-     * @return the entity type
+     * (Optional) the custom query type, when empty we just return the entity.
+     * @return the query type
      */
-    Class<?> entityType() default Object.class;
+    Class<?> queryType() default Object.class;
 
     /**
-     * Alternate result type where the query can be found.
-     * 
+     * (Optional) the result type, where the query type should be mapped to.
      * @return the result type
      */
     Class<?> resultType() default Object.class;
     
     /**
      * Determines if the query returns in a single result.
-     * 
      * @return {@code true} when single result, else {@code false}
      */
     boolean unique() default false;

@@ -177,16 +177,15 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         }
 
         private Listable<?> buildListable(QueryInformation query, HttpServletRequest request) {
+            ResultInformation findAll = information.getResultInfo(information.findAll());
+            Class<?> resultType = findAll.getResultType();
+
             Listable<?> delegate = new CrudServiceListable(entityService, information.getEntityClass());
-
-            ResultInformation result = information.getResultInfo(information.findAll());
-            Class<?> resultType = result.getType();
-
             if (query != null) {
                 delegate = new RepositoryMethodListable(crudServiceRegistry, conversionService, information, query, request.getParameterMap());
-                resultType = query.getResultType();
-            } else if (result.isByQuery()) {
-                return new ReadServiceListable(readService, resultType);
+                resultType = query.getResultInfo().getResultType();
+            } else if (information.hasCustomQuery(findAll)) {
+                delegate = new ReadServiceListable(readService, findAll.getQueryType());
             }
             return new BeanMappingListable(delegate, mapper, resultType);
         }
@@ -220,12 +219,14 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         }
 
         private Object mapIdToResult(Serializable id) {
-            ResultInformation result = information.getResultInfo(information.findOne());
-            if (result.isByQuery()) {
-                return readService.getOne((Class) result.getType(), id);
+            ResultInformation findOne = information.getResultInfo(information.findOne());
+            Object entity = null;
+            if (information.hasCustomQuery(findOne)) {
+                entity = readService.getOne((Class) findOne.getQueryType(), id);
             } else {
-                return mapper.map(entityService.getOne(id), result.getType());
+                entity = entityService.getOne(id);
             }
+            return mapper.map(entity, findOne.getResultType());
         }
 
         //
@@ -318,12 +319,12 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
          * @return the entity in its result type
          */
         private Object mapToResult(Persistable<?> entity, RestConfig config) {
-            ResultInformation result = information.getResultInfo(config);
-            if (result.isByQuery()) {
-                return readService.getOne((Class) result.getType(), entity.getId());
-            } else {
-                return mapper.map(entity, result.getType());
+            ResultInformation resultInfo = information.getResultInfo(config);
+            Object result = entity;
+            if (information.hasCustomQuery(resultInfo)) {
+                result = readService.getOne((Class) resultInfo.getQueryType(), entity.getId());
             }
+            return mapper.map(result, resultInfo.getResultType());
         }
 
         private void init() {

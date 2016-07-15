@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 @Controller
 @RequestMapping("/with-controller")
-@RestResource(WithController.class)
+@RestResource(entityType = WithController.class)
 public class WithControllerController {
     
 }
