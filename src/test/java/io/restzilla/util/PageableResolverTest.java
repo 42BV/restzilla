@@ -6,12 +6,14 @@ package io.restzilla.util;
 import io.restzilla.SortingDefault;
 import io.restzilla.SortingDefault.SortingDefaults;
 import io.restzilla.model.User;
-import io.restzilla.util.PageableResolver;
+
+import java.util.Iterator;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.mock.web.MockHttpServletRequest;
 
 public class PageableResolverTest {
@@ -30,20 +32,77 @@ public class PageableResolverTest {
     }
     
     @Test
-    public void testResolve() {
+    public void testResolveSingleProperty() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
         request.setParameter(PageableResolver.SIZE_PARAMETER, "42");
-        request.setParameter(PageableResolver.SORT_PARAMETER, "id,name,ASC");
+        request.addParameter(PageableResolver.SORT_PARAMETER, "id,ASC");
         
         Pageable pageable = PageableResolver.getPageable(request, User.class);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(42, pageable.getPageSize());
-        Assert.assertEquals(Direction.ASC, pageable.getSort().getOrderFor("id").getDirection());
-        Assert.assertEquals(Direction.ASC, pageable.getSort().getOrderFor("name").getDirection());
-        Assert.assertNull(pageable.getSort().getOrderFor("other"));
+        
+        Iterator<Order> orders = pageable.getSort().iterator();
+        assertHasNextOrder(orders, "id", Direction.ASC);
+        Assert.assertFalse(orders.hasNext());
     }
     
+    @Test
+    public void testResolveMultipleProperties() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
+        request.setParameter(PageableResolver.SIZE_PARAMETER, "42");
+        request.addParameter(PageableResolver.SORT_PARAMETER, "id,name,ASC");
+        
+        Pageable pageable = PageableResolver.getPageable(request, User.class);
+        Assert.assertEquals(1, pageable.getPageNumber());
+        Assert.assertEquals(42, pageable.getPageSize());
+        
+        Iterator<Order> orders = pageable.getSort().iterator();
+        assertHasNextOrder(orders, "id", Direction.ASC);
+        assertHasNextOrder(orders, "name", Direction.ASC);
+        Assert.assertFalse(orders.hasNext());
+    }
+    
+    @Test
+    public void testResolveMultipleParameters() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
+        request.setParameter(PageableResolver.SIZE_PARAMETER, "42");
+        request.addParameter(PageableResolver.SORT_PARAMETER, "id,ASC");
+        request.addParameter(PageableResolver.SORT_PARAMETER, "name,DESC");
+        
+        Pageable pageable = PageableResolver.getPageable(request, User.class);
+        Assert.assertEquals(1, pageable.getPageNumber());
+        Assert.assertEquals(42, pageable.getPageSize());
+        
+        Iterator<Order> orders = pageable.getSort().iterator();
+        assertHasNextOrder(orders, "id", Direction.ASC);
+        assertHasNextOrder(orders, "name", Direction.DESC);
+        Assert.assertFalse(orders.hasNext());
+    }
+    
+    @Test
+    public void testResolveMultipleParametersAndProperties() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
+        request.setParameter(PageableResolver.SIZE_PARAMETER, "42");
+        request.addParameter(PageableResolver.SORT_PARAMETER, "id,name,ASC");
+        request.addParameter(PageableResolver.SORT_PARAMETER, "other,DESC");
+        request.addParameter(PageableResolver.SORT_PARAMETER, "age,ASC");
+        
+        Pageable pageable = PageableResolver.getPageable(request, User.class);
+        Assert.assertEquals(1, pageable.getPageNumber());
+        Assert.assertEquals(42, pageable.getPageSize());
+        
+        Iterator<Order> orders = pageable.getSort().iterator();
+        assertHasNextOrder(orders, "id", Direction.ASC);
+        assertHasNextOrder(orders, "name", Direction.ASC);
+        assertHasNextOrder(orders, "other", Direction.DESC);
+        assertHasNextOrder(orders, "age", Direction.ASC);
+        Assert.assertFalse(orders.hasNext());
+    }
+
     @Test
     public void testResolveEntityMultipleDefaults() {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -52,10 +111,12 @@ public class PageableResolverTest {
         Pageable pageable = PageableResolver.getPageable(request, EntityWithMultiplePageableDefaults.class);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(10, pageable.getPageSize());
-        Assert.assertEquals(Direction.ASC, pageable.getSort().getOrderFor("name").getDirection());
-        Assert.assertEquals(Direction.DESC, pageable.getSort().getOrderFor("age").getDirection());
-        Assert.assertEquals(Direction.DESC, pageable.getSort().getOrderFor("id").getDirection());
-        Assert.assertNull(pageable.getSort().getOrderFor("other"));
+        
+        Iterator<Order> orders = pageable.getSort().iterator();
+        assertHasNextOrder(orders, "name", Direction.ASC);
+        assertHasNextOrder(orders, "age", Direction.DESC);
+        assertHasNextOrder(orders, "id", Direction.DESC);
+        Assert.assertFalse(orders.hasNext());
     }
 
     @Test
@@ -66,8 +127,10 @@ public class PageableResolverTest {
         Pageable pageable = PageableResolver.getPageable(request, EntityWithPageableDefaults.class);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(10, pageable.getPageSize());
-        Assert.assertEquals(Direction.ASC, pageable.getSort().getOrderFor("name").getDirection());
-        Assert.assertNull(pageable.getSort().getOrderFor("id"));
+        
+        Iterator<Order> orders = pageable.getSort().iterator();
+        assertHasNextOrder(orders, "name", Direction.ASC);
+        Assert.assertFalse(orders.hasNext());
     }
     
     @Test
@@ -78,10 +141,19 @@ public class PageableResolverTest {
         Pageable pageable = PageableResolver.getPageable(request, EntityWithoutPageableDefaults.class);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(10, pageable.getPageSize());
-        Assert.assertEquals(Direction.ASC, pageable.getSort().getOrderFor("id").getDirection());
-        Assert.assertNull(pageable.getSort().getOrderFor("name"));
+        
+        Iterator<Order> orders = pageable.getSort().iterator();
+        assertHasNextOrder(orders, "id", Direction.ASC);
+        Assert.assertFalse(orders.hasNext());
     }
     
+    private static void assertHasNextOrder(Iterator<Order> orders, String property, Direction direction) {
+        Order order = orders.next();
+        Assert.assertNotNull("Order should not be null", order);
+        Assert.assertEquals(property, order.getProperty());
+        Assert.assertEquals(direction, order.getDirection());
+    }
+
     @SortingDefaults({
         @SortingDefault("name"),
         @SortingDefault(value = { "age", "id" }, direction = Direction.DESC)
