@@ -19,7 +19,7 @@ Add the dependency to your own project:
 <dependency>
   <groupId>io.restzilla</groupId>
   <artifactId>restzilla</artifactId>
-  <version>1.9.6-SNAPSHOT</version>
+  <version>1.11.0</version>
 </dependency>
 ```
 
@@ -28,7 +28,7 @@ Other dependencies:
 * Spring MVC (4.0+)
 * Spring Data JPA (1.8+)
 * Jackson (2.0+)
-* Java (1.6+)
+* Java (1.8+)
 
 Annotate your Spring Configuration with @EnableRest:
 
@@ -267,9 +267,24 @@ public class UserController {
 }
 ```
 
+REST controllers can also use the @RestResource annotation to place have all endpoint logic in one class. In this case we also scan the controller class for the base path:
+
+```java
+@RestController
+@RequestMapping("/user")
+@RestResource(entityType = User.class)
+public class UserController {
+
+ @RequestMapping(method = POST)
+ public UserModel create(CreateUserModel model) {
+ }
+ 
+}
+```
+
 ## Swagger ##
 
-Restzilla also provides native support for Swagger, automatically generating an API documentation. To activate Swagger, just configure the provided plugin as follows:
+Swagger is also supported, allowing you to automatically generate the API documentation. To activate Swagger, just configure the provided plugin as follows:
 
 ```java
 @EnableWebMvc
