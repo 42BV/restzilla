@@ -286,6 +286,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
+            ensureIsModifiable(information.update().secured(), request);
             Serializable id = extractId(request);
             String json = CharStreams.toString(request.getReader());
             Object input = objectMapper.readValue(json, information.getInputType(information.update()));
