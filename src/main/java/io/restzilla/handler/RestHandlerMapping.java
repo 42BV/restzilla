@@ -1,5 +1,6 @@
 package io.restzilla.handler;
 
+import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.restzilla.RestInformation;
 import io.restzilla.util.UrlUtils;
 
@@ -21,7 +22,7 @@ import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.handler.AbstractHandlerMapping;
-import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerMapping;
+import org.springframework.web.servlet.handler.SimpleUrlHandlerMapping;
 
 /**
  * Root handler mapping for managing CRUD requests.
@@ -57,6 +58,7 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
      * The application context.
      */
     private final ApplicationContext applicationContext;
+    private final String defaultHandlerMappingName;
 
     {
         this.skippedExceptions.add(HttpRequestMethodNotSupportedException.class);
@@ -66,22 +68,12 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
     /**
      * Create a new handler mapping.
      * 
-     * @param defaultHandlerMapping
-     *            the default {@link HandlerMapping}
-     */
-    public RestHandlerMapping(HandlerMapping defaultHandlerMapping) {
-        this.defaultHandlerMapping = defaultHandlerMapping;
-        this.applicationContext = null;
-    }
-    
-    /**
-     * Create a new handler mapping.
-     * 
      * @param applicationContext
      *            the initialized {@link ApplicationContext}
      */
-    public RestHandlerMapping(ApplicationContext applicationContext) {
+    public RestHandlerMapping(ApplicationContext applicationContext, String defaultHandlerMappingName) {
         this.applicationContext = applicationContext;
+        this.defaultHandlerMappingName = defaultHandlerMappingName;
     }
 
     /**
@@ -101,12 +93,11 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
     }
 
     private void init() {
-        // Lazily initialize the default handler mapping when not provided
-        if (defaultHandlerMapping == null) {
-            String[] beanNames = applicationContext.getBeanNamesForType(RequestMappingHandlerMapping.class);
-            if (beanNames.length > 0) {
-                defaultHandlerMapping = applicationContext.getBean(RequestMappingHandlerMapping.class);
-            }
+        if (isNotBlank(defaultHandlerMappingName)) {
+            defaultHandlerMapping = applicationContext.getBean(defaultHandlerMappingName, HandlerMapping.class);
+        } else {
+            LOGGER.warn("No default handler mapping defined in @EnableRest");
+            defaultHandlerMapping = new SimpleUrlHandlerMapping();
         }
     }
 
@@ -135,7 +126,6 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
         }
         return null;
     }
-
 
     /**
      * Register a custom handler mapping.

@@ -26,5 +26,7 @@ import org.springframework.context.annotation.Import;
 public @interface EnableRest {
 
     Class<?> basePackageClass();
+    
+    String defaultHandlerMappingName() default "requestMappingHandlerMapping";
 
 }

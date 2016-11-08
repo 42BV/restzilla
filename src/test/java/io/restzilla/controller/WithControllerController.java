@@ -14,11 +14,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 
 @Controller
-@RequestMapping("/with-controller")
 @RestResource(entityType = WithController.class)
 public class WithControllerController {
     
-    @RequestMapping(method = RequestMethod.GET)
+    @RequestMapping(value = "/with-controller", method = RequestMethod.GET)
     public Map<String, String> test() {
         return Collections.singletonMap("a", "b");
     }

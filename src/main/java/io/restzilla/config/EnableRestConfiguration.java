@@ -7,8 +7,8 @@ import io.restzilla.handler.RestHandlerMapping;
 import io.restzilla.service.CrudServiceFactory;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
-import io.restzilla.service.impl.DefaultServiceFactory;
 import io.restzilla.service.impl.AutoGenerateMapCrudServiceRegistry;
+import io.restzilla.service.impl.DefaultServiceFactory;
 import io.restzilla.service.impl.LazyRetrievalFactory;
 
 import java.util.Map;
@@ -31,12 +31,14 @@ import org.springframework.core.type.AnnotationMetadata;
 public class EnableRestConfiguration implements ImportAware, ApplicationContextAware {
     
     private static final String BASE_PACKAGE_CLASS_NAME = "basePackageClass";
+    private static final String DEFAULT_HANDLER_MAPPING_NAME = "defaultHandlerMappingName";
 
     private ApplicationContext applicationContext;
     
     private CrudServiceFactory crudServiceFactory;
 
     private String basePackage;
+    private String defaultHandlerMappingName;
 
     /**
      * Build a registry with references to each entity service, repository.
@@ -72,6 +74,7 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
     public RestHandlerMapping restHandlerMapping() throws Exception {
         RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean(crudServiceRegistry());
         factoryBean.setBasePackage(basePackage);
+        factoryBean.setDefaultHandlerMappingName(defaultHandlerMappingName);
         factoryBean.setApplicationContext(applicationContext);
         applicationContext.getAutowireCapableBeanFactory().autowireBean(factoryBean);
         return factoryBean.getObject();
@@ -84,6 +87,7 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
     public void setImportMetadata(AnnotationMetadata importMetadata) {
         Map<String, Object> attributes = importMetadata.getAnnotationAttributes(EnableRest.class.getName());
         basePackage = ((Class<?>) attributes.get(BASE_PACKAGE_CLASS_NAME)).getPackage().getName();
+        defaultHandlerMappingName = (String) attributes.get(DEFAULT_HANDLER_MAPPING_NAME);
     }
     
     /**

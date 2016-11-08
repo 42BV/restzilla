@@ -34,6 +34,7 @@ import org.springframework.validation.Validator;
 import org.springframework.validation.beanvalidation.CustomValidatorBean;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -49,6 +50,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
     excludeFilters = {
         @Filter({ ControllerAdvice.class, Controller.class, RestController.class })
 })
+@EnableWebMvc
 @EnableRest(basePackageClass = ApplicationConfig.class)
 @EnableTransactionManagement
 @EnableJpaRepositories(basePackageClasses = ApplicationConfig.class)
