@@ -3,7 +3,13 @@
  */
 package io.restzilla;
 
-import io.beanmapper.exceptions.BeanConversionException;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import io.restzilla.builder.EntityBuilder;
 import io.restzilla.builder.OtherBuilder;
 import io.restzilla.builder.UserBuilder;
@@ -18,21 +24,18 @@ import io.restzilla.model.WithSecurity;
 import io.restzilla.model.WithService;
 import io.restzilla.model.WithoutPatch;
 import io.restzilla.model.dto.ValidationDto;
-import io.restzilla.util.PageableResolver;
 
 import java.util.Arrays;
 
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.mock.web.MockHttpServletResponse;
+import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BindException;
-import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.util.NestedServletException;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 /**
  * 
@@ -51,58 +54,46 @@ public class RestTest extends AbstractControllerTest {
     @Autowired
     private EntityBuilder entityBuilder;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+    
     @Test
     public void testFindAllAsArray() throws Exception {
         userBuilder.createUser("Jan");
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals("[{\"name\":\"Jan\"}]", response.getContentAsString());
+        this.webClient.perform(get("/user/"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("Jan"));
     }
     
     @Test
     public void testFindAllAsArrayNoData() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user");
-        request.setMethod(RequestMethod.GET.name());
-
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals("[]", response.getContentAsString());
+        this.webClient.perform(get("/user/"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0]").doesNotExist());
     }
-    
+        
     @Test
     public void testFindAllAsPage() throws Exception {
         userBuilder.createUser("Jan");
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user");
-        request.setParameter(PageableResolver.PAGE_PARAMETER, "0");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        String contents = response.getContentAsString();
-        Assert.assertTrue(contents.contains("\"content\":[{\"name\":\"Jan\"}]"));
-        Assert.assertTrue(contents.contains("\"number\":0"));
-        Assert.assertTrue(contents.contains("\"size\":10"));
+        this.webClient.perform(get("/user?page=0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.content[0].name").value("Jan"));
     }
     
     @Test
     public void testFindAllAsPageNoData() throws Exception {
         userBuilder.createUser("Jan");
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user");
-        request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        String contents = response.getContentAsString();
-        Assert.assertTrue(contents.contains("\"content\":[]"));
-        Assert.assertTrue(contents.contains("\"number\":1"));
-        Assert.assertTrue(contents.contains("\"size\":10"));
+        this.webClient.perform(get("/user?page=1"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(1))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.content[0]").doesNotExist());
     }
     
     @Test
@@ -110,27 +101,21 @@ public class RestTest extends AbstractControllerTest {
         User henk = userBuilder.createUser("Henk");
         userBuilder.createUser("Piet");
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user/" + henk.getId());
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals("{\"name\":\"Henk\"}", response.getContentAsString());
+        this.webClient.perform(get("/user/" + henk.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.name").value("Henk"));
     }
     
     @Test
     public void testCreate() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user");
-        request.setMethod(RequestMethod.POST.name());
-        
         User piet = new User();
         piet.setName("Piet");
-        setContentAsJson(request, piet);
-
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertTrue(response.getContentAsString().matches("\\d+"));
+        
+        this.webClient.perform(post("/user")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(piet)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$").exists());
         
         Assert.assertEquals(Long.valueOf(1), 
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
@@ -138,22 +123,17 @@ public class RestTest extends AbstractControllerTest {
     
     @Test
     public void testCreateAsArray() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user");
-        request.setMethod(RequestMethod.POST.name());
-        
         User piet = new User();
         piet.setName("Piet");
         User jan = new User();
         jan.setName("Jan");
-        setContentAsJson(request, Arrays.asList(piet, jan));
-
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        String[] contentsAsString = response.getContentAsString().split(",");
-        Assert.assertEquals(2, contentsAsString.length);
-        Assert.assertTrue(response.getContentAsString().matches("\\[\\d+\\,\\d+\\]"));
         
+        this.webClient.perform(post("/user")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(Arrays.asList(piet, jan))))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$").isArray());
+
         Assert.assertEquals(Long.valueOf(2),
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
     }
@@ -162,17 +142,14 @@ public class RestTest extends AbstractControllerTest {
     public void testUpdate() throws Exception {        
         User henk = userBuilder.createUser("Henk");
 
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user/" + henk.getId());
-        request.setMethod(RequestMethod.PUT.name());
-        
         henk.setName("Piet");
-        setContentAsJson(request, henk);
-
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"name\":\"Piet\"}", response.getContentAsString());
         
+        this.webClient.perform(put("/user/" + henk.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(henk)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.name").value("Piet"));
+
         Assert.assertEquals(Long.valueOf(1), 
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
     }
@@ -182,14 +159,9 @@ public class RestTest extends AbstractControllerTest {
         User henk = userBuilder.createUser("Henk");
         userBuilder.createUser("Piet");
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/user/" + henk.getId());
-        request.setMethod(RequestMethod.DELETE.name());
+        this.webClient.perform(delete("/user/" + henk.getId()))
+                        .andExpect(status().isOk());
         
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("", response.getContentAsString());
-
         Assert.assertEquals(Long.valueOf(0), 
                             getJdbcTemplate().queryForObject("SELECT count(*) FROM user WHERE id = " + henk.getId(), Long.class));
     }
@@ -202,40 +174,33 @@ public class RestTest extends AbstractControllerTest {
     public void testFindAllWithQuery() throws Exception {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-other-entity");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[{\"id\":" + entity.getId() + ",\"name\":\"My name\"}]", response.getContentAsString());
+        this.webClient.perform(get("/with-other-entity"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].id").value(entity.getId().intValue()))
+                .andExpect(jsonPath("$[0].name").value("My name"));
     }
     
     @Test
     public void testFindByIdWithQuery() throws Exception {
-        WithOtherEntity entity = otherBuilder.createOther("My name");
-        
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-other-entity/" + entity.getId());
-        request.setMethod(RequestMethod.GET.name());
+        WithOtherEntity entity = otherBuilder.createOther("My name"); 
 
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"My name\"}", response.getContentAsString());
+        this.webClient.perform(get("/with-other-entity/" + entity.getId()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(entity.getId().intValue()))
+                .andExpect(jsonPath("$.name").value("My name"));
     }
     
     @Test
     public void testUpdateWithQuery() throws Exception {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-other-entity/" + entity.getId());
-        request.setMethod(RequestMethod.PUT.name());
-        setContentAsJson(request, entity);
-
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"My name\"}", response.getContentAsString());
+        this.webClient.perform(put("/with-other-entity/" + entity.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(entity)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value(entity.getId().intValue()))
+                        .andExpect(jsonPath("$.name").value("My name"));
     }
 
     //
@@ -244,38 +209,26 @@ public class RestTest extends AbstractControllerTest {
     
     @Test
     public void testCustomBasePath() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/MyBasePath");
-        request.setMethod(RequestMethod.GET.name());
-        
-        Assert.assertNotNull(getHandlerChain(request));
+        this.webClient.perform(get("/MyBasePath"))
+                .andExpect(status().isOk());
     }
     
     @Test
     public void testNestedBasePath() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/mybase/path");
-        request.setMethod(RequestMethod.GET.name());
-        
-        Assert.assertNull(getHandlerChain(request));
+        this.webClient.perform(get("/mybase/path"))
+                .andExpect(status().isNotFound());
     }
     
     @Test
     public void testDuplicate() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-duplicate");
-        request.setMethod(RequestMethod.GET.name());
-        
-        Assert.assertNotNull(getHandlerChain(request));
+        this.webClient.perform(get("/with-duplicate"))
+                .andExpect(status().isOk());
     }
     
     @Test
     public void testDisabled() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-disabled");
-        request.setMethod(RequestMethod.GET.name());
-        
-        Assert.assertNull(getHandlerChain(request));
+        this.webClient.perform(get("/with-disabled"))
+                .andExpect(status().isNotFound());
     }
     
     @Test
@@ -283,30 +236,24 @@ public class RestTest extends AbstractControllerTest {
         WithReadOnly entity = new WithReadOnly();
         entity.setName("Test");
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-read-only");
-        request.setMethod(RequestMethod.POST.name());
-        setContentAsJson(request, entity);
-        
-        Assert.assertNull(getHandlerChain(request));
+        this.webClient.perform(post("/with-read-only/")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(entity)))
+                        .andExpect(status().isNotFound());
     }
     
     @Test
     public void testPagedOnly() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-paged-only");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        String contents = response.getContentAsString();
-        Assert.assertTrue(contents.contains("\"content\":[]"));
-        Assert.assertTrue(contents.contains("\"number\":0"));
-        Assert.assertTrue(contents.contains("\"size\":10"));
+        this.webClient.perform(get("/with-paged-only"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.size").value(10));
     }
     
     // TODO: This should not cause an exception
-    @Test(expected = BeanConversionException.class)
     @Transactional
+    @Test(expected = NestedServletException.class)
     public void testPatch() throws Exception {
         WithPatch entity = new WithPatch();
         entity.setName("My name");
@@ -314,19 +261,17 @@ public class RestTest extends AbstractControllerTest {
         entity.setNested(new WithPatchNested());
         entity.getNested().setNestedName("My nested name");
         entity.getNested().setNestedOther("My nested other");
+        
         entityBuilder.save(entity);
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-patch/" + entity.getId());
-        request.setMethod(RequestMethod.PATCH.name());
-        
-        setValueAsJson(request, "{\"name\":\"New name\",\"nested\":{\"nestedName\":\"New nested name\"}}");
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"id\":" + entity.getId()
-                + ",\"name\":\"New name\",\"email\":\"email@42.nl\",\"nested\":{\"nestedName\":\"New nested name\",\"nestedOther\":\"My nested other\"}}",
-                response.getContentAsString());
+        this.webClient.perform(patch("/with-patch/" + entity.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"name\":\"New name\",\"nested\":{\"nestedName\":\"New nested name\"}}"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.name").value("New name"))
+                        .andExpect(jsonPath("$.email").value("email@42.nl"))
+                        .andExpect(jsonPath("$.nested.nestedName").value("New nested name"))
+                        .andExpect(jsonPath("$.nested.nestedOther").value("My nested other"));
     }
     
     @Test
@@ -337,15 +282,12 @@ public class RestTest extends AbstractControllerTest {
         entity.setName("email@42.nl");
         entityBuilder.save(entity);
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/without-patch/" + entity.getId());
-        request.setMethod(RequestMethod.PUT.name());
-        
-        setValueAsJson(request, "{\"name\":\"New name\"}");
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"id\":" + entity.getId() + ",\"name\":\"New name\",\"email\":null}", response.getContentAsString());
+        this.webClient.perform(put("/without-patch/" + entity.getId())
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("{\"name\":\"New name\"}"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.name").value("New name"))
+                        .andExpect(jsonPath("$.email").doesNotExist());
     }
     
     //
@@ -355,135 +297,107 @@ public class RestTest extends AbstractControllerTest {
     @Test
     public void testSecuredReader() throws Exception {
         TestingAuthenticationToken user = new TestingAuthenticationToken("user", "user", "ROLE_READER");
-        SecurityContextHolder.getContext().setAuthentication(user);
         
-        try {
-            MockHttpServletRequest request = new MockHttpServletRequest();
-            request.setRequestURI("/with-security");
-            request.setMethod(RequestMethod.GET.name());
-            
-            MockHttpServletResponse response = call(request);
-            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        } finally {
-            SecurityContextHolder.getContext().setAuthentication(null);
-        }
+        this.webClient.perform(get("/with-security").principal(user))
+                        .andExpect(status().isOk());
     }
     
-    @Test(expected = SecurityException.class)
+    @Test(expected = NestedServletException.class)
     public void testSecuredReaderFail() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-security");
-        request.setMethod(RequestMethod.GET.name());
-        
-        call(request);
+        this.webClient.perform(get("/with-security"))
+                        .andExpect(status().isOk());
     }
     
     @Test
     public void testSecuredModify() throws Exception {
-        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_CHANGER");
-        SecurityContextHolder.getContext().setAuthentication(admin);
+        TestingAuthenticationToken user = new TestingAuthenticationToken("admin", "admin", "ROLE_CHANGER");
         
-        try {
-            MockHttpServletRequest request = new MockHttpServletRequest();
-            request.setRequestURI("/with-security");
-            request.setMethod(RequestMethod.POST.name());
-            
-            WithSecurity piet = new WithSecurity();
-            piet.setName("Piet");
-            setContentAsJson(request, piet);
-
-            MockHttpServletResponse response = call(request);
-            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        } finally {
-            SecurityContextHolder.getContext().setAuthentication(null);
-        }
+        WithSecurity piet = new WithSecurity();
+        piet.setName("Piet");
+        
+        this.webClient.perform(post("/with-security")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(piet))
+                            .principal(user))
+                        .andExpect(status().isOk());
     }
     
-    @Test(expected = SecurityException.class)
+    @Test(expected = NestedServletException.class)
     public void testSecuredModifyFail() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-security");
-        request.setMethod(RequestMethod.GET.name());
+        WithSecurity piet = new WithSecurity();
+        piet.setName("Piet");
         
-        call(request);
+        this.webClient.perform(post("/with-security")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(piet)))
+                        .andExpect(status().isOk());
     }
-
+    
     @Test
     @Transactional
     public void testSecuredCustom() throws Exception {
-        TestingAuthenticationToken admin = new TestingAuthenticationToken("admin", "admin", "ROLE_ADMIN");
-        SecurityContextHolder.getContext().setAuthentication(admin);
+        TestingAuthenticationToken user = new TestingAuthenticationToken("admin", "admin", "ROLE_ADMIN");
         
         WithSecurity piet = new WithSecurity();
         piet.setName("Piet");
         entityBuilder.save(piet);
-
-        try {
-            MockHttpServletRequest request = new MockHttpServletRequest();
-            request.setRequestURI("/with-security/" + piet.getId());
-            request.setMethod(RequestMethod.DELETE.name());
-            
-            MockHttpServletResponse response = call(request);
-            Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        } finally {
-            SecurityContextHolder.getContext().setAuthentication(null);
-        }
-    }
-    
-    @Test(expected = SecurityException.class)
-    public void testSecuredCustomFail() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-security/1");
-        request.setMethod(RequestMethod.DELETE.name());
         
-        call(request);
+        this.webClient.perform(delete("/with-security/" + piet.getId()).principal(user))
+            .andExpect(status().isOk());
+
     }
     
+    @Test(expected = NestedServletException.class)
+    @Transactional
+    public void testSecuredCustomFail() throws Exception {
+        WithSecurity piet = new WithSecurity();
+        piet.setName("Piet");
+        entityBuilder.save(piet);
+        
+        this.webClient.perform(delete("/with-security/" + piet.getId()))
+            .andExpect(status().isOk());
+    }
+        
+    //
+    // Validation
+    //
+
     @Test
     public void testValidation() throws Exception {
         ValidationDto dto = new ValidationDto();
         dto.name = "Henk";
         dto.street = "Teststreet 42";
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-validation");
-        request.setMethod(RequestMethod.POST.name());
-        setContentAsJson(request, dto);
-        
-        MockHttpServletResponse response = call(request);
-        String contents = response.getContentAsString();
-        Assert.assertTrue(contents.contains("\"name\":\"Henk\""));
-        Assert.assertTrue(contents.contains("\"street\":\"Teststreet 42\""));
+        this.webClient.perform(post("/with-validation")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(dto)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.name").value("Henk"))
+                        .andExpect(jsonPath("$.street").value("Teststreet 42"));
     }
     
-    @Test(expected = BindException.class)
+    @Test
     public void testValidationFail() throws Exception {
         ValidationDto dto = new ValidationDto();
         dto.name = "Henk";
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-validation");
-        request.setMethod(RequestMethod.POST.name());
-        setContentAsJson(request, dto);
-        
-        call(request);
+        this.webClient.perform(post("/with-validation")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().is4xxClientError());
     }
-    
+        
     //
     // Custom beans
     //
 
     @Test
     public void testCustomRepository() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-repository");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[]", response.getContentAsString());
+        this.webClient.perform(get("/with-repository"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$").isArray());
     }
-    
+        
     @Test
     public void testCustomRepositoryQuery() throws Exception {
         WithRepository jan = new WithRepository();
@@ -499,15 +413,12 @@ public class RestTest extends AbstractControllerTest {
         WithRepository piet = new WithRepository();
         piet.setName("Piet");
         entityBuilder.save(piet);
-
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-repository");
-        request.setParameter("active", "true");
-        request.setMethod(RequestMethod.GET.name());
         
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[{\"name\":\"Henk\",\"active\":true},{\"name\":\"Jan\",\"active\":true}]", response.getContentAsString());
+        this.webClient.perform(get("/with-repository?active=true"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$").isArray())
+                        .andExpect(jsonPath("$[0].name").value("Henk"))
+                        .andExpect(jsonPath("$[1].name").value("Jan"));
     }
     
     @Test
@@ -526,16 +437,11 @@ public class RestTest extends AbstractControllerTest {
         piet.setName("Piet");
         entityBuilder.save(piet);
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-repository");
-        request.setParameter("active", "true");
-        request.setParameter(PageableResolver.SORT_PARAMETER, "name,desc");
-        request.setMethod(RequestMethod.GET.name());
-        
-        // Returned in reverse order
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[{\"name\":\"Jan\",\"active\":true},{\"name\":\"Henk\",\"active\":true}]", response.getContentAsString());
+        this.webClient.perform(get("/with-repository?active=true&sort=name,desc"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$").isArray())
+                        .andExpect(jsonPath("$[0].name").value("Jan"))
+                        .andExpect(jsonPath("$[1].name").value("Henk"));
     }
     
     @Test
@@ -549,18 +455,12 @@ public class RestTest extends AbstractControllerTest {
         piet.setName("Piet");
         entityBuilder.save(piet);
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-repository");
-        request.setParameter("active", "true");
-        request.setParameter(PageableResolver.PAGE_PARAMETER, "0");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        String contents = response.getContentAsString();
-        Assert.assertTrue(contents.contains("\"content\":[{\"name\":\"Jan\",\"active\":true}]"));
-        Assert.assertTrue(contents.contains("\"number\":0"));
-        Assert.assertTrue(contents.contains("\"size\":10"));
+        this.webClient.perform(get("/with-repository?active=true&page=0"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.number").value(0))
+                        .andExpect(jsonPath("$.size").value(10))
+                        .andExpect(jsonPath("$.content").isArray())
+                        .andExpect(jsonPath("$.content[0].name").value("Jan"));
     }
 
     @Test
@@ -579,15 +479,11 @@ public class RestTest extends AbstractControllerTest {
         piet.setName("Piet");
         entityBuilder.save(piet);
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-repository");
-        request.setParameter("active", "true");
-        request.setParameter("type", "name");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[{\"name\":\"Henk\"},{\"name\":\"Jan\"}]", response.getContentAsString());
+        this.webClient.perform(get("/with-repository?active=true&type=name"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$").isArray())
+                        .andExpect(jsonPath("$[0].name").value("Henk"))
+                        .andExpect(jsonPath("$[1].name").value("Jan"));
     }
     
     @Test
@@ -601,15 +497,9 @@ public class RestTest extends AbstractControllerTest {
         piet.setName("Piet");
         entityBuilder.save(piet);
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-repository");
-        request.setParameter("active", "true");
-        request.setParameter("unique", "true");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("{\"name\":\"Jan\"}", response.getContentAsString());
+        this.webClient.perform(get("/with-repository?active=true&unique=true"))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.name").value("Jan"));
     }
 
     @Test
@@ -617,15 +507,12 @@ public class RestTest extends AbstractControllerTest {
         WithService entity = new WithService();
         entity.setName("Test");
         
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-service");
-        request.setMethod(RequestMethod.POST.name());
-        setContentAsJson(request, entity);
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        // In the service we append ' with User!' to the name 
-        Assert.assertEquals("{\"id\":1,\"name\":\"Test with User!\"}", response.getContentAsString());
+        this.webClient.perform(post("/with-service")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(entity)))
+                        .andExpect(status().isOk())
+                        .andExpect(jsonPath("$.id").value(1))
+                        .andExpect(jsonPath("$.name").value("Test with User!"));
     }
     
     @Test
@@ -634,18 +521,15 @@ public class RestTest extends AbstractControllerTest {
         entity.setName("Initial");
         entityBuilder.save(entity);
 
-        // Change name, and enforce rollback
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-rollback/" + entity.getId());
-        request.setMethod(RequestMethod.PUT.name());
-        setValueAsJson(request, "{\"name\":\"Updated\"}");
-        
         try {
-            call(request);
+            this.webClient.perform(put("/with-rollback/" + entity.getId())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content("{\"name\":\"Updated\"}"))
+                .andExpect(status().is5xxServerError());
+            
             Assert.fail("Expected an UnsupportedOperationException.");
-        } catch (UnsupportedOperationException uoe) {
-        } catch (RuntimeException rte) {
-            Assert.fail("Expected an UnsupportedOperationException.");
+        } catch (NestedServletException nse) {
+            Assert.assertEquals(UnsupportedOperationException.class, nse.getCause().getClass());
         }
 
         WithRollback result = entityBuilder.get(WithRollback.class, entity.getId());
@@ -654,58 +538,39 @@ public class RestTest extends AbstractControllerTest {
     
     @Test
     public void testCustomServiceWithFinder() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-service");
-        request.setMethod(RequestMethod.GET.name());
-        request.setParameter("custom", "true");
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[{\"id\":42,\"name\":\"Service generated\"}]", response.getContentAsString());
+        this.webClient.perform(get("/with-service?custom=true"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].id").value(42))
+                .andExpect(jsonPath("$[0].name").value("Service generated"));
     }
-    
-    // TODO: Figure out why this causes an exception
-    @Test(expected = IllegalArgumentException.class)
-    public void testCustomServiceWithProxy() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-proxy-service");
-        request.setMethod(RequestMethod.GET.name());
-        request.setParameter("age", "42");
         
-        call(request);
+    // TODO: Figure out why this causes an exception
+    @Test(expected = NestedServletException.class)
+    public void testCustomServiceWithProxy() throws Exception {
+        this.webClient.perform(get("/with-proxy-service?age=42"))
+                .andExpect(status().isOk());
     }
     
     @Test
     public void testCustomController() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-controller");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[]", response.getContentAsString());
+        this.webClient.perform(get("/with-controller"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
+                //.andExpect(jsonPath("$.a").value("b"));
     }
     
     @Test
     public void testCustomControllerEmptyMapping() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-controller-empty-mapping");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[]", response.getContentAsString());
+        this.webClient.perform(get("/with-controller-empty-mapping"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
     }
     
     @Test
     public void testCustomControllerCustomMapping() throws Exception {
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        request.setRequestURI("/with-controller-custom-test");
-        request.setMethod(RequestMethod.GET.name());
-        
-        MockHttpServletResponse response = call(request);
-        Assert.assertEquals(HttpStatus.OK.value(), response.getStatus());
-        Assert.assertEquals("[]", response.getContentAsString());
+        this.webClient.perform(get("/with-controller-custom-test"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray());
     }
 
 }
