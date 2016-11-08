@@ -37,6 +37,10 @@ public class UrlUtils {
      * @return the same path without slashes
      */
     public static String stripSlashes(String path) {
+        if (StringUtils.isBlank(path)) {
+            return "";
+        }
+
         if (!path.startsWith(SLASH)) {
             path = SLASH + path;
         }
