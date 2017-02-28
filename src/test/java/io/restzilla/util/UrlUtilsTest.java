@@ -16,6 +16,11 @@ public class UrlUtilsTest {
     }
     
     @Test
+    public void testStripSlashesSlash() {
+        Assert.assertEquals("", UrlUtils.stripSlashes("/"));
+    }
+    
+    @Test
     public void testStripSlashesText() {
         Assert.assertEquals("test", UrlUtils.stripSlashes("test"));
     }

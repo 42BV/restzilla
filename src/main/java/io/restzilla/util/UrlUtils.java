@@ -3,6 +3,8 @@
  */
 package io.restzilla.util;
 
+import java.util.Objects;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +39,7 @@ public class UrlUtils {
      * @return the same path without slashes
      */
     public static String stripSlashes(String path) {
-        if (StringUtils.isBlank(path)) {
+        if (StringUtils.isBlank(path) || Objects.equals(SLASH, path)) {
             return "";
         }
 
