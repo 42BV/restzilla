@@ -8,10 +8,10 @@ import io.beanmapper.config.BeanMapperBuilder;
 import io.beanmapper.utils.Classes;
 import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
-import io.restzilla.handler.SimpleResourceHandlerMappingFactory;
 import io.restzilla.handler.ResourceHandlerMapping;
 import io.restzilla.handler.ResourceHandlerMappingFactory;
 import io.restzilla.handler.RestHandlerMapping;
+import io.restzilla.handler.SimpleResourceHandlerMappingFactory;
 import io.restzilla.handler.security.AlwaysSecurityProvider;
 import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.service.CrudServiceRegistry;
@@ -101,6 +101,11 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     private Validator validator = new NoOpValidator();
 
     /**
+     * Default handler mapping name.
+     */
+    private String defaultHandlerMappingName;
+    
+    /**
      * Create a new REST handler mapping factory bean.
      * @param serviceRegistry the service registry
      */
@@ -116,7 +121,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     public final RestHandlerMapping getObject() throws Exception {
         afterPropertiesSet();
 
-        RestHandlerMapping handlerMapping = new RestHandlerMapping(applicationContext);
+        RestHandlerMapping handlerMapping = new RestHandlerMapping(applicationContext, defaultHandlerMappingName);
         ResourceHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(crudServiceRegistry);
         for (Class resourceClass : getAllResourceClasses()) {
             RestInformation resourceInfo = new RestInformation(resourceClass);
@@ -201,6 +206,14 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) throws BeansException {
         this.applicationContext = applicationContext;
+    }
+    
+    /**
+     * Sets the default handler mapping name.
+     * @param defaultHandlerMappingName the new default handler mapping name
+     */
+    public void setDefaultHandlerMappingName(String defaultHandlerMappingName) {
+        this.defaultHandlerMappingName = defaultHandlerMappingName;
     }
     
     /**

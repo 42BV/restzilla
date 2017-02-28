@@ -3,6 +3,8 @@
  */
 package io.restzilla.handler.security;
 
+import java.security.Principal;
+
 import javax.servlet.http.HttpServletRequest;
 
 import org.apache.commons.lang3.StringUtils;
@@ -37,7 +39,7 @@ public class SpelSecurityProvider implements SecurityProvider {
     public boolean isAuthorized(String[] expressions, HttpServletRequest request) {
         boolean authorized = true;
         if (expressions.length > 0) {
-            Authentication authentication = getAuthentication();
+            Authentication authentication = getAuthentication(request);
             FilterInvocation invocation = new FilterInvocation(request.getServletPath(), request.getMethod());
             EvaluationContext context = handler.createEvaluationContext(authentication, invocation);
             for (String expression : expressions) {
@@ -52,12 +54,21 @@ public class SpelSecurityProvider implements SecurityProvider {
         return authorized;
     }
 
-    private Authentication getAuthentication() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            authentication = new AnonymousAuthenticationToken("anonymousUser", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
+    private Authentication getAuthentication(HttpServletRequest request) {
+        Principal principal = request.getUserPrincipal();
+        if (principal instanceof Authentication) {
+            return (Authentication) principal;
+        } else {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if (authentication == null) {
+                authentication = annonymous();
+            }
+            return authentication;
         }
-        return authentication;
+    }
+
+    private AnonymousAuthenticationToken annonymous() {
+        return new AnonymousAuthenticationToken("anonymousUser", "anonymousUser", AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
     }
     
     /**
