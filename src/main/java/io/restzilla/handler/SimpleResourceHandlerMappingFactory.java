@@ -430,20 +430,24 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             }
 
             Method method = null;
-            int fragments = UrlUtils.getPath(request).split(UrlUtils.SLASH).length;
-            if (fragments == 1) {
+            String path = StringUtils.stripEnd(UrlUtils.getPath(request), "/");
+            String[] fragments = path.split(UrlUtils.SLASH);
+            if (fragments.length == 1) {
                 if (hasRequestMethod(request, GET)) {
                     method = toMethodIfEnabled(FIND_ALL_NAME, getInformation().findAll());
                 } else if (hasRequestMethod(request, POST)) {
                     method = toMethodIfEnabled(CREATE_NAME, getInformation().create());
                 }
-            } else if (fragments == 2) {
-                if (hasRequestMethod(request, GET)) {
-                    method = toMethodIfEnabled(FIND_ONE_NAME, getInformation().findOne());
-                } else if (hasRequestMethod(request, PUT) || (hasRequestMethod(request, PATCH) && getInformation().isPatch())) {
-                    method = toMethodIfEnabled(UPDATE_NAME, getInformation().update());
-                } else if (hasRequestMethod(request, DELETE)) {
-                    method = toMethodIfEnabled(DELETE_NAME, getInformation().delete());
+            } else if (fragments.length == 2) {
+                String id = fragments[1];
+                if (StringUtils.isNumeric(id)) {
+                    if (hasRequestMethod(request, GET)) {
+                        method = toMethodIfEnabled(FIND_ONE_NAME, getInformation().findOne());
+                    } else if (hasRequestMethod(request, PUT) || (hasRequestMethod(request, PATCH) && getInformation().isPatch())) {
+                        method = toMethodIfEnabled(UPDATE_NAME, getInformation().update());
+                    } else if (hasRequestMethod(request, DELETE)) {
+                        method = toMethodIfEnabled(DELETE_NAME, getInformation().delete());
+                    }
                 }
             }
             return method;
