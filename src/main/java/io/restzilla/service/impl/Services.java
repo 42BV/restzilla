@@ -8,6 +8,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.BeanFactoryUtils;
 import org.springframework.context.ApplicationContext;
 
 /**
@@ -45,13 +46,14 @@ class Services {
             instances = new HashMap<Class<?>, CrudService<?, ?>>();
             LOGGER.debug("Scanning classpath for service beans...");
             for (CrudService<?, ?> service : getAllServices(applicationContext)) {
+                LOGGER.debug("Registering service {} for {}...", service.getClass(), service.getEntityClass());
                 instances.put(service.getEntityClass(), service);
             }
         }
     }
 
     private Collection<CrudService> getAllServices(ApplicationContext applicationContext) {
-        Map<String, CrudService> services = applicationContext.getBeansOfType(CrudService.class);
+        Map<String, CrudService> services = BeanFactoryUtils.beansOfTypeIncludingAncestors(applicationContext, CrudService.class);
         while (applicationContext.getParent() != null) {
             applicationContext = applicationContext.getParent();
             services.putAll(applicationContext.getBeansOfType(CrudService.class));
