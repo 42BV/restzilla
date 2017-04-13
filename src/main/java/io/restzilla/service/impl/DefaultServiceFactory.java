@@ -11,6 +11,7 @@ import java.io.Serializable;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Persistable;
@@ -48,10 +49,15 @@ public class DefaultServiceFactory implements CrudServiceFactory {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> buildRepository(Class<T> entityClass) {
         SimpleJpaRepository<T, ID> repository = new SimpleJpaRepository<T, ID>(entityClass, getEntityManager());
         beanFactory.autowireBean(repository);
-        return repository;
+        
+        final String beanName = StringUtils.uncapitalize(entityClass.getSimpleName()) + "Repository";
+        Object proxy = beanFactory.applyBeanPostProcessorsAfterInitialization(repository, beanName);
+        beanFactory.registerSingleton(generateName(beanName), repository);
+        return (PagingAndSortingRepository<T, ID>) proxy;
     }
     
     /**
@@ -65,10 +71,14 @@ public class DefaultServiceFactory implements CrudServiceFactory {
 
         final String beanName = StringUtils.uncapitalize(entityClass.getSimpleName()) + "Service";
         Object proxy = beanFactory.applyBeanPostProcessorsAfterInitialization(service, beanName);
-        beanFactory.registerSingleton(beanName, proxy);
+        beanFactory.registerSingleton(generateName(beanName), proxy);
         return (CrudService<T, ID>) proxy;
     }
     
+    private String generateName(String baseName) {
+        return baseName + "_" + RandomStringUtils.randomAlphabetic(6);
+    }
+
     /**
      * Retrieve the entity manager.
      * 

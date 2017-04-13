@@ -23,6 +23,7 @@ import java.util.Set;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -246,6 +247,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * <i>Optionally</i> set a custom object mapper.
      * @param objectMapper the object mapper
      */
+    @Qualifier("objectMapper")
     @Autowired(required = false)
     public void setObjectMapper(ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
