@@ -11,6 +11,9 @@ import java.io.Serializable;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 
+import org.apache.commons.lang3.RandomStringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Persistable;
@@ -26,6 +29,8 @@ import org.springframework.util.StringUtils;
  */
 public class DefaultServiceFactory implements CrudServiceFactory {
     
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCrudService.class);
+
     /**
      * Bean factory used to autowire and register generated beans.
      */
@@ -48,12 +53,25 @@ public class DefaultServiceFactory implements CrudServiceFactory {
      * {@inheritDoc}
      */
     @Override
+    @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> buildRepository(Class<T> entityClass) {
         SimpleJpaRepository<T, ID> repository = new SimpleJpaRepository<T, ID>(entityClass, getEntityManager());
         beanFactory.autowireBean(repository);
-        return repository;
+        
+        final String beanName = StringUtils.uncapitalize(entityClass.getSimpleName()) + "Repository";
+        Object proxy = beanFactory.applyBeanPostProcessorsAfterInitialization(repository, beanName);
+        registerSafely(generateName(beanName), proxy);
+        return (PagingAndSortingRepository<T, ID>) proxy;
     }
     
+    private void registerSafely(String beanName, Object bean) {
+        try {
+            beanFactory.registerSingleton(beanName, bean);
+        } catch (RuntimeException rte) {
+            LOGGER.warn("Could not dynamically register CRUD bean: " + beanName, rte);
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -65,10 +83,14 @@ public class DefaultServiceFactory implements CrudServiceFactory {
 
         final String beanName = StringUtils.uncapitalize(entityClass.getSimpleName()) + "Service";
         Object proxy = beanFactory.applyBeanPostProcessorsAfterInitialization(service, beanName);
-        beanFactory.registerSingleton(beanName, proxy);
+        registerSafely(generateName(beanName), proxy);
         return (CrudService<T, ID>) proxy;
     }
     
+    private String generateName(String baseName) {
+        return baseName + "_" + RandomStringUtils.randomAlphabetic(6);
+    }
+
     /**
      * Retrieve the entity manager.
      * 

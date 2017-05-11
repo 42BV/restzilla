@@ -12,7 +12,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -52,9 +51,8 @@ public class WithServiceService extends DefaultCrudService<WithService, Long> {
      */
     @Lazy
     @Autowired
-    @Qualifier("userService")
-    public void setUserService(CrudService<User, Long> userService) {
-        this.userService = userService;
+    public void setServices(CrudServiceRegistry services) {
+        this.userService = services.getService(User.class);
     }
 
 }
