@@ -8,6 +8,7 @@ import io.restzilla.service.CrudService;
 import io.restzilla.service.RepositoryAware;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityNotFoundException;
@@ -29,6 +30,9 @@ import org.springframework.util.Assert;
  */
 public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID>, RepositoryAware<T, ID> {
 
+    private List<T> cache;
+    private boolean cacheEnabled = false;
+    
     /**
      * Class reference to the type of entities that we manage
      * in this service instance.
@@ -51,6 +55,10 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     public DefaultCrudService() {
         this.entityClass = (Class<T>) resolveEntityType();
         Assert.notNull(entityClass, "Entity class cannot be null");
+    }
+    
+    public void setCacheEnabled(boolean cacheEnabled) {
+        this.cacheEnabled = cacheEnabled;
     }
 
     /**
@@ -103,7 +111,16 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional(readOnly = true)
     public List<T> findAll() {
-        return (List<T>) repository.findAll();
+        if (cacheEnabled && cache != null) {
+            return cache;
+        }
+        
+        List<T> result = (List<T>) repository.findAll();
+        if (cacheEnabled) {
+            cache = result;
+        }
+        
+        return Collections.unmodifiableList(result);
     }
     
     /**
@@ -152,6 +169,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional
     public <S extends T> S save(S entity) {
+        clearCache();
         return repository.save(entity);
     }
     
@@ -170,6 +188,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional
     public void delete(ID id) {
+        clearCache();
         repository.delete(id);
     }
     
@@ -206,6 +225,13 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     public void setRepository(PagingAndSortingRepository<T, ID> repository) {
         this.repository = repository;
+    }
+    
+    /**
+     * Clears the service cache.
+     */
+    public void clearCache() {
+        this.cache = null;
     }
 
 }
