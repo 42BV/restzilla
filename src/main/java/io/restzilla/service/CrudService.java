@@ -90,15 +90,7 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      * @return the saved entity
      */
     <S extends T> S save(Lazy<S> entity);
-    
-    /**
-     * Deletes the entity with the given id.
-     * 
-     * @param id must not be {@literal null}.
-     * @throws IllegalArgumentException in case the given {@code id} is {@literal null}
-     */
-    void delete(ID id);
-    
+
     /**
      * Deletes the entity.
      * 

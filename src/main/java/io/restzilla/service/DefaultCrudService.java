@@ -142,9 +142,11 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      */
     @Override
     @Transactional
-    public void delete(ID id) {
-        repository.delete(id);
-        cache.clear();
+    public void delete(T entity) {
+        if (entity != null) {
+            repository.delete(entity);
+            cache.clear();
+        }
     }
 
     @SuppressWarnings("unchecked")

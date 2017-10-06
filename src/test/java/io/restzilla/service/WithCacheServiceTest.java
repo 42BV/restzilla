@@ -66,7 +66,7 @@ public class WithCacheServiceTest extends AbstractSpringTest {
         WithCache cached2 = service.findOne(result.getId());
         Assert.assertEquals(cached1, cached2);
         
-        service.delete(result.getId());
+        service.delete(cached2);
         Assert.assertEquals(0, service.findAll().size());
     }
 
