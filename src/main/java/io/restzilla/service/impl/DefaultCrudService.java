@@ -130,6 +130,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional(readOnly = true)
     public T findOne(ID id) {
+        if (id == null) {
+            return null;
+        }
         return repository.findOne(id);
     }
     
