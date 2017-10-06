@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class WithRollbackService extends DefaultCrudService<WithRollback, Long> {
 
     @Override
-    public <S extends WithRollback> S save(S entity) {
+    public final <S extends WithRollback> S save(S entity) {
         throw new UnsupportedOperationException("Unsupported, perform rollback.");
     }
 

@@ -76,17 +76,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
     public <S extends T> S save(Lazy<S> entity) {
         return save(entity.get());
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    public void delete(T entity) {
-        if (!entity.isNew()) {
-            delete(entity.getId());
-        }
-    }
-    
+
     /**
      * {@inheritDoc}
      */
