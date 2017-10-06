@@ -1,4 +1,4 @@
-package io.restzilla.handler.query;
+package io.restzilla.web.query;
 
 public interface Finder<T> {
     

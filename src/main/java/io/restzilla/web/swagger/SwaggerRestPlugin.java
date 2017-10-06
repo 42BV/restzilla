@@ -1,11 +1,11 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.handler.swagger;
+package io.restzilla.web.swagger;
 
 import io.restzilla.RestInformation;
-import io.restzilla.handler.RestHandlerMapping;
-import io.restzilla.handler.ResourceHandlerMapping;
+import io.restzilla.web.ResourceHandlerMapping;
+import io.restzilla.web.RestHandlerMapping;
 
 import java.util.ArrayList;
 import java.util.Arrays;

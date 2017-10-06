@@ -1,17 +1,19 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service.impl;
+package io.restzilla.service;
 
 import io.beanmapper.spring.Lazy;
-import io.restzilla.service.CrudService;
-import io.restzilla.service.RepositoryAware;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.function.Supplier;
 
 import javax.persistence.EntityNotFoundException;
 
+import org.springframework.cache.Cache;
+import org.springframework.cache.Cache.ValueWrapper;
+import org.springframework.cache.support.NoOpCacheManager;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +31,8 @@ import org.springframework.util.Assert;
  */
 public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID>, RepositoryAware<T, ID> {
 
+    private static Cache EMPTY_CACHE = new NoOpCacheManager().getCache("empty");
+
     /**
      * Class reference to the type of entities that we manage
      * in this service instance.
@@ -41,6 +45,8 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      * dynamically injected at runtime.
      */
     private PagingAndSortingRepository<T, ID> repository;
+
+    private Cache cache = EMPTY_CACHE;
 
     /**
      * Construct a new service.
@@ -103,9 +109,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional(readOnly = true)
     public List<T> findAll() {
-        return (List<T>) repository.findAll();
+        return getByCacheOrExecute("findAll()", () -> (List<T>) repository.findAll());
     }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -133,7 +139,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         if (id == null) {
             return null;
         }
-        return repository.findOne(id);
+        
+        final String key = "findOne(" + id + ")";
+        return getByCacheOrExecute(key, () -> repository.findOne(id));
     }
     
     /**
@@ -155,7 +163,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional
     public <S extends T> S save(S entity) {
-        return repository.save(entity);
+        S result = repository.save(entity);
+        cache.clear();
+        return result;
     }
     
     /**
@@ -174,6 +184,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Transactional
     public void delete(ID id) {
         repository.delete(id);
+        cache.clear();
     }
     
     /**
@@ -187,6 +198,18 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         }
     }
 
+    @SuppressWarnings("unchecked")
+    private <R> R getByCacheOrExecute(String key, Supplier<R> retriever) {
+        ValueWrapper cached = cache.get(key);
+        if (cached == null) {
+            R result = retriever.get();
+            cache.put(key, result);
+            return result;
+        } else {
+            return (R) cached.get();
+        }
+    }
+
     /**
      * {@inheritDoc}
      */
@@ -195,20 +218,20 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         return entityClass;
     }
     
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public PagingAndSortingRepository<T, ID> getRepository() {
         return repository;
     }
     
-    /**
-     * {@inheritDoc}
-     */
-    @Override
     public void setRepository(PagingAndSortingRepository<T, ID> repository) {
         this.repository = repository;
+    }
+    
+    public Cache getCache() {
+        return cache;
+    }
+    
+    public void setCache(Cache cache) {
+        this.cache = cache;
     }
 
 }

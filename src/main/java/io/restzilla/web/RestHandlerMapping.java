@@ -1,4 +1,4 @@
-package io.restzilla.handler;
+package io.restzilla.web;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 import io.restzilla.RestInformation;

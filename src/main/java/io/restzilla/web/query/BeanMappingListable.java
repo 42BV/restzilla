@@ -1,6 +1,6 @@
-package io.restzilla.handler.query;
+package io.restzilla.web.query;
 
-import io.restzilla.handler.RestResultMapper;
+import io.restzilla.web.RestResultMapper;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -18,6 +18,8 @@ import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.Cache;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
@@ -122,6 +124,11 @@ public class ApplicationConfig {
     @Bean
     public Validator validator() {
         return new CustomValidatorBean();
+    }
+    
+    @Bean
+    public Cache cache() {
+        return new ConcurrentMapCache("test");
     }
 
     public static class HsqlConfig {

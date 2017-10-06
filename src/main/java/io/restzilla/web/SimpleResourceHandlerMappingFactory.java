@@ -1,4 +1,4 @@
-package io.restzilla.handler;
+package io.restzilla.web;
 
 import static org.springframework.util.StringUtils.collectionToDelimitedString;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
@@ -12,20 +12,20 @@ import io.restzilla.RestConfig;
 import io.restzilla.RestInformation;
 import io.restzilla.RestInformation.QueryInformation;
 import io.restzilla.RestInformation.ResultInformation;
-import io.restzilla.handler.query.BeanMappingListable;
-import io.restzilla.handler.query.CrudServiceListable;
-import io.restzilla.handler.query.Finder;
-import io.restzilla.handler.query.Listable;
-import io.restzilla.handler.query.ReadServiceListable;
-import io.restzilla.handler.query.RepositoryMethodListable;
-import io.restzilla.handler.security.SecurityProvider;
-import io.restzilla.handler.swagger.SwaggerApiDescriptor;
 import io.restzilla.service.CrudService;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
 import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
+import io.restzilla.web.query.BeanMappingListable;
+import io.restzilla.web.query.CrudServiceListable;
+import io.restzilla.web.query.Finder;
+import io.restzilla.web.query.Listable;
+import io.restzilla.web.query.ReadServiceListable;
+import io.restzilla.web.query.RepositoryMethodListable;
+import io.restzilla.web.security.SecurityProvider;
+import io.restzilla.web.swagger.SwaggerApiDescriptor;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;
@@ -613,11 +613,11 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         }
 
         private void addModel(com.mangofactory.swagger.models.dto.ApiListing listing, Class<?> modelType) {
-            io.restzilla.handler.swagger.SwaggerUtils.addIfNotExists(listing, modelType, modelProvider);
+            io.restzilla.web.swagger.SwaggerUtils.addIfNotExists(listing, modelType, modelProvider);
         }
         
-        private io.restzilla.handler.swagger.SwaggerUtils.DescriptionBuilder newDescription(String description, String path, RequestMethod method) {
-            return io.restzilla.handler.swagger.SwaggerUtils.newDescription(description, path, method);
+        private io.restzilla.web.swagger.SwaggerUtils.DescriptionBuilder newDescription(String description, String path, RequestMethod method) {
+            return io.restzilla.web.swagger.SwaggerUtils.newDescription(description, path, method);
         }
 
     }

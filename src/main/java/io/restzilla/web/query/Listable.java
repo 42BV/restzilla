@@ -1,7 +1,7 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.handler.query;
+package io.restzilla.web.query;
 
 import java.util.List;
 

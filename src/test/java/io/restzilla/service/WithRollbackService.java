@@ -5,7 +5,6 @@ package io.restzilla.service;
 
 import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 import io.restzilla.model.WithRollback;
-import io.restzilla.service.impl.DefaultCrudService;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
