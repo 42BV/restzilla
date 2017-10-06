@@ -7,6 +7,7 @@ import io.beanmapper.spring.Lazy;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import javax.persistence.EntityNotFoundException;
@@ -128,6 +129,16 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Transactional(readOnly = true)
     public Page<T> findAll(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+    
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<T> find(ID id) {
+        T result = findOne(id);
+        return Optional.ofNullable(result);
     }
     
     /**

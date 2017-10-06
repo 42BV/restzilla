@@ -7,6 +7,7 @@ import io.beanmapper.spring.Lazy;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -43,6 +44,14 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      * @return the entities in that page
      */
     Page<T> findAll(Pageable pageable);
+    
+    /**
+     * Retrieve an optional entity based on its identifier.
+     * 
+     * @param id the identifier
+     * @return the optional entity
+     */
+    Optional<T> find(ID id);
     
     /**
      * Retrieves an entity by its id.

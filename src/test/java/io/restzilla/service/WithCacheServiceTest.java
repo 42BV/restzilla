@@ -5,6 +5,7 @@ import io.restzilla.model.WithCache;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -47,8 +48,8 @@ public class WithCacheServiceTest extends AbstractSpringTest {
     
     @Test
     public void testCacheFindOneNotFound() {
-        WithCache entity = service.findOne(24L);
-        Assert.assertNull(entity);
+        Optional<WithCache> entity = service.find(24L);
+        Assert.assertEquals(false, entity.isPresent());
     }
     
     @Test
