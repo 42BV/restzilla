@@ -3,19 +3,13 @@
  */
 package io.restzilla.service;
 
-import io.beanmapper.spring.Lazy;
-
 import java.io.Serializable;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Supplier;
-
-import javax.persistence.EntityNotFoundException;
 
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.support.NoOpCacheManager;
-import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
@@ -30,15 +24,14 @@ import org.springframework.util.Assert;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> implements CrudService<T, ID>, RepositoryAware<T, ID> {
+public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> extends AbstractCrudService<T, ID> implements RepositoryAware<T, ID> {
 
     private static Cache EMPTY_CACHE = new NoOpCacheManager().getCache("empty");
 
     /**
-     * Class reference to the type of entities that we manage
-     * in this service instance.
+     * Cache used internally for storing entities.
      */
-    private final Class<T> entityClass;
+    private Cache cache = EMPTY_CACHE;
 
     /**
      * Repository used to communicate with the database. Note that
@@ -47,7 +40,6 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      */
     private PagingAndSortingRepository<T, ID> repository;
 
-    private Cache cache = EMPTY_CACHE;
 
     /**
      * Construct a new service.
@@ -56,17 +48,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      */
     @SuppressWarnings("unchecked")
     public DefaultCrudService() {
-        this.entityClass = (Class<T>) resolveEntityType();
-        Assert.notNull(entityClass, "Entity class cannot be null");
-    }
-
-    /**
-     * Dynamically resolve the entity type based on generic type arguments.
-     * 
-     * @return the resolved entity type
-     */
-    private Class<?> resolveEntityType() {
-        return GenericTypeResolver.resolveTypeArguments(getClass(), CrudService.class)[0];
+        super(); // Dynamically resolve entity class
     }
     
     /**
@@ -75,10 +57,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      * @param entityClass the entity class
      */
     public DefaultCrudService(Class<T> entityClass) {
-        Assert.notNull(entityClass, "Entity class cannot be null");
-        this.entityClass = entityClass;
+        super(entityClass);
     }
-
+    
     /**
      * Construct a new service.
      * <br>
@@ -91,7 +72,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         Assert.notNull(repository, "Repository cannot be null");
         this.repository = repository;
     }
-
+    
     /**
      * Construct a new service.
      * 
@@ -130,17 +111,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     public Page<T> findAll(Pageable pageable) {
         return repository.findAll(pageable);
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public Optional<T> find(ID id) {
-        T result = findOne(id);
-        return Optional.ofNullable(result);
-    }
-    
+
     /**
      * {@inheritDoc}
      */
@@ -154,19 +125,6 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         final String key = "findOne(" + id + ")";
         return getByCacheOrExecute(key, () -> repository.findOne(id));
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public T getOne(ID id) {
-        T entity = findOne(id);
-        if (entity == null) {
-            throw new EntityNotFoundException("Could not find entity '" + getEntityClass().getSimpleName() + "' with id: " + id);
-        }
-        return entity;
-    }
 
     /**
      * {@inheritDoc}
@@ -178,15 +136,6 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         cache.clear();
         return result;
     }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @Transactional
-    public <S extends T> S save(Lazy<S> entity) {
-        return save(entity.get());
-    }
 
     /**
      * {@inheritDoc}
@@ -196,17 +145,6 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     public void delete(ID id) {
         repository.delete(id);
         cache.clear();
-    }
-    
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @Transactional
-    public void delete(T entity) {
-        if (!entity.isNew()) {
-            delete(entity.getId());
-        }
     }
 
     @SuppressWarnings("unchecked")
@@ -222,25 +160,33 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     }
 
     /**
-     * {@inheritDoc}
+     * Retrieves the repository.
+     * @return repository
      */
-    @Override
-    public Class<T> getEntityClass() {
-        return entityClass;
-    }
-    
     public PagingAndSortingRepository<T, ID> getRepository() {
         return repository;
     }
     
+    /**
+     * Modifies the repository.
+     * @param repository the new repository
+     */
     public void setRepository(PagingAndSortingRepository<T, ID> repository) {
         this.repository = repository;
     }
     
+    /**
+     * Retrieves the cache.
+     * @return cache
+     */
     public Cache getCache() {
         return cache;
     }
     
+    /**
+     * Modifies the cache.
+     * @param cache the new cache
+     */
     public void setCache(Cache cache) {
         this.cache = cache;
     }
