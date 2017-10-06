@@ -1,4 +1,4 @@
-package io.restzilla.handler;
+package io.restzilla.web;
 
 import io.beanmapper.BeanMapper;
 import io.restzilla.RestInformation;

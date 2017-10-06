@@ -8,14 +8,14 @@ import io.beanmapper.config.BeanMapperBuilder;
 import io.beanmapper.utils.Classes;
 import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
-import io.restzilla.handler.ResourceHandlerMapping;
-import io.restzilla.handler.ResourceHandlerMappingFactory;
-import io.restzilla.handler.RestHandlerMapping;
-import io.restzilla.handler.SimpleResourceHandlerMappingFactory;
-import io.restzilla.handler.security.AlwaysSecurityProvider;
-import io.restzilla.handler.security.SecurityProvider;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.util.NoOpValidator;
+import io.restzilla.web.ResourceHandlerMapping;
+import io.restzilla.web.ResourceHandlerMappingFactory;
+import io.restzilla.web.RestHandlerMapping;
+import io.restzilla.web.SimpleResourceHandlerMappingFactory;
+import io.restzilla.web.security.AlwaysSecurityProvider;
+import io.restzilla.web.security.SecurityProvider;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -176,7 +176,7 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     
     private SecurityProvider buildSecurityProvider() {
         if (ClassUtils.isPresent(SPRING_SECURITY_PATH, getClass().getClassLoader())) {
-            SecurityProvider securityProvider = new io.restzilla.handler.security.SpelSecurityProvider();
+            SecurityProvider securityProvider = new io.restzilla.web.security.SpelSecurityProvider();
             applicationContext.getAutowireCapableBeanFactory().autowireBean(securityProvider);
             return securityProvider;
         } else {

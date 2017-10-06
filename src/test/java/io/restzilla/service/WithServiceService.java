@@ -6,7 +6,6 @@ package io.restzilla.service;
 import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 import io.restzilla.model.User;
 import io.restzilla.model.WithService;
-import io.restzilla.service.impl.DefaultCrudService;
 
 import java.util.ArrayList;
 import java.util.List;

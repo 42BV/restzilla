@@ -1,10 +1,11 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service.impl;
+package io.restzilla.registry;
 
 import io.restzilla.service.CrudService;
 import io.restzilla.service.CrudServiceFactory;
+import io.restzilla.service.DefaultCrudService;
 
 import java.io.Serializable;
 

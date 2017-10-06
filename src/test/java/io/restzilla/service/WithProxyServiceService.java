@@ -4,7 +4,6 @@
 package io.restzilla.service;
 
 import io.restzilla.model.WithProxyService;
-import io.restzilla.service.impl.DefaultCrudService;
 
 import java.util.Collections;
 import java.util.List;

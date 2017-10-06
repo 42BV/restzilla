@@ -1,7 +1,7 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.handler.swagger;
+package io.restzilla.web.swagger;
 
 /**
  * Defines that this instance is able to describe all APIs to Swagger.
