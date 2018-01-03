@@ -18,6 +18,8 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 
+import com.google.common.collect.Lists;
+
 /**
  * Default implementation of the CRUD service, delegates all to the repository.
  *
@@ -92,6 +94,11 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Transactional(readOnly = true)
     public List<T> findAll() {
         return getByCacheOrExecute("findAll()", () -> (List<T>) repository.findAll());
+    }
+
+    @Override
+    public List<T> findAll(Iterable<ID> ids) {
+        return Lists.newArrayList(repository.findAll(ids));
     }
 
     /**

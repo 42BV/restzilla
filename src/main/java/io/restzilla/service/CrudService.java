@@ -28,6 +28,13 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      * @return all entities
      */
     List<T> findAll();
+
+    /**
+     * Returns all entities matching the specified IDs
+     * @param ids IDs to find the entities for.
+     * @return All found entities.
+     */
+    List<T> findAll(Iterable<ID> ids);
     
     /**
      * Returns all entities, sorted.
