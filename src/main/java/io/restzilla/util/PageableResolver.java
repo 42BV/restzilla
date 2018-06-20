@@ -107,7 +107,7 @@ public class PageableResolver {
         
         String[] properties = sort.split(SORT_DELIMITER);
         if (properties.length > 1) {
-            direction = Direction.fromStringOrNull(properties[properties.length - 1]);
+            direction = Direction.fromString(properties[properties.length - 1]);
             properties = ArrayUtils.remove(properties, properties.length - 1);
         }
         

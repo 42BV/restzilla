@@ -3,10 +3,6 @@
  */
 package io.restzilla.service;
 
-import java.io.Serializable;
-import java.util.List;
-import java.util.function.Supplier;
-
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.support.NoOpCacheManager;
@@ -17,6 +13,10 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
+
+import java.io.Serializable;
+import java.util.List;
+import java.util.function.Supplier;
 
 import com.google.common.collect.Lists;
 
@@ -98,7 +98,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
 
     @Override
     public List<T> findAll(Iterable<ID> ids) {
-        return Lists.newArrayList(repository.findAll(ids));
+        return Lists.newArrayList(repository.findAllById(ids));
     }
 
     /**
@@ -130,7 +130,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         }
         
         final String key = "findOne(" + id + ")";
-        return getByCacheOrExecute(key, () -> repository.findOne(id));
+        return getByCacheOrExecute(key, () -> repository.findById(id).orElse(null));
     }
 
     /**
@@ -152,6 +152,18 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     public void delete(T entity) {
         if (entity != null) {
             repository.delete(entity);
+            cache.clear();
+        }
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    @Transactional
+    public void delete(ID id) {
+        if (id != null) {
+            repository.deleteById(id);
             cache.clear();
         }
     }
