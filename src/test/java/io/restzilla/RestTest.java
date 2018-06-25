@@ -27,6 +27,7 @@ import io.restzilla.model.dto.ValidationDto;
 
 import java.util.Arrays;
 
+import io.restzilla.util.LazyEntityRetrievalException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -529,7 +530,8 @@ public class RestTest extends AbstractControllerTest {
             
             Assert.fail("Expected an UnsupportedOperationException.");
         } catch (NestedServletException nse) {
-            Assert.assertEquals(UnsupportedOperationException.class, nse.getCause().getClass());
+            Assert.assertEquals(LazyEntityRetrievalException.class, nse.getCause().getClass());
+            Assert.assertEquals(UnsupportedOperationException.class, nse.getCause().getCause().getClass());
         }
 
         WithRollback result = entityBuilder.get(WithRollback.class, entity.getId());

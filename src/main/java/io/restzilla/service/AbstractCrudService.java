@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
 
+import io.restzilla.util.LazyEntityRetrievalException;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Persistable;
 import org.springframework.transaction.annotation.Transactional;
@@ -74,7 +75,11 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      */
     @Override
     public <S extends T> S save(Lazy<S> entity) {
-        return save(entity.get());
+        try {
+            return save(entity.get());
+        } catch (Exception e) {
+            throw new LazyEntityRetrievalException(e);
+        }
     }
 
     /**
