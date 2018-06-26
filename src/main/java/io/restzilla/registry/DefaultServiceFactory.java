@@ -29,14 +29,14 @@ import org.springframework.util.StringUtils;
  * @since Sep 18, 2015
  */
 public class DefaultServiceFactory implements CrudServiceFactory {
-    
+
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCrudService.class);
 
     /**
      * Bean factory used to autowire and register generated beans.
      */
     private final ConfigurableListableBeanFactory beanFactory;
-    
+
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -58,13 +58,13 @@ public class DefaultServiceFactory implements CrudServiceFactory {
     public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> buildRepository(Class<T> entityClass) {
         SimpleJpaRepository<T, ID> repository = new SimpleJpaRepository<T, ID>(entityClass, getEntityManager());
         beanFactory.autowireBean(repository);
-        
+
         final String beanName = StringUtils.uncapitalize(entityClass.getSimpleName()) + "Repository";
         Object proxy = beanFactory.applyBeanPostProcessorsAfterInitialization(repository, beanName);
         registerSafely(generateName(beanName), proxy);
         return (PagingAndSortingRepository<T, ID>) proxy;
     }
-    
+
     private void registerSafely(String beanName, Object bean) {
         try {
             beanFactory.registerSingleton(beanName, bean);
@@ -87,7 +87,7 @@ public class DefaultServiceFactory implements CrudServiceFactory {
         registerSafely(generateName(beanName), proxy);
         return (CrudService<T, ID>) proxy;
     }
-    
+
     private String generateName(String baseName) {
         return baseName + "_" + RandomStringUtils.randomAlphabetic(6);
     }

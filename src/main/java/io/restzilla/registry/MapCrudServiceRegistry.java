@@ -22,8 +22,8 @@ public class MapCrudServiceRegistry implements CrudServiceRegistry {
     private final Map<Class<?>, CrudService<?, ?>> services;
     
     {
-        repositories = new HashMap<Class<?>, PagingAndSortingRepository<?, ?>>();
-        services = new HashMap<Class<?>, CrudService<?, ?>>();
+        repositories = new HashMap<>();
+        services = new HashMap<>();
     }
 
     /**

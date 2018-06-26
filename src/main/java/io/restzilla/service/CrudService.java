@@ -68,10 +68,10 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      * @throws IllegalArgumentException if {@code id} is {@literal null}
      */
     T findOne(ID id);
-    
+
     /**
      * Retrieves an entity by its id, but when the value is null we throw an exception.
-     * 
+     *
      * @param id must not be {@literal null}.
      * @return the entity with the given id
      * @throws IllegalArgumentException if {@code id} is {@literal null} or the result cannot be found
@@ -102,13 +102,19 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      * Deletes the entity.
      * 
      * @param entity must not be {@literal null}.
-     * @throws IllegalArgumentException in case the given {@code id} is {@literal null}
      */
     void delete(T entity);
-    
+
+    /**
+     * Deletes the entity by identifier.
+     *
+     * @param id must not be {@literal null}.
+     */
+    void delete(ID id);
+
     /**
      * Retrieve the entity class.
-     * 
+     *
      * @return the entity class
      */
     Class<T> getEntityClass();
