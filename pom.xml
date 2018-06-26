@@ -185,14 +185,38 @@
 					<target>${java.version}</target>
 				</configuration>
 			</plugin>
+			<plugin>
+				<artifactId>maven-release-plugin</artifactId>
+				<version>2.5.3</version>
+				<dependencies>
+					<!-- Fixes release commit creation on systems which are not in English -->
+					<dependency>
+						<groupId>org.apache.maven.scm</groupId>
+						<artifactId>maven-scm-provider-gitexe</artifactId>
+						<version>1.9.2</version>
+					</dependency>
+				</dependencies>
+			</plugin>
 		</plugins>
 	</build>
+
+	<scm>
+		<connection>scm:git:https://github.com/42BV/restzilla.git</connection>
+		<developerConnection>scm:git:https://github.com/42BV/restzilla.git</developerConnection>
+		<url>https://github.com/42BV/restzilla</url>
+		<tag>HEAD</tag>
+	</scm>
 
 	<distributionManagement>
 		<repository>
 			<id>repository.42.nl</id>
 			<url>https://repository.42.nl/content/repositories/releases</url>
 		</repository>
+		<snapshotRepository>
+			<id>snapshots.repository.42.nl</id>
+			<url>https://repository.42.nl/content/repositories/snapshots</url>
+			<uniqueVersion>false</uniqueVersion>
+		</snapshotRepository>
 	</distributionManagement>
 
 </project>
