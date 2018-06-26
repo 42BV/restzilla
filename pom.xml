@@ -4,7 +4,7 @@
 
     <groupId>io.restzilla</groupId>
     <artifactId>restzilla</artifactId>
-    <version>1.12.4-SNAPSHOT</version>
+    <version>1.12.4.SPRING5</version>
     <packaging>jar</packaging>
 
 	<properties>
@@ -204,7 +204,7 @@
 		<connection>scm:git:https://github.com/42BV/restzilla.git</connection>
 		<developerConnection>scm:git:https://github.com/42BV/restzilla.git</developerConnection>
 		<url>https://github.com/42BV/restzilla</url>
-		<tag>HEAD</tag>
+		<tag>1.12.4.SPRING5</tag>
 	</scm>
 
 	<distributionManagement>
