@@ -4,7 +4,7 @@
 
     <groupId>io.restzilla</groupId>
     <artifactId>restzilla</artifactId>
-    <version>1.12.6</version>
+    <version>1.12.7-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 	<properties>
