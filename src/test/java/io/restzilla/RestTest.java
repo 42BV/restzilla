@@ -530,8 +530,7 @@ public class RestTest extends AbstractControllerTest {
             
             Assert.fail("Expected an UnsupportedOperationException.");
         } catch (NestedServletException nse) {
-            Assert.assertEquals(LazyEntityRetrievalException.class, nse.getCause().getClass());
-            Assert.assertEquals(UnsupportedOperationException.class, nse.getCause().getCause().getClass());
+            Assert.assertEquals(UnsupportedOperationException.class, nse.getCause().getClass());
         }
 
         WithRollback result = entityBuilder.get(WithRollback.class, entity.getId());

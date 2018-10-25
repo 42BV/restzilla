@@ -77,7 +77,10 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
     public <S extends T> S save(Lazy<S> entity) {
         try {
             return save(entity.get());
+        } catch (RuntimeException rte) {
+            throw rte;
         } catch (Exception e) {
+            // Wrap checked exception into runtime exception
             throw new LazyEntityRetrievalException(e);
         }
     }
