@@ -6,20 +6,23 @@ package io.restzilla.config;
 import io.restzilla.registry.AutoGenerateMapCrudServiceRegistry;
 import io.restzilla.registry.DefaultServiceFactory;
 import io.restzilla.registry.LazyRetrievalFactory;
+import io.restzilla.service.CrudService;
 import io.restzilla.service.CrudServiceFactory;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
 import io.restzilla.web.RestHandlerMapping;
-
-import java.util.Map;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportAware;
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.type.AnnotationMetadata;
+import org.springframework.data.repository.CrudRepository;
+import org.springframework.data.repository.PagingAndSortingRepository;
+
+import java.util.Map;
 
 /**
  * Configuration imported when using @EnableRest.
@@ -50,7 +53,24 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
         if (crudServiceFactory == null) {
             crudServiceFactory = new DefaultServiceFactory(applicationContext);
         }
-        return new AutoGenerateMapCrudServiceRegistry(new LazyRetrievalFactory(applicationContext, crudServiceFactory));
+
+        LazyRetrievalFactory lazyFactory = new LazyRetrievalFactory(applicationContext, crudServiceFactory);
+        AutoGenerateMapCrudServiceRegistry registry = new AutoGenerateMapCrudServiceRegistry(lazyFactory);
+
+        // Auto register services and repositories
+
+        for (CrudService crudService : applicationContext.getBeansOfType(CrudService.class).values()) {
+            registry.registerService(crudService.getEntityClass(), crudService);
+        }
+
+        for (PagingAndSortingRepository crudRepository : applicationContext.getBeansOfType(PagingAndSortingRepository.class).values()) {
+            Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(crudRepository.getClass(), CrudRepository.class);
+            if (arguments != null && arguments.length == 2) {
+                registry.registerRepository(arguments[0], crudRepository);
+            }
+        }
+
+        return registry;
     }
 
     /**

@@ -81,7 +81,6 @@ public class AutoGenerateMapCrudServiceRegistry extends MapCrudServiceRegistry {
      * Generates a new service instance.
      * 
      * @param entityClass the entity class
-     * @param repository the repository instance
      */
     private <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass) {
         PagingAndSortingRepository<T, ID> repository = getRepository(entityClass);

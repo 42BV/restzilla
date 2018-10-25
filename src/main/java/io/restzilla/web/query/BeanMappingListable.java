@@ -50,10 +50,10 @@ public class BeanMappingListable<T> implements Listable<T>, Finder<T> {
     
     private List<T> mapList(List<?> entities) {
         if (entities == null || entities.isEmpty()) {
-            return new ArrayList<T>(0);
+            return new ArrayList<>(0);
         }
 
-        List<T> results = new ArrayList<T>(entities.size());
+        List<T> results = new ArrayList<>(entities.size());
         for (Object entity : entities) {
             T result = mapper.map(entity, resultType);
             if (result != null) {

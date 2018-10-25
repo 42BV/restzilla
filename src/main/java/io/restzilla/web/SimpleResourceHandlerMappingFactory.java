@@ -1,11 +1,7 @@
 package io.restzilla.web;
 
-import static org.springframework.util.StringUtils.collectionToDelimitedString;
-import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
-import static org.springframework.web.bind.annotation.RequestMethod.GET;
-import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
-import static org.springframework.web.bind.annotation.RequestMethod.POST;
-import static org.springframework.web.bind.annotation.RequestMethod.PUT;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.common.io.CharStreams;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.spring.Lazy;
 import io.restzilla.RestConfig;
@@ -18,23 +14,9 @@ import io.restzilla.service.ReadService;
 import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
-import io.restzilla.web.query.BeanMappingListable;
-import io.restzilla.web.query.CrudServiceListable;
-import io.restzilla.web.query.Finder;
-import io.restzilla.web.query.Listable;
-import io.restzilla.web.query.ReadServiceListable;
-import io.restzilla.web.query.RepositoryMethodListable;
+import io.restzilla.web.query.*;
 import io.restzilla.web.security.SecurityProvider;
 import io.restzilla.web.swagger.SwaggerApiDescriptor;
-
-import java.io.Serializable;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import javax.servlet.http.HttpServletRequest;
-
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,8 +31,15 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.CharStreams;
+import javax.servlet.http.HttpServletRequest;
+import java.io.Serializable;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+
+import static org.springframework.util.StringUtils.collectionToDelimitedString;
+import static org.springframework.web.bind.annotation.RequestMethod.*;
 
 /**
  * Default implementation of the {@link ResourceHandlerMappingFactory}.
@@ -203,7 +192,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         /**
          * Retrieve a single entity by identifier: /{id}
          * 
-         * @param id the identifier
+         * @param request the request
          * @return the entity, in result type
          */
         @ResponseBody
@@ -319,11 +308,12 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
          * @param config the configuration
          * @return the entity in its result type
          */
-        private Object mapToResult(Persistable<?> entity, RestConfig config) {
+        private <T extends Persistable<ID>, ID extends Serializable> Object mapToResult(Persistable<?> entity, RestConfig config) {
             ResultInformation resultInfo = information.getResultInfo(config);
             Object result = entity;
             if (information.hasCustomQuery(resultInfo)) {
-                result = readService.getOne((Class) resultInfo.getQueryType(), entity.getId());
+                final ID id = ((Persistable<ID>) entity).getId();
+                result = readService.getOne((Class) resultInfo.getQueryType(), id);
             }
             return mapper.map(result, resultInfo.getResultType());
         }
@@ -368,7 +358,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
                 if (patch) {
                     Set<String> propertyNames = JsonUtil.getPropertyNamesFromJson(json, objectMapper);
                     beanMapper.wrapConfig()
-                                .downsizeSource(new ArrayList<String>(propertyNames))
+                                .downsizeSource(new ArrayList<>(propertyNames))
                                 .build()
                                 .map(input, entity);
                 } else {
