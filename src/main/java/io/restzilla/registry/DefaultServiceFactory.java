@@ -4,7 +4,6 @@
 package io.restzilla.registry;
 
 import io.restzilla.service.CrudService;
-import io.restzilla.service.CrudServiceFactory;
 import io.restzilla.service.DefaultCrudService;
 
 import java.io.Serializable;
@@ -56,7 +55,7 @@ public class DefaultServiceFactory implements CrudServiceFactory {
     @Override
     @SuppressWarnings("unchecked")
     public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> buildRepository(Class<T> entityClass) {
-        SimpleJpaRepository<T, ID> repository = new SimpleJpaRepository<T, ID>(entityClass, getEntityManager());
+        SimpleJpaRepository<T, ID> repository = new SimpleJpaRepository<>(entityClass, entityManager);
         beanFactory.autowireBean(repository);
 
         final String beanName = StringUtils.uncapitalize(entityClass.getSimpleName()) + "Repository";
@@ -90,15 +89,6 @@ public class DefaultServiceFactory implements CrudServiceFactory {
 
     private String generateName(String baseName) {
         return baseName + "_" + RandomStringUtils.randomAlphabetic(6);
-    }
-
-    /**
-     * Retrieve the entity manager.
-     * 
-     * @return the entity manager
-     */
-    public final EntityManager getEntityManager() {
-        return entityManager;
     }
 
 }

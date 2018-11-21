@@ -10,6 +10,7 @@ import io.restzilla.model.WithService;
 import java.util.ArrayList;
 import java.util.List;
 
+import io.restzilla.registry.CrudServiceRegistry;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;

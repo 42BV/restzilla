@@ -1,4 +1,4 @@
-package io.restzilla.util;
+package io.restzilla.web.util;
 
 import java.io.IOException;
 import java.util.HashSet;

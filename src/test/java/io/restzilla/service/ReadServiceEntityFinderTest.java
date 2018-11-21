@@ -6,8 +6,8 @@ package io.restzilla.service;
 import io.restzilla.AbstractSpringTest;
 import io.restzilla.builder.UserBuilder;
 import io.restzilla.model.User;
-import io.restzilla.service.ReadService;
 
+import io.restzilla.web.mapping.ReadServiceEntityFinder;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;

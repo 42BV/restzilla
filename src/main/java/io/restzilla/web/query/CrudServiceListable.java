@@ -1,6 +1,7 @@
 package io.restzilla.web.query;
 
 import io.restzilla.service.CrudService;
+import io.restzilla.web.query.Listable;
 
 import java.io.Serializable;
 import java.util.List;

@@ -1,9 +1,9 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.web.query;
+package io.restzilla.service;
 
-import io.restzilla.service.ReadService;
+import io.restzilla.web.query.Listable;
 
 import java.io.Serializable;
 import java.util.List;

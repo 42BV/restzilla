@@ -1,7 +1,6 @@
 package io.restzilla.registry;
 
 import io.restzilla.service.CrudService;
-import io.restzilla.service.CrudServiceRegistry;
 
 import java.io.Serializable;
 import java.util.HashMap;

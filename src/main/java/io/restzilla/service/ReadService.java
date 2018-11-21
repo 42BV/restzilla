@@ -6,6 +6,7 @@ package io.restzilla.service;
 import java.io.Serializable;
 import java.util.List;
 
+import io.restzilla.registry.CrudServiceRegistry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;

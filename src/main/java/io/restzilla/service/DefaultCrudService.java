@@ -3,6 +3,7 @@
  */
 package io.restzilla.service;
 
+import io.restzilla.registry.RepositoryAware;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.support.NoOpCacheManager;

@@ -1,4 +1,4 @@
-package io.restzilla.util;
+package io.restzilla.service;
 
 /**
  * LazyEntityRetrievalException is a runtime exception which is thrown when the underlying BeanMapper failed to obtain a Lazy entity
@@ -9,4 +9,5 @@ public class LazyEntityRetrievalException extends RuntimeException {
     public LazyEntityRetrievalException(Exception e) {
         super(e);
     }
+
 }

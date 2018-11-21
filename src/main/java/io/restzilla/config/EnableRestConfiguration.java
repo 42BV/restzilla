@@ -7,8 +7,8 @@ import io.restzilla.registry.AutoGenerateMapCrudServiceRegistry;
 import io.restzilla.registry.DefaultServiceFactory;
 import io.restzilla.registry.LazyRetrievalFactory;
 import io.restzilla.service.CrudService;
-import io.restzilla.service.CrudServiceFactory;
-import io.restzilla.service.CrudServiceRegistry;
+import io.restzilla.registry.CrudServiceFactory;
+import io.restzilla.registry.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
 import io.restzilla.web.RestHandlerMapping;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +21,8 @@ import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.data.repository.CrudRepository;
 import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
 import java.util.Map;
 

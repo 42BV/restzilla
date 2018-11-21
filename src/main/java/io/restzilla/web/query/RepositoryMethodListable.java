@@ -1,16 +1,9 @@
 package io.restzilla.web.query;
 
+import com.google.common.base.Preconditions;
+import io.restzilla.registry.CrudServiceRegistry;
 import io.restzilla.web.RestInformation;
 import io.restzilla.web.RestInformation.QueryInformation;
-import io.restzilla.service.CrudServiceRegistry;
-
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.aop.support.AopUtils;
@@ -20,7 +13,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.util.ReflectionUtils;
 
-import com.google.common.base.Preconditions;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Detects the query method and invokes it dynamically.

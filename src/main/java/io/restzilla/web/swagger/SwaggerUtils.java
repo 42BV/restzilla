@@ -3,7 +3,7 @@
  */
 package io.restzilla.web.swagger;
 
-import io.restzilla.util.UrlUtils;
+import io.restzilla.web.util.UrlUtils;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -19,7 +19,6 @@ import com.mangofactory.swagger.models.ModelContext;
 import com.mangofactory.swagger.models.ModelProvider;
 import com.mangofactory.swagger.models.dto.ApiDescription;
 import com.mangofactory.swagger.models.dto.ApiListing;
-import com.mangofactory.swagger.models.dto.Authorization;
 import com.mangofactory.swagger.models.dto.Model;
 import com.mangofactory.swagger.models.dto.Operation;
 import com.mangofactory.swagger.models.dto.Parameter;

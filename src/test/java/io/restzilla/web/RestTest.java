@@ -1,7 +1,7 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla;
+package io.restzilla.web;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -10,6 +10,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import io.restzilla.AbstractControllerTest;
 import io.restzilla.builder.EntityBuilder;
 import io.restzilla.builder.OtherBuilder;
 import io.restzilla.builder.UserBuilder;
@@ -27,7 +29,6 @@ import io.restzilla.model.dto.ValidationDto;
 
 import java.util.Arrays;
 
-import io.restzilla.util.LazyEntityRetrievalException;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;

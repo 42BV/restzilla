@@ -3,21 +3,17 @@
  */
 package io.restzilla.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.config.BeanMapperBuilder;
 import io.beanmapper.utils.Classes;
 import io.restzilla.RestResource;
-import io.restzilla.util.NoOpValidator;
+import io.restzilla.web.DefaultHandlerMappingFactory;
 import io.restzilla.web.ResourceHandlerMapping;
 import io.restzilla.web.ResourceHandlerMappingFactory;
 import io.restzilla.web.RestHandlerMapping;
-import io.restzilla.web.DefaultHandlerMappingFactory;
 import io.restzilla.web.security.AlwaysSecurityProvider;
 import io.restzilla.web.security.SecurityProvider;
-
-import java.util.HashSet;
-import java.util.Set;
-
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +29,8 @@ import org.springframework.util.ClassUtils;
 import org.springframework.validation.Validator;
 import org.springframework.web.servlet.HandlerMapping;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.HashSet;
+import java.util.Set;
 
 /**
  * Create a REST endpoint for all entities annotated with {@link RestResource}.

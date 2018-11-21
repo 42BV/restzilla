@@ -1,4 +1,4 @@
-package io.restzilla.util;
+package io.restzilla.config;
 
 import org.junit.Assert;
 import org.junit.Test;

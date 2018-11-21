@@ -1,10 +1,11 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service;
+package io.restzilla.registry;
 
 import java.io.Serializable;
 
+import io.restzilla.service.CrudService;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 

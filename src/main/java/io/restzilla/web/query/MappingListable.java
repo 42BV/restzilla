@@ -1,10 +1,9 @@
 package io.restzilla.web.query;
 
-import io.restzilla.web.RestResultMapper;
-
 import java.util.ArrayList;
 import java.util.List;
 
+import io.restzilla.web.mapping.Mapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -16,15 +15,15 @@ import org.springframework.data.domain.Sort;
  * @author Jeroen van Schagen
  * @since Dec 9, 2015
  */
-public class BeanMappingListable<T> implements Listable<T>, Finder<T> {
+public class MappingListable<T> implements Listable<T>, Finder<T> {
     
     private final Listable<?> delegate;
     
-    private final RestResultMapper mapper;
+    private final Mapper mapper;
     
     private final Class<T> resultType;
     
-    public BeanMappingListable(Listable<?> delegate, RestResultMapper mapper, Class<T> resultType) {
+    public MappingListable(Listable<?> delegate, Mapper mapper, Class<T> resultType) {
         this.resultType = resultType;
         this.mapper = mapper;
         this.delegate = delegate;

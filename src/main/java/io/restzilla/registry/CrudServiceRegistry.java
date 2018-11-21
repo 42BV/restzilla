@@ -1,7 +1,8 @@
-package io.restzilla.service;
+package io.restzilla.registry;
 
 import java.io.Serializable;
 
+import io.restzilla.service.CrudService;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 

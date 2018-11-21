@@ -1,7 +1,8 @@
-package io.restzilla.web;
+package io.restzilla.web.mapping;
 
 import io.beanmapper.BeanMapper;
 
+import io.restzilla.web.RestInformation;
 import org.springframework.data.domain.Persistable;
 
 /**
@@ -10,25 +11,18 @@ import org.springframework.data.domain.Persistable;
  * @author Jeroen van Schagen
  * @since Jun 24, 2016
  */
-public class RestResultMapper {
+public class BeanMapperAdapter implements Mapper {
     
     private final BeanMapper beanMapper;
     
     private final RestInformation information;
     
-    public RestResultMapper(BeanMapper beanMapper, RestInformation information) {
+    public BeanMapperAdapter(BeanMapper beanMapper, RestInformation information) {
         this.beanMapper = beanMapper;
         this.information = information;
     }
-    
-    /**
-     * Enhances our bean mapper with some common non-bean types that can be returned. 
-     * 
-     * @param <T> the type of result
-     * @param source the source
-     * @param resultType the result type
-     * @return the converted object
-     */
+
+    @Override
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public <T> T map(Object source, Class<T> resultType) {
         if (source == null || Void.class.equals(resultType)) {

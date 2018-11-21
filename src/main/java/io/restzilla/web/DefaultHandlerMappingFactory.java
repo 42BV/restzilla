@@ -4,21 +4,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.spring.Lazy;
+import io.restzilla.web.mapping.Mapper;
 import io.restzilla.RestConfig;
 import io.restzilla.service.CrudService;
-import io.restzilla.service.CrudServiceRegistry;
+import io.restzilla.registry.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
-import io.restzilla.util.JsonUtil;
-import io.restzilla.util.PageableResolver;
-import io.restzilla.util.UrlUtils;
+import io.restzilla.web.util.JsonUtil;
+import io.restzilla.web.util.PageableResolver;
+import io.restzilla.web.util.UrlUtils;
 import io.restzilla.web.RestInformation.QueryInformation;
 import io.restzilla.web.RestInformation.ResultInformation;
-import io.restzilla.web.query.BeanMappingListable;
+import io.restzilla.web.mapping.BeanMapperAdapter;
 import io.restzilla.web.query.CrudServiceListable;
 import io.restzilla.web.query.Finder;
 import io.restzilla.web.query.Listable;
-import io.restzilla.web.query.ReadServiceListable;
+import io.restzilla.service.ReadServiceListable;
 import io.restzilla.web.query.RepositoryMethodListable;
+import io.restzilla.web.query.MappingListable;
 import io.restzilla.web.security.SecurityProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -112,7 +114,7 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
         
         private final RestInformation information;
         
-        private final RestResultMapper mapper;
+        private final Mapper mapper;
 
         /**
          * Always access this field by {@code getEntityService()} as it is initialized lazy.
@@ -121,7 +123,7 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
         
         public DefaultCrudController(RestInformation information) {
             this.information = information;
-            this.mapper = new RestResultMapper(beanMapper, information);
+            this.mapper = new BeanMapperAdapter(beanMapper, information);
         }
         
         //
@@ -184,7 +186,7 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
             } else if (information.hasCustomQuery(findAll)) {
                 delegate = new ReadServiceListable(readService, findAll.getQueryType());
             }
-            return new BeanMappingListable(delegate, mapper, resultType);
+            return new MappingListable(delegate, mapper, resultType);
         }
 
         private Object findAll(Listable<?> listable, HttpServletRequest request) {

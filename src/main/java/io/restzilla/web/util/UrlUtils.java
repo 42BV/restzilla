@@ -1,7 +1,7 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.util;
+package io.restzilla.web.util;
 
 import java.util.Objects;
 

@@ -4,7 +4,6 @@
 package io.restzilla.registry;
 
 import io.restzilla.service.CrudService;
-import io.restzilla.service.CrudServiceFactory;
 
 import java.io.Serializable;
 

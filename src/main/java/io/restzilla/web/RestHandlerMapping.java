@@ -2,7 +2,7 @@ package io.restzilla.web;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
 
-import io.restzilla.util.UrlUtils;
+import io.restzilla.web.util.UrlUtils;
 
 import java.util.Collection;
 import java.util.HashMap;

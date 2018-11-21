@@ -7,7 +7,6 @@ import java.util.Optional;
 
 import javax.persistence.EntityNotFoundException;
 
-import io.restzilla.util.LazyEntityRetrievalException;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Persistable;
 import org.springframework.transaction.annotation.Transactional;

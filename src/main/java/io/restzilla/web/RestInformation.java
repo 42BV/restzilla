@@ -6,7 +6,7 @@ package io.restzilla.web;
 import io.restzilla.RestConfig;
 import io.restzilla.RestQuery;
 import io.restzilla.RestResource;
-import io.restzilla.util.UrlUtils;
+import io.restzilla.web.util.UrlUtils;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
