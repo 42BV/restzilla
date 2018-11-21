@@ -32,27 +32,29 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
     private static final String DEFAULT_HANDLER_MAPPING_NAME = "defaultHandlerMappingName";
 
     private ApplicationContext applicationContext;
-    
-    private CrudServiceFactory crudServiceFactory;
 
     private String basePackage;
     private String defaultHandlerMappingName;
 
     /**
-     * Build a registry with references to each entity service, repository.
+     * Build a registry with references to each entity service and repository.
      * 
      * @return the service registry
      */
     @Bean
-    public CrudServiceRegistry crudServiceRegistry() {
-        if (crudServiceFactory == null) {
-            crudServiceFactory = new DefaultServiceFactory(applicationContext);
-        }
-
-        LookupServiceFactory factory = new LookupServiceFactory(crudServiceFactory);
-        applicationContext.getAutowireCapableBeanFactory().autowireBean(factory);
-
+    public CrudServiceRegistry crudServiceRegistry(CrudServiceFactory factory) {
         return new CachingServiceRegistry(factory);
+    }
+
+    /**
+     * Build a factory with references to each entity service and repository.
+     *
+     * @return the service registry
+     */
+    @Bean
+    public CrudServiceFactory crudServiceFactory() {
+        CrudServiceFactory delegate = new DefaultServiceFactory(applicationContext);
+        return new LookupServiceFactory(delegate);
     }
 
     /**
@@ -61,8 +63,8 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
      * @return the read service
      */
     @Bean
-    public ReadService readService() {
-        return new ReadService(crudServiceRegistry());
+    public ReadService readService(CrudServiceRegistry registry) {
+        return new ReadService(registry);
     }
 
     /**
