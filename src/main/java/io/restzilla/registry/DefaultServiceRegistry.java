@@ -12,14 +12,12 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * Automatically generating map based implementation of {@link CrudServiceRegistry}.
+ * Default service registry implementation.
  *
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-class DefaultServiceRegistry
-  extends AbstractServiceRegistry
-  implements CrudServiceRegistry {
+class DefaultServiceRegistry extends AbstractServiceRegistry implements CrudServiceRegistry {
 
     private final CrudServiceFactory factory;
 
