@@ -46,7 +46,7 @@ public @interface SortingDefault {
     @Documented
     @Target(TYPE)
     @Retention(RUNTIME)
-    public @interface SortingDefaults {
+    @interface SortingDefaults {
         
         /**
          * The sorting defaults.

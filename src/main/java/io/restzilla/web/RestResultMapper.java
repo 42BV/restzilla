@@ -1,7 +1,6 @@
 package io.restzilla.web;
 
 import io.beanmapper.BeanMapper;
-import io.restzilla.RestInformation;
 
 import org.springframework.data.domain.Persistable;
 

@@ -3,7 +3,7 @@
  */
 package io.restzilla.web.swagger;
 
-import io.restzilla.RestInformation;
+import io.restzilla.web.RestInformation;
 import io.restzilla.web.ResourceHandlerMapping;
 import io.restzilla.web.RestHandlerMapping;
 
@@ -15,10 +15,8 @@ import java.util.Map;
 import com.google.common.base.CaseFormat;
 import com.mangofactory.swagger.configuration.SpringSwaggerConfig;
 import com.mangofactory.swagger.core.SwaggerCache;
-import com.mangofactory.swagger.models.dto.ApiDescription;
 import com.mangofactory.swagger.models.dto.ApiListing;
 import com.mangofactory.swagger.models.dto.ApiListingReference;
-import com.mangofactory.swagger.models.dto.Model;
 import com.mangofactory.swagger.models.dto.ResourceListing;
 import com.mangofactory.swagger.models.dto.builder.ApiListingBuilder;
 import com.mangofactory.swagger.paths.SwaggerPathProvider;
@@ -32,19 +30,36 @@ import com.mangofactory.swagger.plugin.SwaggerSpringMvcPlugin;
  * @since Sep 3, 2015
  */
 public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
-    
+
     private final SpringSwaggerConfig springSwaggerConfig;
-        
+
     private final RestHandlerMapping crudHandlerMapping;
-    
+
+    private final SwaggerApiDescriptor apiDescriptor;
+
     private SwaggerPathProvider swaggerPathProvider;
     
     private String swaggerGroup = "default";
 
-    public SwaggerRestPlugin(SpringSwaggerConfig springSwaggerConfig, RestHandlerMapping crudHandlerMapping) {
+    public SwaggerRestPlugin(
+      final SpringSwaggerConfig springSwaggerConfig,
+      final RestHandlerMapping crudHandlerMapping
+    ) {
+
+        this(springSwaggerConfig, crudHandlerMapping, new DefaultApiDescriptor());
+    }
+
+    public SwaggerRestPlugin(
+      final SpringSwaggerConfig springSwaggerConfig,
+      final RestHandlerMapping crudHandlerMapping,
+      final SwaggerApiDescriptor apiDescriptor
+    ) {
+
         super(springSwaggerConfig);
+
         this.springSwaggerConfig = springSwaggerConfig;
         this.crudHandlerMapping = crudHandlerMapping;
+        this.apiDescriptor = apiDescriptor;
         this.swaggerPathProvider = springSwaggerConfig.defaultSwaggerPathProvider();
     }
     
@@ -102,28 +117,27 @@ public class SwaggerRestPlugin extends SwaggerSpringMvcPlugin {
     }
 
     private void addApiListings(SwaggerCache swaggerCache, String resourceName, ResourceHandlerMapping handlerMapping) {
-        ApiListing apiListing = getApiListing(swaggerCache, resourceName, handlerMapping.getInformation());
-        if (handlerMapping instanceof SwaggerApiDescriptor) {
-            ((SwaggerApiDescriptor) handlerMapping).enhance(apiListing, springSwaggerConfig.defaultModelProvider());
-        }
+        RestInformation information = handlerMapping.getInformation();
+        ApiListing apiListing = getApiListing(swaggerCache, resourceName, information);
+        apiDescriptor.enhance(information, apiListing, springSwaggerConfig.defaultModelProvider());
     }
 
     private ApiListing getApiListing(SwaggerCache swaggerCache, String resourceName, RestInformation information) {
         Map<String, ApiListing> apiListings = swaggerCache.getSwaggerApiListingMap().get(swaggerGroup);
         ApiListing apiListing = apiListings.get(resourceName);
         if (apiListing == null) {
-            apiListing = buildApiListing(resourceName, information);
+            apiListing = buildApiListing(information);
             apiListings.put(resourceName, apiListing);
         }
         return apiListing;
     }
 
-    private ApiListing buildApiListing(String resourceName, RestInformation information) {
+    private ApiListing buildApiListing(RestInformation information) {
         return new ApiListingBuilder()
                     .basePath(swaggerPathProvider.getApplicationBasePath())
                     .description(information.getEntityClass().getSimpleName())
-                    .apis(new ArrayList<ApiDescription>())
-                    .models(new HashMap<String, Model>())
+                    .apis(new ArrayList<>())
+                    .models(new HashMap<>())
                     .consumes(Arrays.asList("*/*"))
                     .produces(Arrays.asList("*/*"))
                     .build();

@@ -88,11 +88,10 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
      * handlers for the registered entities.
      * 
      * @return the handler mapping
-     * @throws Exception whenever a problem occurs
      */
     @Bean
-    public RestHandlerMapping restHandlerMapping() throws Exception {
-        RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean(crudServiceRegistry());
+    public RestHandlerMapping restHandlerMapping() {
+        RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean();
         factoryBean.setBasePackage(basePackage);
         factoryBean.setDefaultHandlerMappingName(defaultHandlerMappingName);
         factoryBean.setApplicationContext(applicationContext);

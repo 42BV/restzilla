@@ -56,7 +56,7 @@ public @interface RestResource {
      * (Optional) security expression for retrieving data.
      * @return the read security
      */
-    String[] reader() default "";
+    String[] readSecured() default "";
     
     /**
      * (Optional) the default query type. When undefined we use the entity type.
@@ -96,7 +96,7 @@ public @interface RestResource {
      * (Optional) security expression for modifying data.
      * @return the modification security
      */
-    String[] modifier() default "";
+    String[] modifySecured() default "";
 
     /**
      * Determines if update requests can be considered as patch.

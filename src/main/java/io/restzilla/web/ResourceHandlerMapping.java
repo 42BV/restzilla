@@ -1,7 +1,5 @@
 package io.restzilla.web;
 
-import io.restzilla.RestInformation;
-
 import javax.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;

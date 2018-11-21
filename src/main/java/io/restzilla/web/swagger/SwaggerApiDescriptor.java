@@ -3,6 +3,10 @@
  */
 package io.restzilla.web.swagger;
 
+import com.mangofactory.swagger.models.ModelProvider;
+import com.mangofactory.swagger.models.dto.ApiListing;
+import io.restzilla.web.RestInformation;
+
 /**
  * Defines that this instance is able to describe all APIs to Swagger.
  *
@@ -17,7 +21,10 @@ public interface SwaggerApiDescriptor {
      * @param listing the API listing
      * @param modelProvider describes our models
      */
-    void enhance(com.mangofactory.swagger.models.dto.ApiListing listing, 
-                 com.mangofactory.swagger.models.ModelProvider modelProvider);
+    void enhance(
+      RestInformation information,
+      ApiListing listing,
+      ModelProvider modelProvider
+    );
 
 }

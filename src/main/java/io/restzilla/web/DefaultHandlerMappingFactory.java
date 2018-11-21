@@ -5,18 +5,21 @@ import com.google.common.io.CharStreams;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.spring.Lazy;
 import io.restzilla.RestConfig;
-import io.restzilla.RestInformation;
-import io.restzilla.RestInformation.QueryInformation;
-import io.restzilla.RestInformation.ResultInformation;
 import io.restzilla.service.CrudService;
 import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.service.ReadService;
 import io.restzilla.util.JsonUtil;
 import io.restzilla.util.PageableResolver;
 import io.restzilla.util.UrlUtils;
-import io.restzilla.web.query.*;
+import io.restzilla.web.RestInformation.QueryInformation;
+import io.restzilla.web.RestInformation.ResultInformation;
+import io.restzilla.web.query.BeanMappingListable;
+import io.restzilla.web.query.CrudServiceListable;
+import io.restzilla.web.query.Finder;
+import io.restzilla.web.query.Listable;
+import io.restzilla.web.query.ReadServiceListable;
+import io.restzilla.web.query.RepositoryMethodListable;
 import io.restzilla.web.security.SecurityProvider;
-import io.restzilla.web.swagger.SwaggerApiDescriptor;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +42,11 @@ import java.util.List;
 import java.util.Set;
 
 import static org.springframework.util.StringUtils.collectionToDelimitedString;
-import static org.springframework.web.bind.annotation.RequestMethod.*;
+import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
+import static org.springframework.web.bind.annotation.RequestMethod.GET;
+import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
+import static org.springframework.web.bind.annotation.RequestMethod.POST;
+import static org.springframework.web.bind.annotation.RequestMethod.PUT;
 
 /**
  * Default implementation of the {@link ResourceHandlerMappingFactory}.
@@ -47,7 +54,7 @@ import static org.springframework.web.bind.annotation.RequestMethod.*;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappingFactory {
+public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFactory {
     
     private static final String ARRAY_JSON_START = "[";
 
@@ -66,7 +73,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
     private CrudServiceRegistry crudServiceRegistry;
 
     /**
-     * Instantiate a new {@link SimpleResourceHandlerMappingFactory}.
+     * Instantiate a new {@link DefaultHandlerMappingFactory}.
      * 
      * @param objectMapper
      *              the {@link ObjectMapper} for JSON parsing and formatting
@@ -79,11 +86,11 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
      * @param validator
      *              the {@link Validator} for verifying the input
      */
-    public SimpleResourceHandlerMappingFactory(ObjectMapper objectMapper,
-                                          ConversionService conversionService,
-                                                 BeanMapper beanMapper,
-                                           SecurityProvider securityProvider,
-                                                  Validator validator) {
+    public DefaultHandlerMappingFactory(ObjectMapper objectMapper,
+                                        ConversionService conversionService,
+                                        BeanMapper beanMapper,
+                                        SecurityProvider securityProvider,
+                                        Validator validator) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
         this.beanMapper = beanMapper;
@@ -95,7 +102,8 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
      * {@inheritDoc}
      */
     @Override
-    public DefaultHandlerMapping build(RestInformation information) {
+    public DefaultHandlerMapping build(Class<?> resourceType) {
+        RestInformation information = new RestInformation(resourceType);
         return new DefaultHandlerMapping(new DefaultCrudController(information));
     }
     
@@ -209,7 +217,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
 
         private Object mapIdToResult(Serializable id) {
             ResultInformation findOne = information.getResultInfo(information.findOne());
-            Object entity = null;
+            Object entity;
             if (information.hasCustomQuery(findOne)) {
                 entity = readService.getOne((Class) findOne.getQueryType(), id);
             } else {
@@ -235,14 +243,14 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
 
             if (json.startsWith(ARRAY_JSON_START)) {
                 List<Object> inputs = objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, inputType));
-                List<Object> results = new ArrayList<Object>();
+                List<Object> results = new ArrayList<>();
                 for (Object input : inputs) {
-                    results.add(doCreate(input, json));
+                    results.add(doCreate(input));
                 }
                 return results;
             } else {
                 Object input = objectMapper.readValue(json, inputType);
-                return doCreate(input, json);
+                return doCreate(input);
             }
         }
         
@@ -253,7 +261,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             ensureIsAuthorized(expressions, request);
         }
         
-        private Object doCreate(Object input, String json) throws BindException {
+        private Object doCreate(Object input) throws BindException {
             Persistable<?> entity = mapper.map(validate(input), information.getEntityClass());
             Persistable<?> output = entityService.save(entity);
             return mapToResult(output, information.create());
@@ -377,7 +385,8 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
      * @author Jeroen van Schagen
      * @since Sep 3, 2015
      */
-    private static class DefaultHandlerMapping extends ResourceHandlerMapping implements SwaggerApiDescriptor {
+    private static class DefaultHandlerMapping
+      extends ResourceHandlerMapping {
         
         private static final String FIND_ALL_NAME = "findAll";
         private static final String FIND_ONE_NAME = "findOne";
@@ -454,19 +463,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
             }
             return method;
         }
-        
-        /**
-         * {@inheritDoc}
-         * <br><br>
-         * <b>All swagger dependencies are specified with their full name to prevent
-         * class loading errors for users without swagger.</b>
-         */
-        @Override
-        public void enhance(com.mangofactory.swagger.models.dto.ApiListing listing,
-                            com.mangofactory.swagger.models.ModelProvider modelProvider) {
-            new DefaultSwaggerDescriber(modelProvider, getInformation()).enhance(listing);
-        }
-        
+
         /**
          * {@inheritDoc}
          */
@@ -495,123 +492,7 @@ public class SimpleResourceHandlerMappingFactory implements ResourceHandlerMappi
         }
 
     }
-    
-    /**
-     * Describes our dynamically generated controller handle methods.
-     *
-     * @author Jeroen van Schagen
-     * @since Sep 3, 2015
-     */
-    private static class DefaultSwaggerDescriber {
-        
-        private static final String FIND_ALL_NAME = "findAll";
-        private static final String FIND_ONE_NAME = "findOne";
-        private static final String CREATE_NAME = "create";
-        private static final String UPDATE_NAME = "update";
-        private static final String DELETE_NAME = "delete";
-        
-        private static final String ID_PARAM = "id";
-        private static final String PAGE_PARAM = "page";
-        private static final String SIZE_PARAM = "size";
-        private static final String SORT_PARAM = "sort";
-        
-        private final com.mangofactory.swagger.models.ModelProvider modelProvider;
-        
-        private final RestInformation information;
-        
-        private final String basePath;
 
-        DefaultSwaggerDescriber(com.mangofactory.swagger.models.ModelProvider modelProvider, RestInformation information) {
-            this.modelProvider = modelProvider;
-            this.information = information;
-            
-            String basePath = information.getBasePath();
-            if (!basePath.startsWith("/")) {
-                basePath = "/" + basePath;
-            }
-            this.basePath = basePath;
-        }
-        
-        /**
-         * Enhances the swagger API listings with new models and descriptions.
-         * 
-         * @param listing the API listings to enhance
-         */
-        void enhance(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            registerFindAll(listing);
-            registerFindOne(listing);
-            if (!information.isReadOnly()) {
-                registerCreate(listing);
-                registerUpdate(listing);
-                registerDelete(listing);
-            }
-        }
-        
-        private void registerFindAll(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            if (information.findAll().enabled()) {
-                addModel(listing, information.getResultType(information.findAll()));
-                newDescription(FIND_ALL_NAME, basePath, RequestMethod.GET)
-                        .responseClassIterable(information.getResultType(information.findAll()))
-                        .addQueryParameter(PAGE_PARAM, Long.class, false)
-                        .addQueryParameter(SIZE_PARAM, Long.class, false)
-                        .addQueryParameter(SORT_PARAM, String.class, false)
-                        .register(listing);
-            }
-        }
-        
-        private void registerFindOne(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            if (information.findOne().enabled()) {
-                addModel(listing, information.getResultType(information.findOne()));
-                newDescription(FIND_ONE_NAME, basePath + "/{id}", RequestMethod.GET)
-                    .responseClass(information.getResultType(information.findOne()))
-                    .addPathParameter(ID_PARAM, information.getIdentifierClass())
-                    .register(listing);
-            }
-        }
-        
-        private void registerCreate(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            if (information.create().enabled()) {
-                addModel(listing, information.getInputType(information.create()));
-                addModel(listing, information.getResultType(information.create()));
-                newDescription(CREATE_NAME, basePath, RequestMethod.POST)
-                    .responseClass(information.getResultType(information.create()))
-                    .addBodyParameter(information.getInputType(information.create()))
-                    .register(listing);
-            }
-        }
-
-        private void registerUpdate(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            if (information.update().enabled()) {
-                addModel(listing, information.getInputType(information.update()));
-                addModel(listing, information.getResultType(information.update()));
-                newDescription(UPDATE_NAME, basePath + "/{id}", RequestMethod.PUT)
-                    .responseClass(information.getResultType(information.update()))
-                    .addPathParameter(ID_PARAM, information.getIdentifierClass())
-                    .addBodyParameter(information.getInputType(information.update()))
-                    .register(listing);
-            }
-        }
-
-        private void registerDelete(com.mangofactory.swagger.models.dto.ApiListing listing) {
-            if (information.delete().enabled()) {
-                addModel(listing, information.getResultType(information.delete()));
-                newDescription(DELETE_NAME, basePath + "/{id}", RequestMethod.DELETE)
-                    .responseClass(information.getResultType(information.delete()))
-                    .addPathParameter(ID_PARAM, information.getIdentifierClass())
-                    .register(listing);
-            }
-        }
-
-        private void addModel(com.mangofactory.swagger.models.dto.ApiListing listing, Class<?> modelType) {
-            io.restzilla.web.swagger.SwaggerUtils.addIfNotExists(listing, modelType, modelProvider);
-        }
-        
-        private io.restzilla.web.swagger.SwaggerUtils.DescriptionBuilder newDescription(String description, String path, RequestMethod method) {
-            return io.restzilla.web.swagger.SwaggerUtils.newDescription(description, path, method);
-        }
-
-    }
-    
     @Autowired
     public void setReadService(ReadService readService) {
         this.readService = readService;

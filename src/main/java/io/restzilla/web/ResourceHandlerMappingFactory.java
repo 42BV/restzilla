@@ -1,7 +1,5 @@
 package io.restzilla.web;
 
-import io.restzilla.RestInformation;
-
 /**
  * Responsible for building the rest handlers.
  *
@@ -13,9 +11,9 @@ public interface ResourceHandlerMappingFactory {
     /**
      * Build a new handler mapping.
      * 
-     * @param information the REST information
+     * @param resourceType the resource type
      * @return the handler mapping
      */
-    ResourceHandlerMapping build(RestInformation information);
+    ResourceHandlerMapping build(Class<?> resourceType);
     
 }

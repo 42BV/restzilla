@@ -33,7 +33,7 @@ import com.mangofactory.swagger.models.dto.builder.ParameterBuilder;
  * @author Jeroen van Schagen
  * @since Sep 4, 2015
  */
-public class SwaggerUtils {
+class SwaggerUtils {
 
     /**
      * Start building a new API description.
@@ -111,10 +111,10 @@ public class SwaggerUtils {
 
     private static OperationBuilder newOperation(String name) {
         return new OperationBuilder()
-                      .authorizations(new ArrayList<Authorization>())
+                      .authorizations(new ArrayList<>())
                       .produces(Arrays.asList("*/*"))
                       .consumes(Arrays.asList("application/json"))
-                      .parameters(new ArrayList<Parameter>())
+                      .parameters(new ArrayList<>())
                       .nickname(name)
                       .notes(name)
                       .summary(name)

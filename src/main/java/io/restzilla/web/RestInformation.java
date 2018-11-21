@@ -1,8 +1,11 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla;
+package io.restzilla.web;
 
+import io.restzilla.RestConfig;
+import io.restzilla.RestQuery;
+import io.restzilla.RestResource;
 import io.restzilla.util.UrlUtils;
 
 import java.lang.annotation.Annotation;
@@ -289,7 +292,7 @@ public class RestInformation {
      * @return the read expressions
      */
     public String[] getReadSecured() {
-        return annotation.reader();
+        return annotation.readSecured();
     }
     
     /**
@@ -298,7 +301,7 @@ public class RestInformation {
      * @return the modify expressions
      */
     public String[] getModifySecured() {
-        return annotation.modifier();
+        return annotation.modifySecured();
     }
     
     //

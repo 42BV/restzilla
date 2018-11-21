@@ -6,14 +6,12 @@ package io.restzilla.config;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.config.BeanMapperBuilder;
 import io.beanmapper.utils.Classes;
-import io.restzilla.RestInformation;
 import io.restzilla.RestResource;
-import io.restzilla.service.CrudServiceRegistry;
 import io.restzilla.util.NoOpValidator;
 import io.restzilla.web.ResourceHandlerMapping;
 import io.restzilla.web.ResourceHandlerMappingFactory;
 import io.restzilla.web.RestHandlerMapping;
-import io.restzilla.web.SimpleResourceHandlerMappingFactory;
+import io.restzilla.web.DefaultHandlerMappingFactory;
 import io.restzilla.web.security.AlwaysSecurityProvider;
 import io.restzilla.web.security.SecurityProvider;
 
@@ -36,7 +34,6 @@ import org.springframework.validation.Validator;
 import org.springframework.web.servlet.HandlerMapping;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Preconditions;
 
 /**
  * Create a REST endpoint for all entities annotated with {@link RestResource}.
@@ -60,11 +57,6 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      */
     private static final String SPRING_SECURITY_PATH = "org.springframework.security.core.context.SecurityContext";
 
-    /**
-     * Registry used to retrieve the underlying services.
-     */
-    private final CrudServiceRegistry crudServiceRegistry;
-    
     /**
      * Application context used to retrieve and create beans.
      */
@@ -104,30 +96,22 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
      * Default handler mapping name.
      */
     private String defaultHandlerMappingName;
-    
-    /**
-     * Create a new REST handler mapping factory bean.
-     * @param serviceRegistry the service registry
-     */
-    public RestHandlerMappingFactoryBean(CrudServiceRegistry serviceRegistry) {
-        this.crudServiceRegistry = Preconditions.checkNotNull(serviceRegistry, "Service registry is required.");
-    }
-    
+
     /**
      * {@inheritDoc}
      */
     @Override
     @SuppressWarnings({ "unchecked", "rawtypes" })
-    public final RestHandlerMapping getObject() throws Exception {
+    public final RestHandlerMapping getObject() {
         afterPropertiesSet();
 
         RestHandlerMapping handlerMapping = new RestHandlerMapping(applicationContext, defaultHandlerMappingName);
-        ResourceHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory(crudServiceRegistry);
-        for (Class resourceClass : getAllResourceClasses()) {
-            RestInformation resourceInfo = new RestInformation(resourceClass);
-            ResourceHandlerMapping resourceHandlerMapping = handlerMappingFactory.build(resourceInfo);
+        ResourceHandlerMappingFactory handlerMappingFactory = buildHandlerMappingFactory();
+        for (Class<?> resourceClass : getAllResourceClasses()) {
+            ResourceHandlerMapping resourceHandlerMapping = handlerMappingFactory.build(resourceClass);
             handlerMapping.registerCustomHandler(resourceHandlerMapping);
         }
+
         return handlerMapping;
     }
     
@@ -147,11 +131,10 @@ public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping
     /**
      * Create a new factory, responsible for creating entity handler mappings.
      * 
-     * @param serviceRegistry the service registry
      * @return the created factory
      */
-    protected ResourceHandlerMappingFactory buildHandlerMappingFactory(CrudServiceRegistry serviceRegistry) {
-        SimpleResourceHandlerMappingFactory factory = new SimpleResourceHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider, validator);
+    protected ResourceHandlerMappingFactory buildHandlerMappingFactory() {
+        ResourceHandlerMappingFactory factory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider, validator);
         applicationContext.getAutowireCapableBeanFactory().autowireBean(factory);
         return factory;
     }

@@ -1,7 +1,7 @@
 package io.restzilla.web;
 
 import static org.apache.commons.lang3.StringUtils.isNotBlank;
-import io.restzilla.RestInformation;
+
 import io.restzilla.util.UrlUtils;
 
 import java.util.Collection;

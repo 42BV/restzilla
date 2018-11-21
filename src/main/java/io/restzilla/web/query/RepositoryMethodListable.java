@@ -1,7 +1,7 @@
 package io.restzilla.web.query;
 
-import io.restzilla.RestInformation;
-import io.restzilla.RestInformation.QueryInformation;
+import io.restzilla.web.RestInformation;
+import io.restzilla.web.RestInformation.QueryInformation;
 import io.restzilla.service.CrudServiceRegistry;
 
 import java.lang.reflect.InvocationTargetException;
