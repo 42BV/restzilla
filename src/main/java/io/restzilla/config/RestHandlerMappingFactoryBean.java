@@ -47,7 +47,7 @@ import java.util.Set;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, ApplicationContextAware {
+class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, ApplicationContextAware {
     
     /**
      * Base class used to check if Spring Security is available on the classpath.
