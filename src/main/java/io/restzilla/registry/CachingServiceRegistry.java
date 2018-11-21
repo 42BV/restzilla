@@ -16,11 +16,11 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class AutoGenerateMapCrudServiceRegistry extends MapCrudServiceRegistry {
+public class CachingServiceRegistry extends MapCrudServiceRegistry {
 
     private final CrudServiceFactory factory;
 
-    public AutoGenerateMapCrudServiceRegistry(CrudServiceFactory factory) {
+    public CachingServiceRegistry(CrudServiceFactory factory) {
         this.factory = factory;
     }
 

@@ -3,26 +3,19 @@
  */
 package io.restzilla.config;
 
-import io.restzilla.registry.AutoGenerateMapCrudServiceRegistry;
-import io.restzilla.registry.DefaultServiceFactory;
-import io.restzilla.registry.LazyRetrievalFactory;
-import io.restzilla.service.CrudService;
+import io.restzilla.registry.CachingServiceRegistry;
 import io.restzilla.registry.CrudServiceFactory;
 import io.restzilla.registry.CrudServiceRegistry;
+import io.restzilla.registry.DefaultServiceFactory;
+import io.restzilla.registry.LookupServiceFactory;
 import io.restzilla.service.ReadService;
 import io.restzilla.web.RestHandlerMapping;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportAware;
-import org.springframework.core.GenericTypeResolver;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 
 import java.util.Map;
 
@@ -56,23 +49,10 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
             crudServiceFactory = new DefaultServiceFactory(applicationContext);
         }
 
-        LazyRetrievalFactory lazyFactory = new LazyRetrievalFactory(applicationContext, crudServiceFactory);
-        AutoGenerateMapCrudServiceRegistry registry = new AutoGenerateMapCrudServiceRegistry(lazyFactory);
+        LookupServiceFactory factory = new LookupServiceFactory(crudServiceFactory);
+        applicationContext.getAutowireCapableBeanFactory().autowireBean(factory);
 
-        // Auto register services and repositories
-
-        for (CrudService crudService : applicationContext.getBeansOfType(CrudService.class).values()) {
-            registry.registerService(crudService.getEntityClass(), crudService);
-        }
-
-        for (PagingAndSortingRepository crudRepository : applicationContext.getBeansOfType(PagingAndSortingRepository.class).values()) {
-            Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(crudRepository.getClass(), CrudRepository.class);
-            if (arguments != null && arguments.length == 2) {
-                registry.registerRepository(arguments[0], crudRepository);
-            }
-        }
-
-        return registry;
+        return new CachingServiceRegistry(factory);
     }
 
     /**
@@ -117,11 +97,6 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
     @Override
     public void setApplicationContext(ApplicationContext applicationContext) {
         this.applicationContext = applicationContext;
-    }
-    
-    @Autowired(required = false)
-    public void setCrudServiceFactory(CrudServiceFactory crudServiceFactory) {
-        this.crudServiceFactory = crudServiceFactory;
     }
 
 }
