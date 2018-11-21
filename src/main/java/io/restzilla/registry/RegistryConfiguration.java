@@ -13,19 +13,9 @@ public class RegistryConfiguration {
    * @return the service registry
    */
   @Bean
-  public CrudServiceRegistry crudServiceRegistry(CrudServiceFactory factory) {
-    return new CachingServiceRegistry(factory);
-  }
-
-  /**
-   * Build a factory with references to each entity service and repository.
-   *
-   * @return the service registry
-   */
-  @Bean
-  public CrudServiceFactory crudServiceFactory(ApplicationContext applicationContext) {
-    CrudServiceFactory delegate = new DefaultServiceFactory(applicationContext);
-    return new LookupServiceFactory(delegate);
+  public CrudServiceRegistry crudServiceRegistry(ApplicationContext applicationContext) {
+    CrudServiceFactory factory = new CrudServiceFactory(applicationContext);
+    return new DefaultServiceRegistry(factory);
   }
 
 }

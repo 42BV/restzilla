@@ -3,23 +3,17 @@
  */
 package io.restzilla.service;
 
-import static org.springframework.context.annotation.ScopedProxyMode.TARGET_CLASS;
 import io.restzilla.model.User;
 import io.restzilla.model.WithService;
+import io.restzilla.registry.CrudServiceRegistry;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.restzilla.registry.CrudServiceRegistry;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-@Service
-@Transactional
-@Scope(proxyMode = TARGET_CLASS)
+@DefaultService
 public class WithServiceService extends DefaultCrudService<WithService, Long> {
 
     private CrudService<User, Long> userService;
@@ -47,7 +41,7 @@ public class WithServiceService extends DefaultCrudService<WithService, Long> {
     /**
      * Configure the user service. This is merely a check to ensure
      * that generated services can also be injected.
-     * @param userService the user service
+     * @param services the services registry
      */
     @Lazy
     @Autowired

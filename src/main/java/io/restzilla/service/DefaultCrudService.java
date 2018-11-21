@@ -27,7 +27,9 @@ import com.google.common.collect.Lists;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> extends AbstractCrudService<T, ID> implements RepositoryAware<T, ID> {
+public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable>
+  extends AbstractCrudService<T, ID>
+  implements RepositoryAware<T, ID> {
 
     private static Cache EMPTY_CACHE = new NoOpCacheManager().getCache("empty");
 
