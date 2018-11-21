@@ -16,7 +16,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class CachingServiceRegistry extends MapCrudServiceRegistry {
+class CachingServiceRegistry extends MapCrudServiceRegistry {
 
     private final CrudServiceFactory factory;
 

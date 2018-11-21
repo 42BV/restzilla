@@ -27,7 +27,7 @@ import org.springframework.util.StringUtils;
  * @author Jeroen van Schagen
  * @since Sep 18, 2015
  */
-public class DefaultServiceFactory implements CrudServiceFactory {
+class DefaultServiceFactory implements CrudServiceFactory {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultCrudService.class);
 
@@ -41,14 +41,14 @@ public class DefaultServiceFactory implements CrudServiceFactory {
 
     /**
      * Create a new {@link DefaultServiceFactory} instance.
-     * 
+     *
      * @param applicationContext the application context for autowiring
      */
     public DefaultServiceFactory(ApplicationContext applicationContext) {
-        beanFactory = (ConfigurableListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();        
+        beanFactory = (ConfigurableListableBeanFactory) applicationContext.getAutowireCapableBeanFactory();
         beanFactory.autowireBean(this);
     }
-    
+
     /**
      * {@inheritDoc}
      */

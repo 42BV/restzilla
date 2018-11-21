@@ -15,7 +15,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
  * @author Jeroen van Schagen
  * @since May 12, 2016
  */
-public class MapCrudServiceRegistry implements CrudServiceRegistry {
+class MapCrudServiceRegistry implements CrudServiceRegistry {
     
     private final Map<Class<?>, PagingAndSortingRepository<?, ?>> repositories;
     private final Map<Class<?>, CrudService<?, ?>> services;

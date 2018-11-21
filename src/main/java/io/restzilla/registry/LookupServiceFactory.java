@@ -24,7 +24,7 @@ import java.util.Map;
  * @since Dec 10, 2015
  */
 @SuppressWarnings("unchecked")
-public class LookupServiceFactory implements CrudServiceFactory {
+class LookupServiceFactory implements CrudServiceFactory {
     
     private static final Logger LOGGER = LoggerFactory.getLogger(LookupServiceFactory.class);
 

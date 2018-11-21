@@ -3,17 +3,14 @@
  */
 package io.restzilla.config;
 
-import io.restzilla.registry.CachingServiceRegistry;
-import io.restzilla.registry.CrudServiceFactory;
 import io.restzilla.registry.CrudServiceRegistry;
-import io.restzilla.registry.DefaultServiceFactory;
-import io.restzilla.registry.LookupServiceFactory;
+import io.restzilla.registry.RegistryConfiguration;
 import io.restzilla.service.ReadService;
 import io.restzilla.web.RestHandlerMapping;
 import org.springframework.context.ApplicationContext;
-import org.springframework.context.ApplicationContextAware;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportAware;
 import org.springframework.core.type.AnnotationMetadata;
 
@@ -26,46 +23,14 @@ import java.util.Map;
  * @since Nov 12, 2015
  */
 @Configuration
-public class EnableRestConfiguration implements ImportAware, ApplicationContextAware {
+@Import(RegistryConfiguration.class)
+public class EnableRestConfiguration implements ImportAware {
     
     private static final String BASE_PACKAGE_CLASS_NAME = "basePackageClass";
     private static final String DEFAULT_HANDLER_MAPPING_NAME = "defaultHandlerMappingName";
 
-    private ApplicationContext applicationContext;
-
     private String basePackage;
     private String defaultHandlerMappingName;
-
-    /**
-     * Build a registry with references to each entity service and repository.
-     * 
-     * @return the service registry
-     */
-    @Bean
-    public CrudServiceRegistry crudServiceRegistry(CrudServiceFactory factory) {
-        return new CachingServiceRegistry(factory);
-    }
-
-    /**
-     * Build a factory with references to each entity service and repository.
-     *
-     * @return the service registry
-     */
-    @Bean
-    public CrudServiceFactory crudServiceFactory() {
-        CrudServiceFactory delegate = new DefaultServiceFactory(applicationContext);
-        return new LookupServiceFactory(delegate);
-    }
-
-    /**
-     * Build a new service, capable of querying each type of registered entity.
-     * 
-     * @return the read service
-     */
-    @Bean
-    public ReadService readService(CrudServiceRegistry registry) {
-        return new ReadService(registry);
-    }
 
     /**
      * Build a handler mapping, capable of delegating HTTP requests and fallback
@@ -74,7 +39,7 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
      * @return the handler mapping
      */
     @Bean
-    public RestHandlerMapping restHandlerMapping() {
+    public RestHandlerMapping restHandlerMapping(ApplicationContext applicationContext) {
         RestHandlerMappingFactoryBean factoryBean = new RestHandlerMappingFactoryBean();
         factoryBean.setBasePackage(basePackage);
         factoryBean.setDefaultHandlerMappingName(defaultHandlerMappingName);
@@ -92,13 +57,15 @@ public class EnableRestConfiguration implements ImportAware, ApplicationContextA
         basePackage = ((Class<?>) attributes.get(BASE_PACKAGE_CLASS_NAME)).getPackage().getName();
         defaultHandlerMappingName = (String) attributes.get(DEFAULT_HANDLER_MAPPING_NAME);
     }
-    
+
     /**
-     * {@inheritDoc}
+     * Build a new service, capable of querying each type of registered entity.
+     *
+     * @return the read service
      */
-    @Override
-    public void setApplicationContext(ApplicationContext applicationContext) {
-        this.applicationContext = applicationContext;
+    @Bean
+    public ReadService readService(CrudServiceRegistry registry) {
+        return new ReadService(registry);
     }
 
 }
