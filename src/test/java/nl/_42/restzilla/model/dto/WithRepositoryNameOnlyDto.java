@@ -1,0 +1,15 @@
+package nl._42.restzilla.model.dto;
+
+public class WithRepositoryNameOnlyDto {
+    
+    private String name;
+    
+    public String getName() {
+        return name;
+    }
+    
+    public void setName(String name) {
+        this.name = name;
+    }
+
+}
