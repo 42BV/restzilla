@@ -17,7 +17,7 @@ Add the dependency to your own project:
 
 ```xml
 <dependency>
-  <groupId>nl._42.restzilla</groupId>
+  <groupId>nl.42.restzilla</groupId>
   <artifactId>restzilla</artifactId>
   <version>2.0.0-SNAPSHOT</version>
 </dependency>
