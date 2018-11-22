@@ -3,7 +3,9 @@
  */
 package io.restzilla.registry;
 
+import io.restzilla.repository.CrudRepositoryFactory;
 import io.restzilla.service.CrudService;
+import io.restzilla.service.CrudServiceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -19,13 +21,14 @@ import java.util.List;
  */
 class DefaultServiceRegistry extends AbstractServiceRegistry implements CrudServiceRegistry {
 
-    private final CrudServiceFactory factory;
+    private final CrudRepositoryFactory repositoryFactory;
 
-    public DefaultServiceRegistry(final CrudServiceFactory factory) {
-        this.factory = factory;
+    private final CrudServiceFactory serviceFactory;
+
+    DefaultServiceRegistry(CrudRepositoryFactory repositoryFactory, CrudServiceFactory serviceFactory) {
+        this.repositoryFactory = repositoryFactory;
+        this.serviceFactory = serviceFactory;
     }
-
-    // Lookup
 
     /**
      * {@inheritDoc}
@@ -39,8 +42,10 @@ class DefaultServiceRegistry extends AbstractServiceRegistry implements CrudServ
     }
 
     private <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> generateService(Class<T> entityClass) {
-        PagingAndSortingRepository<T, ID> repository = getRepository(entityClass);
-        return factory.buildService(entityClass, repository);
+        return serviceFactory.build(
+          entityClass,
+          getRepository(entityClass)
+        );
     }
 
     /**
@@ -50,11 +55,9 @@ class DefaultServiceRegistry extends AbstractServiceRegistry implements CrudServ
     public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> getRepository(Class<T> entityClass) {
         return repositoryOf(
           entityClass,
-          factory::buildRepository
+          repositoryFactory::build
         );
     }
-
-    // Registration
 
     @Autowired(required = false)
     public void setRepositories(List<PagingAndSortingRepository<?, ?>> repositories) {
@@ -64,26 +67,6 @@ class DefaultServiceRegistry extends AbstractServiceRegistry implements CrudServ
     @Autowired(required = false)
     public void setServices(List<CrudService<?, ?>> services) {
         services.forEach(this::registerService);
-    }
-
-    @Override
-    protected void registerService(CrudService<?, ?> service) {
-        if (service instanceof RepositoryAware) {
-            autowireRepository(service.getEntityClass(), (RepositoryAware) service);
-        }
-
-        super.registerService(service);
-    }
-
-    // Hook that automatically wires the repository into a custom service
-    private <T extends Persistable<ID>, ID extends Serializable> void autowireRepository(
-      final Class<T> entityClass,
-      final RepositoryAware<T, ID> service
-    ) {
-
-        if (service.getRepository() == null) {
-            service.setRepository(getRepository(entityClass));
-        }
     }
 
 }

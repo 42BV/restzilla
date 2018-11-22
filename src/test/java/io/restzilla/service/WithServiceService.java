@@ -3,6 +3,7 @@
  */
 package io.restzilla.service;
 
+import io.restzilla.DefaultService;
 import io.restzilla.model.User;
 import io.restzilla.model.WithService;
 import io.restzilla.registry.CrudServiceRegistry;

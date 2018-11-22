@@ -7,7 +7,8 @@ import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 /**
- * 
+ * Registry capable of retrieving a CRUD service or repository
+ * based on the entity class.
  *
  * @author jeroen
  * @since May 12, 2016
@@ -15,8 +16,7 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 public interface CrudServiceRegistry {
     
     /**
-     * Retrieve the service for our entity. When no instance can be found we
-     * initialize and register a new service bean.
+     * Retrieve the CRUD service of an entity.
      * 
      * @param <T> the entity type
      * @param <ID> the identifier type
@@ -26,8 +26,7 @@ public interface CrudServiceRegistry {
     <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> getService(Class<T> entityClass);
     
     /**
-     * Retrieve the repository for our entity. When no instance can be found we
-     * initialize and register a new repository bean.
+     * Retrieve the CRUD repository of an entity.
      * 
      * @param <T> the entity type
      * @param <ID> the identifier type

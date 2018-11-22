@@ -18,7 +18,7 @@ import io.restzilla.web.mapping.BeanMapperAdapter;
 import io.restzilla.web.query.CrudServiceListable;
 import io.restzilla.web.query.Finder;
 import io.restzilla.web.query.Listable;
-import io.restzilla.service.ReadServiceListable;
+import io.restzilla.web.query.ReadServiceListable;
 import io.restzilla.web.query.RepositoryMethodListable;
 import io.restzilla.web.query.MappingListable;
 import io.restzilla.web.security.SecurityProvider;

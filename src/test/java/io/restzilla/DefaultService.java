@@ -1,7 +1,7 @@
 /*
  * (C) 2014 42 bv (www.42.nl). All rights reserved.
  */
-package io.restzilla.service;
+package io.restzilla;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.domain.Sort.Direction;

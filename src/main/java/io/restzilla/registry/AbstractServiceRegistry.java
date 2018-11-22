@@ -1,5 +1,6 @@
 package io.restzilla.registry;
 
+import io.restzilla.repository.RepositoryAware;
 import io.restzilla.service.CrudService;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Persistable;
@@ -13,7 +14,7 @@ import java.util.function.Function;
  * Default implementation of a service registry that uses concurrent
  * hash maps for caching.
  */
-public abstract class AbstractServiceRegistry implements CrudServiceRegistry {
+abstract class AbstractServiceRegistry implements CrudServiceRegistry {
 
     private final ConcurrentHashMap<Class<?>, PagingAndSortingRepository<?, ?>> repositories =
       new ConcurrentHashMap<>();
@@ -30,7 +31,8 @@ public abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      * @param <ID> entity identifier type
      * @return the service
      */
-    protected <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> serviceOf(
+    @SuppressWarnings("unchecked")
+    <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> serviceOf(
       final Class<T> entityClass,
       final Function<Class<T>, CrudService<T, ID>> factory
     ) {
@@ -52,7 +54,8 @@ public abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      * @param <ID> entity identifier type
      * @return the repository
      */
-    protected <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> repositoryOf(
+    @SuppressWarnings("unchecked")
+    <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> repositoryOf(
       final Class<T> entityClass,
       final Function<Class<T>, PagingAndSortingRepository<T, ID>> factory
     ) {
@@ -70,7 +73,7 @@ public abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      *
      * @param repository the repository
      */
-    protected void registerRepository(PagingAndSortingRepository<?, ?> repository) {
+    void registerRepository(PagingAndSortingRepository<?, ?> repository) {
         Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(repository.getClass(), PagingAndSortingRepository.class);
         if (arguments != null && arguments.length == 2) {
             this.registerRepository(arguments[0], repository);
@@ -83,7 +86,7 @@ public abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      * @param entityClass the entity class
      * @param repository the repository
      */
-    protected void registerRepository(Class<?> entityClass, PagingAndSortingRepository<?, ?> repository) {
+    private void registerRepository(Class<?> entityClass, PagingAndSortingRepository<?, ?> repository) {
         this.repositories.put(entityClass, repository);
     }
 
@@ -92,7 +95,7 @@ public abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      *
      * @param service the service
      */
-    protected void registerService(CrudService<?, ?> service) {
+    void registerService(CrudService<?, ?> service) {
         this.registerService(service.getEntityClass(), service);
     }
 
@@ -102,7 +105,13 @@ public abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      * @param entityClass the entity class
      * @param service the service
      */
-    protected void registerService(Class<?> entityClass, CrudService<?, ?> service) {
+    private void registerService(Class<?> entityClass, CrudService<?, ?> service) {
+        if (service instanceof RepositoryAware) {
+            ((RepositoryAware) service).setRepository(
+              getRepository(service.getEntityClass())
+            );
+        }
+
         this.services.put(entityClass, service);
     }
 
