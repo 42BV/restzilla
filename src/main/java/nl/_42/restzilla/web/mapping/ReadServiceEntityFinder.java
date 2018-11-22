@@ -3,9 +3,8 @@
  */
 package nl._42.restzilla.web.mapping;
 
-import io.beanmapper.spring.web.EntityFinder;
-
 import com.google.common.base.Preconditions;
+import io.beanmapper.spring.web.EntityFinder;
 import nl._42.restzilla.service.ReadService;
 
 /**
@@ -31,9 +30,16 @@ public class ReadServiceEntityFinder implements EntityFinder {
      * {@inheritDoc}
      */
     @Override
-    @SuppressWarnings({ "unchecked", "rawtypes" })
-    public Object find(Long id, Class entityClass) {
-        return readService.getOne(entityClass, id);
+    public <T> T find(Long id, Class<T> type) {
+        return (T) readService.getOne((Class) type, id);
     }
-    
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T findAndDetach(Long id, Class<T> type) {
+        return find(id, type);
+    }
+
 }

@@ -15,16 +15,16 @@
 		<java.servlet.version>3.1.0</java.servlet.version>
 
 		<!-- Dependency versions -->
-		<spring.version>5.0.7.RELEASE</spring.version>
-		<spring.data.version>2.0.8.RELEASE</spring.data.version>
-		<spring.security.version>5.0.6.RELEASE</spring.security.version>
-		<hibernate.version>5.3.1.Final</hibernate.version>
-		<hibernate.validator.version>6.0.10.Final</hibernate.validator.version>
-		<beanmapper.version>2.4.1</beanmapper.version>
-		<commons.lang.version>3.3.2</commons.lang.version>
-		<jackson.version>2.9.6</jackson.version>
+		<spring.version>5.1.2.RELEASE</spring.version>
+		<spring.data.version>2.1.2.RELEASE</spring.data.version>
+		<spring.security.version>5.1.1.RELEASE</spring.security.version>
+		<hibernate.version>5.4.0.CR1</hibernate.version>
+		<hibernate.validator.version>6.0.13.Final</hibernate.validator.version>
+		<beanmapper.version>3.0.0</beanmapper.version>
+		<commons.lang.version>3.8.1</commons.lang.version>
+		<jackson.version>2.9.7</jackson.version>
 		<swagger.version>1.0.2</swagger.version>
-		<slf4j.version>1.7.7</slf4j.version>
+		<slf4j.version>1.7.25</slf4j.version>
 	</properties>
 
 	<dependencies>
@@ -116,10 +116,10 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.hibernate</groupId>
+			<groupId>org.hibernate.validator</groupId>
 			<artifactId>hibernate-validator</artifactId>
 			<version>${hibernate.validator.version}</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 
 		<!-- Validation -->
@@ -155,8 +155,6 @@
             <version>2.2.0</version>
             <scope>test</scope>
         </dependency>
-
-		<!-- Logging -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>

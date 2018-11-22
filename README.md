@@ -11,23 +11,25 @@ The purpose of [Restzilla](https://github.com/42BV/restzilla) is to dynamically 
 
 ## Quick Start ##
 
-Clone the Restzilla project and install with Maven.
+Clone the Restzilla project and install locally with Maven.
 
 Add the dependency to your own project:
 
 ```xml
 <dependency>
-  <groupId>io.restzilla</groupId>
+  <groupId>nl._42.restzilla</groupId>
   <artifactId>restzilla</artifactId>
-  <version>1.11.0</version>
+  <version>2.0.0-SNAPSHOT</version>
 </dependency>
 ```
 
+We are currently working on publishing the project to Maven Central.
+
 Other dependencies:
 
-* Spring MVC (4.0+)
-* Spring Data JPA (1.8+)
-* Jackson (2.0+)
+* Spring MVC (5.1+)
+* Spring Data JPA (2.1+)
+* Jackson (2.9+)
 * Java (1.8+)
 
 Annotate your Spring Configuration with @EnableRest:
@@ -55,22 +57,22 @@ public class User {
 
 That's it! Restzilla will now automatically inject a repository, service and controller. Where the controller will handle the following requests:
 
-* GET    /user
-* GET    /user/{id}
-* POST   /user
-* PUT    /user/{id}
-* DELETE /user/{id}
+* `GET    /user`
+* `GET    /user/{id}`
+* `POST   /user`
+* `PUT    /user/{id}`
+* `DELETE /user/{id}`
 
 ## Pagination and sorting ##
 
 The GET requests by default return a collection of entities. But it is also possible to retrieve the entities as page:
 
-* GET     /user?page=0&size=10
+* `GET     /user?page=0&size=10`
 
 Also, the entities can be retrieved with a specific order:
 
-* GET     /user?page=0&size=10&sort=id,[asc|desc]
-* GET     /user?sort=id,[asc|desc]
+* `GET     /user?page=0&size=10&sort=id,[asc|desc]`
+* `GET     /user?sort=id,[asc|desc]`
 
 You can also specify default orders per entity, as fallback when no orders are specified in the request:
 
@@ -240,7 +242,7 @@ Whenever the query always returns a single result, it can be marked as unique. T
 
 ### Service ###
 
-Services can have a custom implementation. By implemening the CrudService interface your services will automatically be detected. In the lines of convention of configuration we offer an extendable template class:
+Services can have a custom implementation. By implementing the CrudService interface your services will automatically be detected. In the lines of convention of configuration we offer an extendable template class:
 
 ```java
 @Service

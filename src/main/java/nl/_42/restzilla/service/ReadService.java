@@ -3,16 +3,15 @@
  */
 package nl._42.restzilla.service;
 
-import java.io.Serializable;
-import java.util.List;
-
+import com.google.common.base.Preconditions;
 import nl._42.restzilla.registry.CrudServiceRegistry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
 
-import com.google.common.base.Preconditions;
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * Service capable of reading any type of entity.
@@ -29,10 +28,10 @@ public class ReadService {
      * Registry containing all service instanced. Note that this
      * variable is not final as it can be injected dynamically.
      */
-    private final CrudServiceRegistry crudServiceRegistry;
+    private final CrudServiceRegistry registry;
     
-    public ReadService(CrudServiceRegistry crudServiceRegistry) {
-        this.crudServiceRegistry = Preconditions.checkNotNull(crudServiceRegistry, "Service registry is required.");
+    public ReadService(CrudServiceRegistry registry) {
+        this.registry = Preconditions.checkNotNull(registry, "Service registry is required.");
     }
 
     /**
@@ -75,7 +74,7 @@ public class ReadService {
     }
     
     private <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> getService(Class<T> entityClass) {
-        return crudServiceRegistry.getService(entityClass);
+        return registry.getService(entityClass);
     }
 
 }
