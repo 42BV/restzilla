@@ -3,7 +3,7 @@
  */
 package nl._42.restzilla.service;
 
-import nl._42.restzilla.repository.RepositoryAware;
+import com.google.common.collect.Lists;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.support.NoOpCacheManager;
@@ -19,17 +19,13 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.function.Supplier;
 
-import com.google.common.collect.Lists;
-
 /**
  * Default implementation of the CRUD service, delegates all to the repository.
  *
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable>
-  extends AbstractCrudService<T, ID>
-  implements RepositoryAware<T, ID> {
+public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> extends AbstractCrudService<T, ID> {
 
     private static Cache EMPTY_CACHE = new NoOpCacheManager().getCache("empty");
 
@@ -112,7 +108,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     public List<T> findAll(Sort sort) {
         return (List<T>) repository.findAll(sort);
     }
-    
+
     /**
      * {@inheritDoc}
      */

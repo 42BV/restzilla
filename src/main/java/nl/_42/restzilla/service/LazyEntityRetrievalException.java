@@ -6,7 +6,7 @@ package nl._42.restzilla.service;
  */
 public class LazyEntityRetrievalException extends RuntimeException {
 
-    public LazyEntityRetrievalException(Exception e) {
+    public LazyEntityRetrievalException(final Exception e) {
         super(e);
     }
 
