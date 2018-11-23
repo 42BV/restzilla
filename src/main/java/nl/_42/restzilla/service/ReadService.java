@@ -3,7 +3,6 @@
  */
 package nl._42.restzilla.service;
 
-import com.google.common.base.Preconditions;
 import nl._42.restzilla.registry.CrudServiceRegistry;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +11,8 @@ import org.springframework.data.domain.Sort;
 
 import java.io.Serializable;
 import java.util.List;
+
+import static java.util.Objects.requireNonNull;
 
 /**
  * Service capable of reading any type of entity.
@@ -30,8 +31,8 @@ public class ReadService {
      */
     private final CrudServiceRegistry registry;
     
-    public ReadService(CrudServiceRegistry registry) {
-        this.registry = Preconditions.checkNotNull(registry, "Service registry is required.");
+    public ReadService(final CrudServiceRegistry registry) {
+        this.registry = requireNonNull(registry, "Service registry is required.");
     }
 
     /**

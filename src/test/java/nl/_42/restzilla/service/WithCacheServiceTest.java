@@ -30,7 +30,7 @@ public class WithCacheServiceTest extends AbstractSpringTest {
         entity.setName("Test");
         
         cache.put("findAll()", Arrays.asList(entity));
-        cache.put("findOne(42)", entity);
+        cache.put("find(42)", Optional.of(entity));
     }
 
     @Test
