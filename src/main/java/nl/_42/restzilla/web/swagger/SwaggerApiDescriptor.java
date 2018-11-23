@@ -17,7 +17,8 @@ public interface SwaggerApiDescriptor {
     
     /**
      * Enhance our API listing with new mappings.
-     * 
+     *
+     * @param information the resource information
      * @param listing the API listing
      * @param modelProvider describes our models
      */

@@ -12,6 +12,7 @@ public interface CrudServiceFactory {
      * Build a new service based on an entity class.
      *
      * @param entityClass the entity class
+     * @param repository the repository to use
      * @param <T> the entity type
      * @param <ID> the identifier type
      * @return the service

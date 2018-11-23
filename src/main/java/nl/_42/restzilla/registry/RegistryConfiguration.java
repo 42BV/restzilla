@@ -24,6 +24,8 @@ public class RegistryConfiguration {
   /**
    * Build a registry with references to each entity service and repository.
    *
+   * @param repositoryFactory the factory for building repositories
+   * @param serviceFactory the factory for building services
    * @return the service registry
    */
   @Bean

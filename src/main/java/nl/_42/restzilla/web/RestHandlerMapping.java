@@ -68,8 +68,8 @@ public class RestHandlerMapping extends AbstractHandlerMapping implements Priori
     /**
      * Create a new handler mapping.
      * 
-     * @param applicationContext
-     *            the initialized {@link ApplicationContext}
+     * @param applicationContext the application context
+     * @param defaultHandlerMappingName the default handler mapping bean name
      */
     public RestHandlerMapping(ApplicationContext applicationContext, String defaultHandlerMappingName) {
         this.applicationContext = applicationContext;

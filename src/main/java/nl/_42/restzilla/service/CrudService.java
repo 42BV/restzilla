@@ -34,7 +34,7 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
     /**
      * Saves a given entity. Use the returned instance for further
      * operations as this save could return a wrapped object.
-     * <br/>
+     *
      * The entity is provided as a lazy value, allowing us to perform
      * modifications inside of the service transaction. Without a
      * transaction, it would be impossible to fetch dependencies in
@@ -75,7 +75,7 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
 
     /**
      * Deletes the entity.
-     * <br/>
+     *
      * The entity is provided as a lazy value, allowing us to perform
      * modifications inside of the service transaction.
      *

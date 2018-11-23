@@ -35,7 +35,8 @@ public class EnableRestConfiguration implements ImportAware {
     /**
      * Build a handler mapping, capable of delegating HTTP requests and fallback
      * handlers for the registered entities.
-     * 
+     *
+     * @param applicationContext the application context
      * @return the handler mapping
      */
     @Bean
@@ -61,6 +62,7 @@ public class EnableRestConfiguration implements ImportAware {
     /**
      * Build a new service, capable of querying each type of registered entity.
      *
+     * @param registry the CRUD registry
      * @return the read service
      */
     @Bean
