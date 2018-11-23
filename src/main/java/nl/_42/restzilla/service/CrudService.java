@@ -3,18 +3,11 @@
  */
 package nl._42.restzilla.service;
 
-import io.beanmapper.spring.Lazy;
+import org.springframework.data.domain.Persistable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Persistable;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.PagingAndSortingRepository;
-import org.springframework.transaction.annotation.Transactional;
+import java.util.Objects;
 
 /**
  * CRUD service.
@@ -25,8 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 public interface CrudService<T extends Persistable<ID>, ID extends Serializable> extends PagingAndSortingService<T, ID> {
 
     /**
-     * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
-     * entity instance completely.
+     * Saves a given entity. Use the returned instance for further
+     * operations as this save could return a wrapped object.
      * 
      * @param <S> the result type
      * @param entity the entity
@@ -34,36 +27,28 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      */
     @Transactional
     default <S extends T> S save(S entity) {
+        Objects.requireNonNull(entity, "Cannot save a null entity");
         return getRepository().save(entity);
     }
     
     /**
-     * Saves a given entity. Use the returned instance for further operations as the save operation might have changed the
-     * entity instance completely.
+     * Saves a given entity. Use the returned instance for further
+     * operations as this save could return a wrapped object.
+     * <br/>
+     * The entity is provided as a lazy value, allowing us to perform
+     * modifications inside of the service transaction. Without a
+     * transaction, it would be impossible to fetch dependencies in
+     * the entity tree.
      * 
      * @param <S> the result type
-     * @param entity the lazy entity
+     * @param supplier the entity supplier
      * @return the saved entity
      */
     @Transactional
-    default <S extends T> S save(Lazy<S> entity) {
-        try {
-            return save(entity.get());
-        } catch (RuntimeException rte) {
-            throw rte;
-        } catch (Exception e) {
-            throw new LazyEntityRetrievalException(e);
-        }
-    }
-
-    /**
-     * Deletes the entity.
-     * 
-     * @param entity must not be {@literal null}.
-     */
-    @Transactional
-    default void delete(T entity) {
-        getRepository().delete(entity);
+    default <S extends T> S save(final Lazy<S> supplier) {
+        return this.save(
+          supplier.apply()
+        );
     }
 
     /**
@@ -73,7 +58,34 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      */
     @Transactional
     default void delete(ID id) {
+        Objects.requireNonNull(id, "Cannot delete based on a null identifier");
         getRepository().deleteById(id);
+    }
+
+    /**
+     * Deletes the entity.
+     *
+     * @param entity the entity to delete
+     */
+    @Transactional
+    default void delete(T entity) {
+        Objects.requireNonNull(entity, "Cannot delete a null entity");
+        getRepository().delete(entity);
+    }
+
+    /**
+     * Deletes the entity.
+     * <br/>
+     * The entity is provided as a lazy value, allowing us to perform
+     * modifications inside of the service transaction.
+     *
+     * @param supplier the entity supplier
+     */
+    @Transactional
+    default void delete(final Lazy<T> supplier) {
+        this.delete(
+          supplier.apply()
+        );
     }
 
     /**

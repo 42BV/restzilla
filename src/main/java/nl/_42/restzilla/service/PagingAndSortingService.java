@@ -1,7 +1,6 @@
 package nl._42.restzilla.service;
 
 import com.google.common.collect.Lists;
-import nl._42.restzilla.repository.RepositoryAware;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
@@ -14,7 +13,15 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
 
-public interface PagingAndSortingService<T extends Persistable<ID>, ID extends Serializable> extends RepositoryAware<T, ID> {
+import static java.lang.String.format;
+
+/**
+ * Service capable of retrieving specific and collections
+ * of a certain entity type.
+ * @param <T> the entity type
+ * @param <ID> the identifier type
+ */
+public interface PagingAndSortingService<T extends Persistable<ID>, ID extends Serializable> {
 
   /**
    * Returns all entities.
@@ -90,13 +97,21 @@ public interface PagingAndSortingService<T extends Persistable<ID>, ID extends S
    *
    * @param id must not be {@literal null}.
    * @return the entity with the given id
-   * @throws EntityNotFoundException if {@code id} is {@literal null} or the result cannot be found
+   * @throws EntityNotFoundException if the result cannot be found
    */
   @Transactional(readOnly = true)
   default T getOne(ID id) {
-    return find(id).orElseThrow(() -> new EntityNotFoundException("Cannot find entity with identifier: " + id));
+    return find(id).orElseThrow(
+      () -> new EntityNotFoundException(
+        format("Cannot find entity with identifier: %s", id)
+      )
+    );
   }
 
+  /**
+   * Retrieve the underlying repository.
+   * @return the repository
+   */
   PagingAndSortingRepository<T, ID> getRepository();
 
 }

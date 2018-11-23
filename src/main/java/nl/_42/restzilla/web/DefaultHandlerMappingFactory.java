@@ -3,7 +3,7 @@ package nl._42.restzilla.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import io.beanmapper.BeanMapper;
-import io.beanmapper.spring.Lazy;
+import nl._42.restzilla.service.Lazy;
 import nl._42.restzilla.web.mapping.Mapper;
 import nl._42.restzilla.RestConfig;
 import nl._42.restzilla.service.CrudService;
@@ -291,7 +291,7 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
             return doUpdate(id, json, validate(input), patch);
         }
         
-        private Object doUpdate(Serializable id, String json, Object input, boolean patch) throws BindException {
+        private Object doUpdate(Serializable id, String json, Object input, boolean patch) {
             Persistable<?> output = entityService.save(new LazyMergingEntity(id, input, json, patch));
             return mapToResult(output, information.update());
         }
