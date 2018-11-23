@@ -11,28 +11,24 @@ The purpose of [Restzilla](https://github.com/42BV/restzilla) is to dynamically 
 
 ## Quick Start ##
 
-Clone the Restzilla project and install locally with Maven.
-
-Add the dependency to your own project:
+Add the Maven dependency:
 
 ```xml
 <dependency>
   <groupId>nl.42.restzilla</groupId>
   <artifactId>restzilla</artifactId>
-  <version>2.0.0-SNAPSHOT</version>
+  <version>2.0.0</version>
 </dependency>
 ```
 
-We are currently working on publishing the project to Maven Central.
-
-Other dependencies:
+Required dependencies:
 
 * Spring MVC (5.1+)
 * Spring Data JPA (2.1+)
 * Jackson (2.9+)
 * Java (1.8+)
 
-Annotate your Spring Configuration with @EnableRest:
+Annotate your Spring Configuration with `@EnableRest`:
 
 ```java
 @EnableWebMvc
@@ -41,7 +37,7 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 }
 ```
 
-Then annotate the entities that should have REST endpoints with @RestResource:
+Then annotate the entities that should have REST endpoints with `@RestResource`:
 
 ```java
 @Entity
@@ -195,7 +191,7 @@ When the user does not have any of the roles we will throw a SecurityException. 
 
 ## Customize beans ##
 
-Logic can be customized on each of the architecural layers: Repository, Service and Controller. This is particulary handy when domain specific functionality is desired.
+Logic can be customized on each of the architectural layers: Repository, Service and Controller. This is particulary handy when domain specific functionality is desired.
 
 ### Repository ###
 
@@ -232,7 +228,7 @@ public class User {
 ```
 
 To query all active users, we perform the following request:
-* GET /user?version=1&active=true
+* `GET /user?version=1&active=true`
 
 Whenever the query always returns a single result, it can be marked as unique. This way the result will be an object, rather than an array or page.
 
@@ -242,7 +238,30 @@ Whenever the query always returns a single result, it can be marked as unique. T
 
 ### Service ###
 
-Services can have a custom implementation. By implementing the CrudService interface your services will automatically be detected. In the lines of convention of configuration we offer an extendable template class:
+Services can have a custom implementation. By implementing the `CrudService` interface your services will automatically be detected:
+
+```java
+@Service
+@Transactional
+@Scope(proxyMode = TARGET_CLASS)
+public class UserService implements CrudService<User, Long> {
+ 
+ private final UserRepository userRepository;
+    
+ @Autowired
+ public UserService(UserRepository userRepository) { 
+  super(userRepository);
+ }
+ 
+ @Override
+ public UserRepository getRepository() { 
+  return userRepository;
+ }
+ 
+}
+```
+
+Or extend the template `DefaultCrudService` template:
 
 ```java
 @Service
@@ -258,6 +277,8 @@ public class UserService extends DefaultCrudService<User, Long> {
 }
 ```
 
+Every service method can be overridden for custom logic.
+
 ### Controller ###
 
 To customize the REST endpoint, just define a regular Spring MVC request mapping:
@@ -269,6 +290,7 @@ public class UserController {
 
  @RequestMapping(method = POST)
  public UserModel create(CreateUserModel model) {
+  // Implement
  }
  
 }
@@ -284,6 +306,7 @@ public class UserController {
 
  @RequestMapping(method = POST)
  public UserModel create(CreateUserModel model) {
+  // Implement
  }
  
 }
