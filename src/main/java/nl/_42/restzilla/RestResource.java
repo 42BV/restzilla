@@ -47,17 +47,13 @@ public @interface RestResource {
      * @return the base path
      */
     String basePath() default "";
-    
+
+    RestSecured secured() default @RestSecured;
+
     //
     // Query
     //
-    
-    /**
-     * (Optional) security expression for retrieving data.
-     * @return the read security
-     */
-    String[] readSecured() default "";
-    
+
     /**
      * (Optional) the default query type. When undefined we use the entity type.
      * @return the query class
@@ -91,12 +87,6 @@ public @interface RestResource {
     //
     // Modification
     //
-
-    /**
-     * (Optional) security expression for modifying data.
-     * @return the modification security
-     */
-    String[] modifySecured() default "";
 
     /**
      * Determines if update requests can be considered as patch.

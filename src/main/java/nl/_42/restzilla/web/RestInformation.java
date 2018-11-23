@@ -3,23 +3,23 @@
  */
 package nl._42.restzilla.web;
 
+import com.google.common.base.CaseFormat;
+import com.google.common.base.Preconditions;
 import nl._42.restzilla.RestConfig;
 import nl._42.restzilla.RestQuery;
 import nl._42.restzilla.RestResource;
+import nl._42.restzilla.RestSecured;
 import nl._42.restzilla.web.util.UrlUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Persistable;
+import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Persistable;
-import org.springframework.web.bind.annotation.RequestMapping;
-
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Preconditions;
 
 /**
  * Shows all information of an entity.
@@ -292,7 +292,8 @@ public class RestInformation {
      * @return the read expressions
      */
     public String[] getReadSecured() {
-        return annotation.readSecured();
+        RestSecured secured = annotation.secured();
+        return ArrayUtils.addAll(secured.read(), secured.value());
     }
     
     /**
@@ -301,7 +302,8 @@ public class RestInformation {
      * @return the modify expressions
      */
     public String[] getModifySecured() {
-        return annotation.modifySecured();
+        RestSecured secured = annotation.secured();
+        return ArrayUtils.addAll(secured.modify(), secured.value());
     }
     
     //
