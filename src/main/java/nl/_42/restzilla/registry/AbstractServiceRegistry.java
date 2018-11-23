@@ -7,6 +7,7 @@ import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 
 import java.io.Serializable;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
@@ -74,10 +75,9 @@ abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      * @param repository the repository
      */
     void registerRepository(PagingAndSortingRepository<?, ?> repository) {
-        Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(repository.getClass(), PagingAndSortingRepository.class);
-        if (arguments != null && arguments.length == 2) {
-            this.registerRepository(arguments[0], repository);
-        }
+      getEntityClass(repository, PagingAndSortingRepository.class).ifPresent(entityClass ->
+          this.registerRepository(entityClass, repository)
+      );
     }
 
     /**
@@ -96,7 +96,9 @@ abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      * @param service the service
      */
     void registerService(CrudService<?, ?> service) {
-        this.registerService(service.getEntityClass(), service);
+        getEntityClass(service, CrudService.class).ifPresent(entityClass ->
+          this.registerService(entityClass, service)
+        );
     }
 
     /**
@@ -105,14 +107,29 @@ abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      * @param entityClass the entity class
      * @param service the service
      */
+    @SuppressWarnings("unchecked")
     private void registerService(Class<?> entityClass, CrudService<?, ?> service) {
         if (service instanceof RepositoryAware) {
-            ((RepositoryAware) service).setRepository(
-              getRepository(service.getEntityClass())
-            );
+            PagingAndSortingRepository repository = getRepository((Class) entityClass);
+            ((RepositoryAware) service).setRepository(repository);
         }
 
         this.services.put(entityClass, service);
+    }
+
+    private Optional<Class<?>> getEntityClass(Object container, Class<?> interfaceType) {
+        Class<?> entityClass = null;
+
+        if (container instanceof EntityClassAware) {
+            entityClass = ((EntityClassAware) container).getEntityClass();
+        } else {
+            Class<?>[] arguments = GenericTypeResolver.resolveTypeArguments(container.getClass(), interfaceType);
+            if (arguments != null && arguments.length == 2) {
+                entityClass = arguments[0];
+            }
+        }
+
+        return Optional.ofNullable(entityClass);
     }
 
 }

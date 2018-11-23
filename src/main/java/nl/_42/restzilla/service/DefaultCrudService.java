@@ -3,9 +3,11 @@
  */
 package nl._42.restzilla.service;
 
+import nl._42.restzilla.registry.EntityClassAware;
 import org.springframework.cache.Cache;
 import org.springframework.cache.Cache.ValueWrapper;
 import org.springframework.cache.support.NoOpCacheManager;
+import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.annotation.Transactional;
@@ -16,6 +18,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 import static java.lang.String.format;
+import static java.util.Objects.requireNonNull;
 
 /**
  * Default implementation of the CRUD service, delegates all to the repository.
@@ -23,7 +26,9 @@ import static java.lang.String.format;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> extends AbstractCrudService<T, ID> {
+public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable>
+  extends AbstractCrudService<T, ID>
+  implements EntityClassAware<T> {
 
     private static final Cache EMPTY_CACHE = new NoOpCacheManager().getCache("empty");
 
@@ -32,33 +37,34 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      */
     private Cache cache = EMPTY_CACHE;
 
+    private final Class<T> entityClass;
+
     /**
      * Construct a new service.
      */
     public DefaultCrudService() {
-        super();
+        this.entityClass = (Class<T>) GenericTypeResolver.resolveTypeArguments(getClass(), CrudService.class)[0];
     }
-    
+
     /**
      * Construct a new service.
      * @param entityClass the entity class
      */
     public DefaultCrudService(Class<T> entityClass) {
-        super(entityClass);
+        requireNonNull(entityClass, "Entity class cannot be null");
+        this.entityClass = entityClass;
     }
-    
+
     /**
      * Construct a new service.
-     * <br>
-     * <b>This constructor dynamically resolves the entity type with reflection.</b>
-     * 
+     *
      * @param repository the repository
      */
     public DefaultCrudService(PagingAndSortingRepository<T, ID> repository) {
         this();
         setRepository(repository);
     }
-    
+
     /**
      * Construct a new service.
      * 
@@ -151,6 +157,14 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      */
     public void setCache(Cache cache) {
         this.cache = cache;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public Class<T> getEntityClass() {
+        return entityClass;
     }
 
 }

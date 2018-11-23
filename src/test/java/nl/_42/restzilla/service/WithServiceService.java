@@ -7,6 +7,7 @@ import nl._42.restzilla.DefaultService;
 import nl._42.restzilla.model.User;
 import nl._42.restzilla.model.WithService;
 import nl._42.restzilla.registry.CrudServiceRegistry;
+import nl._42.restzilla.registry.EntityClassAware;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,7 +22,7 @@ public class WithServiceService extends DefaultCrudService<WithService, Long> {
 
     @Override
     public <S extends WithService> S save(S entity) {
-        entity.setName(entity.getName() + " with " + userService.getEntityClass().getSimpleName() + "!");
+        entity.setName(entity.getName() + " with " + ((EntityClassAware) userService).getEntityClass().getSimpleName() + "!");
         return super.save(entity);
     }
     

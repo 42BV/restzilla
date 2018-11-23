@@ -88,11 +88,4 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
         );
     }
 
-    /**
-     * Retrieve the entity class.
-     *
-     * @return the entity class
-     */
-    Class<T> getEntityClass();
-
 }
