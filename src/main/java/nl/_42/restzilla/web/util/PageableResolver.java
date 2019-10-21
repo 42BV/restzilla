@@ -35,7 +35,7 @@ public class PageableResolver {
     
     private static final int FALLBACK_DEFAULT_PAGE = 0;
     private static final int FALLBACK_DEFAULT_SIZE = 10;
-    private static final Sort FALLBACK_DEFAULT_SORT = new Sort(Direction.ASC, "id");
+    private static final Sort FALLBACK_DEFAULT_SORT = Sort.by(Direction.ASC, "id");
 
     /**
      * Determine if this request has pagination information.
@@ -69,7 +69,7 @@ public class PageableResolver {
     public static Pageable getPageable(HttpServletRequest request, Sort sort) {
         int page = getParameterAsInteger(request, PAGE_PARAMETER, FALLBACK_DEFAULT_PAGE);
         int size = getParameterAsInteger(request, SIZE_PARAMETER, FALLBACK_DEFAULT_SIZE);
-        return new PageRequest(page, size, sort);
+        return PageRequest.of(page, size, sort);
     }
 
     private static int getParameterAsInteger(HttpServletRequest request, String name, int defaultValue) {
@@ -110,7 +110,7 @@ public class PageableResolver {
             properties = ArrayUtils.remove(properties, properties.length - 1);
         }
         
-        return new Sort(direction, properties);
+        return Sort.by(direction, properties);
     }
 
     private static Sort getDefaultSort(Class<?> entityClass) {
@@ -124,7 +124,7 @@ public class PageableResolver {
                     orders.add(new Order(fragment.direction(), property));
                 }
             }
-            return new Sort(orders);
+            return Sort.by(orders);
         }
     }
     
