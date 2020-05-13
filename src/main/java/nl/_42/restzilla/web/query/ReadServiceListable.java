@@ -4,14 +4,13 @@
 package nl._42.restzilla.web.query;
 
 import nl._42.restzilla.service.ReadService;
-
-import java.io.Serializable;
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
+
+import java.io.Serializable;
+import java.util.List;
 
 /**
  * Adapts the {@link ReadService} to the {@link Listable} interface.
@@ -22,7 +21,6 @@ import org.springframework.data.domain.Sort;
 public class ReadServiceListable<T extends Persistable<ID>, ID extends Serializable> implements Listable<T> {
     
     private final ReadService readService;
-
     private final Class<T> entityClass;
     
     /**

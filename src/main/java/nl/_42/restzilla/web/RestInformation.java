@@ -6,7 +6,6 @@ package nl._42.restzilla.web;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import nl._42.restzilla.RestConfig;
-import nl._42.restzilla.RestQuery;
 import nl._42.restzilla.RestResource;
 import nl._42.restzilla.RestSecured;
 import nl._42.restzilla.web.util.UrlUtils;
@@ -16,10 +15,6 @@ import org.springframework.data.domain.Persistable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /**
  * Shows all information of an entity.
@@ -232,56 +227,7 @@ public class RestInformation {
     private static boolean isCustom(Class<?> clazz) {
         return !Object.class.equals(clazz);
     }
-    
-    //
-    // Queries
-    //
 
-    public List<QueryInformation> getQueries() {
-        List<QueryInformation> queries = new ArrayList<QueryInformation>();
-        for (RestQuery annotation : annotation.queries()) {
-            queries.add(new QueryInformation(annotation));
-        }
-        return queries;
-    }
-
-    public QueryInformation findQuery(Map<String, String[]> requestParameters) {
-        for (RestQuery query : annotation.queries()) {
-            if (isMatchingParameters(query.parameters(), requestParameters)) {
-                return new QueryInformation(query);
-            }
-        }
-        return null;
-    }
-    
-    private boolean isMatchingParameters(String[] parameters, Map<String, String[]> requestParameters) {
-        for (String parameter : parameters) {
-            if (parameter.contains("=")) {
-                String name = StringUtils.substringBefore(parameter, "=");
-                String expected = StringUtils.substringAfter(parameter, "=");
-                String value = getSingleParameterValue(name, requestParameters);
-                if (!expected.equals(value)) {
-                    return false;
-                }
-            } else {
-                String value = getSingleParameterValue(parameter, requestParameters);
-                if (StringUtils.isBlank(value)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-    
-    private String getSingleParameterValue(String parameterName, Map<String, String[]> requestParameters) {
-        String[] values = requestParameters.get(parameterName);
-        if (values == null || values.length == 0) {
-            return "";
-        } else {
-            return StringUtils.defaultString(values[0], "");
-        }
-    }
-    
     //
     // Security
     //
@@ -380,76 +326,6 @@ public class RestInformation {
             return resultType;
         }
         
-    }
-    
-    /**
-     * Information about the REST query.
-     *
-     * @author Jeroen van Schagen
-     * @since Dec 10, 2015
-     */
-    public class QueryInformation {
-        
-        private final RestQuery query;
-
-        public QueryInformation(RestQuery query) {
-            this.query = query;
-        }
-        
-        /**
-         * Retrieves the method name.
-         * @return the method name
-         */
-        public String getMethodName() {
-            return query.method();
-        }
-        
-        /**
-         * Retrieves the raw parameters.
-         * @return the parameters
-         */
-        public List<String> getRawParameters() {
-            return Arrays.asList(query.parameters());
-        }
-
-        /**
-         * Retrieve the variable parameter names.
-         * @return the parameter names
-         */
-        public List<String> getParameterNames() {
-            List<String> parameterNames = new ArrayList<String>();
-            for (String parameter : query.parameters()) {
-                if (!parameter.contains("=")) {
-                    parameterNames.add(parameter);
-                }
-            }
-            return parameterNames;
-        }
-        
-        /**
-         * Retrieves the result information.
-         * @return the result information
-         */
-        public ResultInformation getResultInfo() {
-            return resolveResultInfo(query.queryType(), query.resultType(), resultInfo);
-        }
-
-        /**
-         * Determine if the finder results in a single result.
-         * @return {@code true} when unique
-         */
-        public boolean isSingleResult() {
-            return query.unique();
-        }
-        
-        /**
-         * Retrieve the security rules for this particular finder.
-         * @return the security rules
-         */
-        public String[] getSecured() {
-            return query.secured();
-        }
-
     }
 
 }

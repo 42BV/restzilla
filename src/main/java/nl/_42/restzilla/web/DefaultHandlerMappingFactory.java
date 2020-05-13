@@ -3,23 +3,21 @@ package nl._42.restzilla.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import io.beanmapper.BeanMapper;
-import nl._42.restzilla.service.Lazy;
-import nl._42.restzilla.web.mapping.Mapper;
 import nl._42.restzilla.RestConfig;
-import nl._42.restzilla.service.CrudService;
 import nl._42.restzilla.registry.CrudServiceRegistry;
+import nl._42.restzilla.service.CrudService;
+import nl._42.restzilla.service.Lazy;
 import nl._42.restzilla.service.ReadService;
+import nl._42.restzilla.web.mapping.BeanMapperAdapter;
+import nl._42.restzilla.web.mapping.Mapper;
+import nl._42.restzilla.web.query.CrudServiceListable;
+import nl._42.restzilla.web.query.Listable;
+import nl._42.restzilla.web.query.MappingListable;
+import nl._42.restzilla.web.query.ReadServiceListable;
+import nl._42.restzilla.web.security.SecurityProvider;
 import nl._42.restzilla.web.util.JsonUtil;
 import nl._42.restzilla.web.util.PageableResolver;
 import nl._42.restzilla.web.util.UrlUtils;
-import nl._42.restzilla.web.mapping.BeanMapperAdapter;
-import nl._42.restzilla.web.query.CrudServiceListable;
-import nl._42.restzilla.web.query.Finder;
-import nl._42.restzilla.web.query.Listable;
-import nl._42.restzilla.web.query.ReadServiceListable;
-import nl._42.restzilla.web.query.RepositoryMethodListable;
-import nl._42.restzilla.web.query.MappingListable;
-import nl._42.restzilla.web.security.SecurityProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +39,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
-import static org.springframework.util.StringUtils.collectionToDelimitedString;
 import static org.springframework.web.bind.annotation.RequestMethod.DELETE;
 import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static org.springframework.web.bind.annotation.RequestMethod.PATCH;
@@ -135,19 +132,16 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
          */
         @ResponseBody
         public Object findAll(HttpServletRequest request) {
-            RestInformation.QueryInformation query = information.findQuery(request.getParameterMap());
-            Listable<?> listable = buildListable(query, request);
+            ensureIsReadable(information.findAll().secured(), request);
 
-            if (query != null) {
-                ensureIsReadable(query.getSecured(), request);
-                if (query.isSingleResult()) {
-                    return ((Finder) listable).findOne();
-                }
+            Listable<?> listable = buildListable();
+            Sort sort = PageableResolver.getSort(request, listable.getEntityClass());
+            if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
+                Pageable pageable = PageableResolver.getPageable(request, sort);
+                return listable.findAll(pageable);
             } else {
-                ensureIsReadable(information.findAll().secured(), request);
+                return listable.findAll(sort);
             }
-            
-            return findAll(listable, request);
         }
 
         private void ensureIsReadable(String[] expressions, HttpServletRequest request) {
@@ -173,28 +167,15 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
             }
         }
 
-        private Listable<?> buildListable(RestInformation.QueryInformation query, HttpServletRequest request) {
+        private Listable<?> buildListable() {
             RestInformation.ResultInformation findAll = information.getResultInfo(information.findAll());
             Class<?> resultType = findAll.getResultType();
 
             Listable<?> delegate = new CrudServiceListable(entityService, information.getEntityClass());
-            if (query != null) {
-                delegate = new RepositoryMethodListable(crudServiceRegistry, conversionService, information, query, request.getParameterMap());
-                resultType = query.getResultInfo().getResultType();
-            } else if (information.hasCustomQuery(findAll)) {
+            if (information.hasCustomQuery(findAll)) {
                 delegate = new ReadServiceListable(readService, findAll.getQueryType());
             }
             return new MappingListable(delegate, mapper, resultType);
-        }
-
-        private Object findAll(Listable<?> listable, HttpServletRequest request) {
-            Sort sort = PageableResolver.getSort(request, listable.getEntityClass());
-            if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
-                Pageable pageable = PageableResolver.getPageable(request, sort);
-                return listable.findAll(pageable);
-            } else {
-                return listable.findAll(sort);
-            }
         }
 
         /**
@@ -472,10 +453,6 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
             final String basePath = controller.information.getBasePath();
             
             logIf(controller.information.findAll(), logger, "Mapped \"[/{}],methods=[GET],params=[]\"", basePath);
-            for (RestInformation.QueryInformation query : controller.information.getQueries()) {
-                List<String> parameters = query.getRawParameters();
-                logger.info("Mapped \"[/{}],methods=[GET],params=[{}]\"", basePath, collectionToDelimitedString(parameters, ","));
-            }
             logIf(controller.information.findOne(), logger, "Mapped \"[/{}/{id}],methods=[GET],params=[]\"", basePath);
             
             if (!controller.information.isReadOnly()) {

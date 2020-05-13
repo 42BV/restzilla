@@ -3,14 +3,7 @@
  */
 package nl._42.restzilla.web;
 
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
+import com.fasterxml.jackson.databind.ObjectMapper;
 import nl._42.restzilla.AbstractControllerTest;
 import nl._42.restzilla.builder.EntityBuilder;
 import nl._42.restzilla.builder.OtherBuilder;
@@ -26,9 +19,6 @@ import nl._42.restzilla.model.WithSecurity;
 import nl._42.restzilla.model.WithService;
 import nl._42.restzilla.model.WithoutPatch;
 import nl._42.restzilla.model.dto.ValidationDto;
-
-import java.util.Arrays;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +27,15 @@ import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.NestedServletException;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import java.util.Arrays;
+
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * 
@@ -422,30 +420,7 @@ public class RestTest extends AbstractControllerTest {
                         .andExpect(jsonPath("$[0].name").value("Henk"))
                         .andExpect(jsonPath("$[1].name").value("Jan"));
     }
-    
-    @Test
-    public void testCustomRepositoryQuerySort() throws Exception {
-        WithRepository jan = new WithRepository();
-        jan.setName("Jan");
-        jan.setActive(true);
-        entityBuilder.save(jan);
-        
-        WithRepository henk = new WithRepository();
-        henk.setName("Henk");
-        henk.setActive(true);
-        entityBuilder.save(henk);
 
-        WithRepository piet = new WithRepository();
-        piet.setName("Piet");
-        entityBuilder.save(piet);
-        
-        this.webClient.perform(get("/with-repository?active=true&sort=name,desc"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$").isArray())
-                        .andExpect(jsonPath("$[0].name").value("Jan"))
-                        .andExpect(jsonPath("$[1].name").value("Henk"));
-    }
-    
     @Test
     public void testCustomRepositoryQueryPage() throws Exception {
         WithRepository jan = new WithRepository();
@@ -487,22 +462,6 @@ public class RestTest extends AbstractControllerTest {
                         .andExpect(jsonPath("$[0].name").value("Henk"))
                         .andExpect(jsonPath("$[1].name").value("Jan"));
     }
-    
-    @Test
-    public void testCustomRepositoryQuerySingleResult() throws Exception {
-        WithRepository jan = new WithRepository();
-        jan.setName("Jan");
-        jan.setActive(true);
-        entityBuilder.save(jan);
-        
-        WithRepository piet = new WithRepository();
-        piet.setName("Piet");
-        entityBuilder.save(piet);
-        
-        this.webClient.perform(get("/with-repository?active=true&unique=true"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.name").value("Jan"));
-    }
 
     @Test
     public void testCustomService() throws Exception {
@@ -537,22 +496,7 @@ public class RestTest extends AbstractControllerTest {
         WithRollback result = entityBuilder.get(WithRollback.class, entity.getId());
         Assert.assertEquals("Initial", result.getName());
     }
-    
-    @Test
-    public void testCustomServiceWithFinder() throws Exception {
-        this.webClient.perform(get("/with-service?custom=true"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(42))
-                .andExpect(jsonPath("$[0].name").value("Service generated"));
-    }
-        
-    // TODO: Figure out why this causes an exception
-    @Test(expected = NestedServletException.class)
-    public void testCustomServiceWithProxy() throws Exception {
-        this.webClient.perform(get("/with-proxy-service?age=42"))
-                .andExpect(status().isOk());
-    }
-    
+
     @Test
     public void testCustomController() throws Exception {
         this.webClient.perform(get("/with-controller"))

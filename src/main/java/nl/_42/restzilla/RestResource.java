@@ -3,12 +3,12 @@
  */
 package nl._42.restzilla;
 
-import static java.lang.annotation.ElementType.TYPE;
-import static java.lang.annotation.RetentionPolicy.RUNTIME;
-
 import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+
+import static java.lang.annotation.ElementType.TYPE;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Automatically generates a REST entpoint for this entity,
@@ -77,12 +77,6 @@ public @interface RestResource {
      * @return the paged only
      */
     boolean pagedOnly() default false;
-
-    /**
-     * Finder queries that should be supported by our resource.
-     * @return the queries
-     */
-    RestQuery[] queries() default {};
     
     //
     // Modification
