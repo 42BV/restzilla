@@ -6,7 +6,6 @@ import io.beanmapper.BeanMapper;
 import nl._42.restzilla.RestConfig;
 import nl._42.restzilla.registry.CrudServiceRegistry;
 import nl._42.restzilla.service.CrudService;
-import nl._42.restzilla.service.Lazy;
 import nl._42.restzilla.service.ReadService;
 import nl._42.restzilla.web.mapping.BeanMapperAdapter;
 import nl._42.restzilla.web.mapping.Mapper;
@@ -273,8 +272,19 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
         }
         
         private Object doUpdate(Serializable id, String json, Object input, boolean patch) {
-            Persistable<?> output = entityService.save(new LazyMergingEntity(id, input, json, patch));
-            return mapToResult(output, information.update());
+            Persistable<?> entity = entityService.getOne(id);
+            if (patch) {
+                Set<String> propertyNames = JsonUtil.getPropertyNamesFromJson(json, objectMapper);
+                beanMapper.wrapConfig()
+                        .downsizeSource(new ArrayList<>(propertyNames))
+                        .build()
+                        .map(input, entity);
+            } else {
+                beanMapper.map(input, entity);
+            }
+
+            Persistable<?> saved = entityService.save(entity);
+            return mapToResult(saved, information.update());
         }
 
         /**
@@ -311,51 +321,6 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
             if (entityService == null) {
                 entityService = crudServiceRegistry.getService((Class) information.getEntityClass());
             }
-        }
-
-        /**
-         * Maps our input into the persisted entity on demand.
-         * This mapping is performed lazy to ensure that the
-         * entity is not auto-updated between transactions.
-         *
-         * @author Jeroen van Schagen
-         * @since Nov 13, 2015
-         */
-        private class LazyMergingEntity implements Lazy<Object> {
-            
-            private final Serializable id;
-            
-            private final Object input;
-            
-            private final String json;
-            
-            private final boolean patch;
-            
-            public LazyMergingEntity(Serializable id, Object input, String json, boolean patch) {
-                this.id = id;
-                this.input = input;
-                this.json = json;
-                this.patch = patch;
-            }
-            
-            /**
-             * {@inheritDoc}
-             */
-            @Override
-            public Object get() {
-                Persistable<?> entity = entityService.getOne(id);
-                if (patch) {
-                    Set<String> propertyNames = JsonUtil.getPropertyNamesFromJson(json, objectMapper);
-                    beanMapper.wrapConfig()
-                                .downsizeSource(new ArrayList<>(propertyNames))
-                                .build()
-                                .map(input, entity);
-                } else {
-                    beanMapper.map(input, entity);
-                }
-                return entity;
-            }
-            
         }
 
     }

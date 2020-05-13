@@ -5,8 +5,7 @@ package nl._42.restzilla.service;
 
 import nl._42.restzilla.registry.EntityClassAware;
 import org.springframework.cache.Cache;
-import org.springframework.cache.Cache.ValueWrapper;
-import org.springframework.cache.support.NoOpCacheManager;
+import org.springframework.cache.support.NoOpCache;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.repository.PagingAndSortingRepository;
@@ -14,8 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -26,16 +25,12 @@ import static java.util.Objects.requireNonNull;
  * @author Jeroen van Schagen
  * @since Aug 21, 2015
  */
-public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable>
-  extends AbstractCrudService<T, ID>
-  implements EntityClassAware<T> {
-
-    private static final Cache EMPTY_CACHE = new NoOpCacheManager().getCache("empty");
+public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializable> extends AbstractCrudService<T, ID> implements EntityClassAware<T> {
 
     /**
      * Cache used internally for storing entities.
      */
-    private Cache cache = EMPTY_CACHE;
+    private Cache cache = new NoOpCache("empty");
 
     private final Class<T> entityClass;
 
@@ -82,9 +77,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional(readOnly = true)
     public List<T> findAll() {
-        return fromCache(
-          "findAll()",
-          super::findAll
+        return cache.get(
+            "findAll()",
+            super::findAll
         );
     }
 
@@ -94,9 +89,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional(readOnly = true)
     public Optional<T> find(final ID id) {
-        return fromCache(
-          format("find(%s)", id),
-          () -> super.find(id)
+        return cache.get(
+            format("find(%s)", id),
+            () -> super.find(id)
         );
     }
 
@@ -121,33 +116,17 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         cache.clear();
     }
 
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @Transactional
-    public void delete(ID id) {
-        super.delete(id);
+    protected void delete(ID id) {
+        Objects.requireNonNull(id, "Cannot delete based on a null identifier");
+        getRepository().deleteById(id);
         cache.clear();
-    }
-
-    @SuppressWarnings("unchecked")
-    private <R> R fromCache(final String key, final Supplier<R> retriever) {
-        ValueWrapper cached = cache.get(key);
-        if (cached == null) {
-            R result = retriever.get();
-            cache.put(key, result);
-            return result;
-        } else {
-            return (R) cached.get();
-        }
     }
 
     /**
      * Retrieves the cache.
      * @return cache
      */
-    public Cache getCache() {
+    protected Cache getCache() {
         return cache;
     }
     
@@ -155,7 +134,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      * Modifies the cache.
      * @param cache the new cache
      */
-    public void setCache(Cache cache) {
+    protected void setCache(Cache cache) {
         this.cache = cache;
     }
 
