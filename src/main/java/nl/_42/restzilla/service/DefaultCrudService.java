@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
@@ -77,9 +78,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional(readOnly = true)
     public List<T> findAll() {
-        return cache.get(
-            "findAll()",
-            super::findAll
+        return fromCache(
+          "findAll()",
+          super::findAll
         );
     }
 
@@ -89,9 +90,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional(readOnly = true)
     public Optional<T> find(final ID id) {
-        return cache.get(
-            format("find(%s)", id),
-            () -> super.find(id)
+        return fromCache(
+          format("find(%s)", id),
+          () -> super.find(id)
         );
     }
 
@@ -120,6 +121,19 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
         Objects.requireNonNull(id, "Cannot delete based on a null identifier");
         getRepository().deleteById(id);
         cache.clear();
+    }
+
+    @SuppressWarnings("unchecked")
+    // Using putIfAbsent causes a recursive update in certain cases
+    private <R> R fromCache(final String key, final Supplier<R> retriever) {
+        Cache.ValueWrapper cached = cache.get(key);
+        if (cached == null) {
+            R result = retriever.get();
+            cache.put(key, result);
+            return result;
+        } else {
+            return (R) cached.get();
+        }
     }
 
     /**
