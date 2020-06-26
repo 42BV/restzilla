@@ -48,6 +48,10 @@ public @interface RestResource {
      */
     String basePath() default "";
 
+    /**
+     * (Optional) the security that should be applied on a resource.
+     * @return the security
+     */
     RestSecured secured() default @RestSecured;
 
     //
@@ -73,7 +77,7 @@ public @interface RestResource {
     boolean readOnly() default false;
     
     /**
-     * Enable this when our {@code getAll} should only return pages.
+     * Enable this when our {@code findAll} should only return pages.
      * @return the paged only
      */
     boolean pagedOnly() default false;

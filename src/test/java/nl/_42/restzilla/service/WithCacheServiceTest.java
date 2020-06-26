@@ -2,16 +2,13 @@ package nl._42.restzilla.service;
 
 import nl._42.restzilla.AbstractSpringTest;
 import nl._42.restzilla.model.WithCache;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
+
+import java.util.Optional;
 
 public class WithCacheServiceTest extends AbstractSpringTest {
     
@@ -29,15 +26,7 @@ public class WithCacheServiceTest extends AbstractSpringTest {
         entity.setId(42L);
         entity.setName("Test");
         
-        cache.put("findAll()", Arrays.asList(entity));
         cache.put("find(42)", Optional.of(entity));
-    }
-
-    @Test
-    public void testCacheFindAll() {
-        List<WithCache> entities = service.findAll();
-        Assert.assertEquals(1, entities.size());
-        Assert.assertEquals("Test", entities.get(0).getName());
     }
 
     @Test

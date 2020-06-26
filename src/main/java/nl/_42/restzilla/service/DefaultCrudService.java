@@ -12,7 +12,6 @@ import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -70,18 +69,6 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     public DefaultCrudService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
         this(entityClass);
         setRepository(repository);
-    }
-
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @Transactional(readOnly = true)
-    public List<T> findAll() {
-        return fromCache(
-          "findAll()",
-          super::findAll
-        );
     }
 
     /**
