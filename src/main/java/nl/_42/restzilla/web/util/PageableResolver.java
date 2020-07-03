@@ -63,7 +63,8 @@ public class PageableResolver {
      * @return the resolved pageable
      */
     public static Pageable getPageable(HttpServletRequest request, Sort sort, RestProperties properties) {
-        int page = getParameterAsInteger(request, PAGE_PARAMETER, properties.getDefaultPage());
+        int parsed = getParameterAsInteger(request, PAGE_PARAMETER, properties.getDefaultPage());
+        int page = properties.getPage(parsed);
         int size = Math.min(getParameterAsInteger(request, SIZE_PARAMETER, properties.getDefaultSize()), properties.getMaxPageSize());
         return PageRequest.of(page, size, sort);
     }
