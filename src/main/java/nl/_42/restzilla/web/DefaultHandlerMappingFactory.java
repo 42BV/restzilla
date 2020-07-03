@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import io.beanmapper.BeanMapper;
 import nl._42.restzilla.RestConfig;
+import nl._42.restzilla.RestProperties;
 import nl._42.restzilla.registry.CrudServiceRegistry;
 import nl._42.restzilla.service.CrudService;
 import nl._42.restzilla.service.ReadService;
@@ -63,7 +64,9 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
     private final SecurityProvider securityProvider;
     
     private final Validator validator;
-    
+
+    private final RestProperties properties;
+
     private ReadService readService;
 
     private CrudServiceRegistry crudServiceRegistry;
@@ -81,17 +84,21 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
      *              the {@link SecurityProvider} checking the authorization
      * @param validator
      *              the {@link Validator} for verifying the input
+     * @param properties
+     *              the {@link RestProperties} for configuration
      */
     public DefaultHandlerMappingFactory(ObjectMapper objectMapper,
                                         ConversionService conversionService,
                                         BeanMapper beanMapper,
                                         SecurityProvider securityProvider,
-                                        Validator validator) {
+                                        Validator validator,
+                                        RestProperties properties) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
         this.beanMapper = beanMapper;
         this.securityProvider = securityProvider;
         this.validator = validator;
+        this.properties = properties;
     }
 
     /**
@@ -134,9 +141,9 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
             ensureIsReadable(information.findAll().secured(), request);
 
             Listable<?> listable = buildListable();
-            Sort sort = PageableResolver.getSort(request, listable.getEntityClass());
+            Sort sort = PageableResolver.getSort(request, listable.getEntityClass(), properties);
             if (information.isPagedOnly() || PageableResolver.isSupported(request)) {
-                Pageable pageable = PageableResolver.getPageable(request, sort);
+                Pageable pageable = PageableResolver.getPageable(request, sort, properties);
                 return listable.findAll(pageable);
             } else {
                 return listable.findAll(sort);

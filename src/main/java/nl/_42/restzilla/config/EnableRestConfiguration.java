@@ -3,6 +3,7 @@
  */
 package nl._42.restzilla.config;
 
+import nl._42.restzilla.RestProperties;
 import nl._42.restzilla.registry.CrudServiceRegistry;
 import nl._42.restzilla.registry.RegistryConfiguration;
 import nl._42.restzilla.service.ReadService;
@@ -12,6 +13,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportAware;
+import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 
 import java.util.Map;
@@ -68,6 +70,17 @@ public class EnableRestConfiguration implements ImportAware {
     @Bean
     public ReadService readService(CrudServiceRegistry registry) {
         return new ReadService(registry);
+    }
+
+    /**
+     * Read the REST properties.
+     *
+     * @param environment the environment
+     * @return the properties
+     */
+    @Bean
+    public RestProperties restProperties(Environment environment) {
+        return new RestProperties(environment);
     }
 
 }

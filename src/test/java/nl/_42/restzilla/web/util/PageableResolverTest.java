@@ -3,20 +3,30 @@
  */
 package nl._42.restzilla.web.util;
 
+import nl._42.restzilla.RestProperties;
 import nl._42.restzilla.SortingDefault;
 import nl._42.restzilla.model.User;
-
-import java.util.Iterator;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.data.domain.Sort.Order;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.mock.web.MockHttpServletRequest;
 
+import java.util.Iterator;
+
 public class PageableResolverTest {
-    
+
+    private final RestProperties properties;
+
+    public PageableResolverTest() {
+        MockEnvironment environment = new MockEnvironment();
+        environment.setProperty(RestProperties.DEFAULT_SORT_NAME, "id");
+
+        this.properties = new RestProperties(environment);
+    }
+
     @Test
     public void testIsSupportedTrue() {
         MockHttpServletRequest request = new MockHttpServletRequest();
@@ -37,7 +47,7 @@ public class PageableResolverTest {
         request.setParameter(PageableResolver.SIZE_PARAMETER, "42");
         request.addParameter(PageableResolver.SORT_PARAMETER, "id,ASC");
         
-        Pageable pageable = PageableResolver.getPageable(request, User.class);
+        Pageable pageable = PageableResolver.getPageable(request, User.class, properties);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(42, pageable.getPageSize());
         
@@ -53,7 +63,7 @@ public class PageableResolverTest {
         request.setParameter(PageableResolver.SIZE_PARAMETER, "42");
         request.addParameter(PageableResolver.SORT_PARAMETER, "id,name,ASC");
         
-        Pageable pageable = PageableResolver.getPageable(request, User.class);
+        Pageable pageable = PageableResolver.getPageable(request, User.class, properties);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(42, pageable.getPageSize());
         
@@ -71,7 +81,7 @@ public class PageableResolverTest {
         request.addParameter(PageableResolver.SORT_PARAMETER, "id,ASC");
         request.addParameter(PageableResolver.SORT_PARAMETER, "name,DESC");
         
-        Pageable pageable = PageableResolver.getPageable(request, User.class);
+        Pageable pageable = PageableResolver.getPageable(request, User.class, properties);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(42, pageable.getPageSize());
         
@@ -90,7 +100,7 @@ public class PageableResolverTest {
         request.addParameter(PageableResolver.SORT_PARAMETER, "other,DESC");
         request.addParameter(PageableResolver.SORT_PARAMETER, "age,ASC");
         
-        Pageable pageable = PageableResolver.getPageable(request, User.class);
+        Pageable pageable = PageableResolver.getPageable(request, User.class, properties);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(42, pageable.getPageSize());
         
@@ -107,7 +117,7 @@ public class PageableResolverTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
         
-        Pageable pageable = PageableResolver.getPageable(request, EntityWithMultiplePageableDefaults.class);
+        Pageable pageable = PageableResolver.getPageable(request, EntityWithMultiplePageableDefaults.class, properties);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(10, pageable.getPageSize());
         
@@ -119,11 +129,21 @@ public class PageableResolverTest {
     }
 
     @Test
+    public void testResolveExceedingSize() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setParameter(PageableResolver.SIZE_PARAMETER, "420");
+
+        Pageable pageable = PageableResolver.getPageable(request, User.class, properties);
+        Assert.assertEquals(0, pageable.getPageNumber());
+        Assert.assertEquals(properties.getMaxPageSize(), pageable.getPageSize());
+    }
+
+    @Test
     public void testResolveEntityDefaults() {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
         
-        Pageable pageable = PageableResolver.getPageable(request, EntityWithPageableDefaults.class);
+        Pageable pageable = PageableResolver.getPageable(request, EntityWithPageableDefaults.class, properties);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(10, pageable.getPageSize());
         
@@ -137,7 +157,7 @@ public class PageableResolverTest {
         MockHttpServletRequest request = new MockHttpServletRequest();
         request.setParameter(PageableResolver.PAGE_PARAMETER, "1");
         
-        Pageable pageable = PageableResolver.getPageable(request, EntityWithoutPageableDefaults.class);
+        Pageable pageable = PageableResolver.getPageable(request, EntityWithoutPageableDefaults.class, properties);
         Assert.assertEquals(1, pageable.getPageNumber());
         Assert.assertEquals(10, pageable.getPageSize());
         

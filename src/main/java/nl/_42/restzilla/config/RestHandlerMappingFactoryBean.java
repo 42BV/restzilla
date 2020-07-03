@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.config.BeanMapperBuilder;
 import io.beanmapper.utils.Classes;
+import nl._42.restzilla.RestProperties;
 import nl._42.restzilla.RestResource;
 import nl._42.restzilla.web.DefaultHandlerMappingFactory;
 import nl._42.restzilla.web.ResourceHandlerMapping;
@@ -91,6 +92,11 @@ class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, Appl
     private Validator validator = new NoOpValidator();
 
     /**
+     * Rest properties.
+     */
+    private RestProperties properties = new RestProperties();
+
+    /**
      * Default handler mapping name.
      */
     private String defaultHandlerMappingName;
@@ -132,7 +138,7 @@ class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, Appl
      * @return the created factory
      */
     protected ResourceHandlerMappingFactory buildHandlerMappingFactory() {
-        ResourceHandlerMappingFactory factory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider, validator);
+        ResourceHandlerMappingFactory factory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider, validator, properties);
         applicationContext.getAutowireCapableBeanFactory().autowireBean(factory);
         return factory;
     }
@@ -248,6 +254,15 @@ class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, Appl
     @Autowired(required = false)
     public void setValidator(Validator validator) {
         this.validator = validator;
+    }
+
+    /**
+     * Set the properties for handling REST requests.
+     * @param properties the properties to set
+     */
+    @Autowired(required = false)
+    public void setProperties(RestProperties properties) {
+        this.properties = properties;
     }
 
 }
