@@ -56,8 +56,8 @@ public class RestProperties {
         return defaultSort;
     }
 
-    public int getPage(int value) {
-        return defaultPage > 0 ? value - 1 : value;
+    public boolean isOneIndexedParameters() {
+        return defaultPage > 0;
     }
 
 }
