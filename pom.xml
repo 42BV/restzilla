@@ -4,7 +4,7 @@
 
     <groupId>nl.42</groupId>
     <artifactId>restzilla</artifactId>
-    <version>3.2.2-SNAPSHOT</version>
+    <version>3.2.2</version>
     <packaging>jar</packaging>
 
 	<name>Restzilla</name>
@@ -67,7 +67,7 @@
 		<connection>scm:git:https://github.com/42BV/restzilla.git</connection>
 		<developerConnection>scm:git:https://github.com/42BV/restzilla.git</developerConnection>
 		<url>https://github.com/42BV/restzilla</url>
-		<tag>HEAD</tag>
+		<tag>3.2.2</tag>
 	</scm>
 
 	<dependencies>
