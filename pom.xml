@@ -42,7 +42,7 @@
 		<!-- Dependency versions -->
 		<spring.version>5.2.6.RELEASE</spring.version>
 		<spring.data.version>2.2.7.RELEASE</spring.data.version>
-		<spring.security.version>5.2.4.RELEASE</spring.security.version>
+		<spring.security.version>5.2.10.RELEASE</spring.security.version>
 		<hibernate.version>5.4.15.Final</hibernate.version>
 		<hibernate.validator.version>6.0.19.Final</hibernate.validator.version>
 		<beanmapper.version>3.0.0</beanmapper.version>
