@@ -4,7 +4,7 @@
 
     <groupId>nl.42</groupId>
     <artifactId>restzilla</artifactId>
-    <version>3.3.1-SNAPSHOT</version>
+    <version>3.2.3-SNAPSHOT</version>
     <packaging>jar</packaging>
 
 	<name>Restzilla</name>
