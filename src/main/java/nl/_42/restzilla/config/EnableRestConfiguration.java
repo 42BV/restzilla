@@ -8,7 +8,6 @@ import nl._42.restzilla.registry.CrudServiceRegistry;
 import nl._42.restzilla.registry.RegistryConfiguration;
 import nl._42.restzilla.service.ReadService;
 import nl._42.restzilla.web.RestHandlerMapping;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -16,7 +15,6 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ImportAware;
 import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolverSupport;
 
 import java.util.Map;
 
@@ -35,9 +33,6 @@ public class EnableRestConfiguration implements ImportAware {
 
     private String basePackage;
     private String defaultHandlerMappingName;
-
-    @Autowired(required = false)
-    private PageableHandlerMethodArgumentResolverSupport pageableResolver;
 
     /**
      * Build a handler mapping, capable of delegating HTTP requests and fallback

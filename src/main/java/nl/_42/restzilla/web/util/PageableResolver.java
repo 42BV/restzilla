@@ -48,7 +48,6 @@ public class PageableResolver {
      * 
      * @param request the request
      * @param entityClass the entity class, used for defaults
-     * @param properties the properties
      * @return the resolved pageable
      */
     public static Pageable getPageable(HttpServletRequest request, Class<?> entityClass, RestProperties properties) {
@@ -61,7 +60,6 @@ public class PageableResolver {
      * 
      * @param request the request
      * @param sort the sort to use
-     * @param properties the properties
      * @return the resolved pageable
      */
     public static Pageable getPageable(HttpServletRequest request, Sort sort, RestProperties properties) {
@@ -85,7 +83,6 @@ public class PageableResolver {
      * 
      * @param request the request
      * @param entityClass the entity class, used for defaults
-     * @param properties the properties
      * @return the resolved pageable
      */
     public static Sort getSort(HttpServletRequest request, Class<?> entityClass, RestProperties properties) {

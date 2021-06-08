@@ -26,7 +26,6 @@ import org.springframework.context.annotation.ClassPathScanningCandidateComponen
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.validation.Validator;
@@ -86,12 +85,7 @@ class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, Appl
      * Checks the authorization.
      */
     private SecurityProvider securityProvider;
-
-    /**
-     * Manages the transactions
-     */
-    private PlatformTransactionManager transactionManager;
-
+    
     /**
      * Validator.
      */
@@ -144,7 +138,7 @@ class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, Appl
      * @return the created factory
      */
     protected ResourceHandlerMappingFactory buildHandlerMappingFactory() {
-        ResourceHandlerMappingFactory factory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider, transactionManager, validator, properties);
+        ResourceHandlerMappingFactory factory = new DefaultHandlerMappingFactory(objectMapper, conversionService, beanMapper, securityProvider, validator, properties);
         applicationContext.getAutowireCapableBeanFactory().autowireBean(factory);
         return factory;
     }
@@ -252,16 +246,7 @@ class RestHandlerMappingFactoryBean implements FactoryBean<HandlerMapping>, Appl
     public void setSecurityProvider(SecurityProvider securityProvider) {
         this.securityProvider = securityProvider;
     }
-
-    /**
-     * Set a transaction manager on our mappings.
-     * @param transactionManager the transaction manager
-     */
-    @Autowired
-    public void setTransactionManager(PlatformTransactionManager transactionManager) {
-        this.transactionManager = transactionManager;
-    }
-
+    
     /**
      * Set the validator that should be used to check the input.
      * @param validator the validator to set
