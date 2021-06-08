@@ -25,6 +25,9 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Validator;
@@ -62,6 +65,8 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
     private final BeanMapper beanMapper;
 
     private final SecurityProvider securityProvider;
+
+    private final TransactionTemplate transactionTemplate;
     
     private final Validator validator;
 
@@ -82,6 +87,8 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
      *              the {@link BeanMapper} for mapping between beans
      * @param securityProvider
      *              the {@link SecurityProvider} checking the authorization
+     * @param transactionManager
+     *              the {@link TransactionManager} for managing transactions
      * @param validator
      *              the {@link Validator} for verifying the input
      * @param properties
@@ -91,12 +98,14 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
                                         ConversionService conversionService,
                                         BeanMapper beanMapper,
                                         SecurityProvider securityProvider,
+                                        PlatformTransactionManager transactionManager,
                                         Validator validator,
                                         RestProperties properties) {
         this.objectMapper = objectMapper;
         this.conversionService = conversionService;
         this.beanMapper = beanMapper;
         this.securityProvider = securityProvider;
+        this.transactionTemplate = new TransactionTemplate(transactionManager);
         this.validator = validator;
         this.properties = properties;
     }
@@ -109,7 +118,27 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
         RestInformation information = new RestInformation(resourceType);
         return new DefaultHandlerMapping(new DefaultCrudController(information));
     }
-    
+
+    public interface Command {
+
+        Object perform() throws Exception;
+
+    }
+
+    private static class NestedException extends RuntimeException {
+
+        private final Exception exception;
+
+        private NestedException(Exception exception) {
+            this.exception = exception;
+        }
+
+        public Exception getException() {
+            return exception;
+        }
+
+    }
+
     @SuppressWarnings({ "rawtypes", "unchecked" })
     private class DefaultCrudController {
         
@@ -224,23 +253,41 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
          */
         @ResponseBody
         public Object create(HttpServletRequest request) throws Exception {
-            ensureIsModifiable(information.create().secured(), request);
-            String json = CharStreams.toString(request.getReader()).trim();
-            Class<?> inputType = information.getInputType(information.create());
+            return execute(() -> {
+                ensureIsModifiable(information.create().secured(), request);
+                String json = CharStreams.toString(request.getReader()).trim();
+                Class<?> inputType = information.getInputType(information.create());
 
-            if (json.startsWith(ARRAY_JSON_START)) {
-                List<Object> inputs = objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, inputType));
-                List<Object> results = new ArrayList<>();
-                for (Object input : inputs) {
-                    results.add(doCreate(input));
+                if (json.startsWith(ARRAY_JSON_START)) {
+                    List<Object> inputs = objectMapper.readValue(json, objectMapper.getTypeFactory().constructCollectionType(List.class, inputType));
+                    List<Object> results = new ArrayList<>();
+                    for (Object input : inputs) {
+                        results.add(doCreate(input));
+                    }
+                    return results;
+                } else {
+                    Object input = objectMapper.readValue(json, inputType);
+                    return doCreate(input);
                 }
-                return results;
-            } else {
-                Object input = objectMapper.readValue(json, inputType);
-                return doCreate(input);
+            });
+        }
+
+        private Object execute(Command command) throws Exception {
+            try {
+                return transactionTemplate.execute(action -> perform(command));
+            } catch (NestedException ne) {
+                throw ne.getException();
             }
         }
-        
+
+        private Object perform(Command command) {
+            try {
+                return command.perform();
+            } catch (Exception e) {
+                throw new NestedException(e);
+            }
+        }
+
         private void ensureIsModifiable(String[] expressions, HttpServletRequest request) {
             if (!hasAnyNotBlank(expressions)) {
                 expressions = information.getModifySecured();
@@ -270,12 +317,14 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
          */
         @ResponseBody
         public Object update(HttpServletRequest request) throws Exception {
-            ensureIsModifiable(information.update().secured(), request);
-            Serializable id = extractId(request);
-            String json = CharStreams.toString(request.getReader());
-            Object input = objectMapper.readValue(json, information.getInputType(information.update()));
-            boolean patch = request.getMethod().equals(PATCH.name());
-            return doUpdate(id, json, validate(input), patch);
+            return execute(() -> {
+                ensureIsModifiable(information.update().secured(), request);
+                Serializable id = extractId(request);
+                String json = CharStreams.toString(request.getReader());
+                Object input = objectMapper.readValue(json, information.getInputType(information.update()));
+                boolean patch = request.getMethod().equals(PATCH.name());
+                return doUpdate(id, json, validate(input), patch);
+            });
         }
         
         private Object doUpdate(Serializable id, String json, Object input, boolean patch) {
@@ -300,11 +349,13 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
          * @return the deleted entity
          */
         @ResponseBody
-        public Object delete(HttpServletRequest request) {
-            ensureIsModifiable(information.delete().secured(), request);
-            Persistable<?> entity = entityService.getOne(extractId(request));
-            entityService.delete(entity);
-            return mapToResult(entity, information.delete());
+        public Object delete(HttpServletRequest request) throws Exception {
+            return execute(() -> {
+                ensureIsModifiable(information.delete().secured(), request);
+                Persistable<?> entity = entityService.getOne(extractId(request));
+                entityService.delete(entity);
+                return mapToResult(entity, information.delete());
+            });
         }
         
         /**
