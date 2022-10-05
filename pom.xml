@@ -47,7 +47,7 @@
 		<hibernate.validator.version>6.1.6.Final</hibernate.validator.version>
 		<beanmapper.version>3.0.0</beanmapper.version>
 		<commons.lang.version>3.11</commons.lang.version>
-		<jackson.version>2.11.3</jackson.version>
+		<jackson.version>2.12.6.1</jackson.version>
 		<swagger.version>1.0.2</swagger.version>
 		<slf4j.version>1.7.30</slf4j.version>
 	</properties>
