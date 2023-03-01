@@ -3,16 +3,11 @@
  */
 package nl._42.restzilla;
 
-import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.config.BeanMapperBuilder;
 import nl._42.restzilla.config.EnableRest;
-
-import java.util.HashMap;
-import java.util.Map;
-
-import javax.sql.DataSource;
-
+import nl._42.restzilla.web.GlobalExceptionHandler;
 import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.jpa.HibernatePersistenceProvider;
@@ -39,7 +34,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import javax.sql.DataSource;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType.HSQL;
 
 /**
  * Test configuration.
@@ -129,6 +128,11 @@ public class ApplicationConfig {
     @Bean
     public Cache cache() {
         return new ConcurrentMapCache("test");
+    }
+
+    @Bean
+    public GlobalExceptionHandler exceptionHandler() {
+        return new GlobalExceptionHandler();
     }
 
     public static class HsqlConfig {

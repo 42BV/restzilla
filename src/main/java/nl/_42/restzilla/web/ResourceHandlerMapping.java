@@ -1,6 +1,6 @@
 package nl._42.restzilla.web;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import org.slf4j.Logger;
 import org.springframework.web.servlet.handler.AbstractHandlerMapping;

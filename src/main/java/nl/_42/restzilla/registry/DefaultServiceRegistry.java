@@ -8,7 +8,7 @@ import nl._42.restzilla.service.CrudService;
 import nl._42.restzilla.service.CrudServiceFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.io.Serializable;
 import java.util.List;
@@ -52,15 +52,12 @@ class DefaultServiceRegistry extends AbstractServiceRegistry implements CrudServ
      * {@inheritDoc}
      */
     @Override
-    public <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> getRepository(Class<T> entityClass) {
-        return repositoryOf(
-          entityClass,
-          repositoryFactory::build
-        );
+    public <T extends Persistable<ID>, ID extends Serializable> JpaRepository<T, ID> getRepository(Class<T> entityClass) {
+        return repositoryOf(entityClass, repositoryFactory::build);
     }
 
     @Autowired(required = false)
-    public void setRepositories(List<PagingAndSortingRepository<?, ?>> repositories) {
+    public void setRepositories(List<JpaRepository<?, ?>> repositories) {
         repositories.forEach(this::registerRepository);
     }
 

@@ -3,11 +3,11 @@
  */
 package nl._42.restzilla.repository;
 
-import java.io.Serializable;
-
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.repository.CrudRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
+
+import java.io.Serializable;
 
 /**
  * Interface to be implemented by any object that wishes to be notified
@@ -22,6 +22,6 @@ public interface RepositoryAware<T extends Persistable<ID>, ID extends Serializa
      * Set the repository that is used by this bean.
      * @param repository the repository instance
      */
-    void setRepository(PagingAndSortingRepository<T, ID> repository);
+    void setRepository(JpaRepository<T, ID> repository);
     
 }

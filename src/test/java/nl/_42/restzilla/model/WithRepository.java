@@ -3,7 +3,7 @@ package nl._42.restzilla.model;
 import nl._42.restzilla.RestResource;
 import nl._42.restzilla.SortingDefault;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 @SortingDefault("name")

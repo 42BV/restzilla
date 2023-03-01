@@ -6,7 +6,7 @@ package nl._42.restzilla.model;
 import nl._42.restzilla.RestConfig;
 import nl._42.restzilla.RestResource;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 @RestResource(readOnly = true, create = @RestConfig(enabled = true))

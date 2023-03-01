@@ -1,7 +1,7 @@
 package nl._42.restzilla.config;
 
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Test;
 import org.springframework.validation.BeanPropertyBindingResult;
 
 public class NoOpValidatorTest {
@@ -10,7 +10,7 @@ public class NoOpValidatorTest {
     
     @Test
     public void testSupport() {
-        Assert.assertTrue(validator.supports(String.class));
+        Assertions.assertTrue(validator.supports(String.class));
     }
     
     @Test
@@ -18,7 +18,7 @@ public class NoOpValidatorTest {
         MyClass target = new MyClass();
         BeanPropertyBindingResult errors = new BeanPropertyBindingResult(target, "input");
         validator.validate(target, errors);
-        Assert.assertFalse(errors.hasErrors());
+        Assertions.assertFalse(errors.hasErrors());
     }
     
     private static class MyClass {

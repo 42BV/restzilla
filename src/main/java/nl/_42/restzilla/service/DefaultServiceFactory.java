@@ -6,7 +6,7 @@ package nl._42.restzilla.service;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.StringUtils;
 
 import java.io.Serializable;
@@ -33,7 +33,7 @@ public class DefaultServiceFactory implements CrudServiceFactory {
     @Override
     public <T extends Persistable<ID>, ID extends Serializable> CrudService<T, ID> build(
       final Class<T> entityClass,
-      final PagingAndSortingRepository<T, ID> repository
+      final JpaRepository<T, ID> repository
     ) {
 
         CrudService<T, ID> service = new DefaultCrudService<>(entityClass, repository);

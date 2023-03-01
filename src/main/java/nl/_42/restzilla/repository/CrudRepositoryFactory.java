@@ -1,7 +1,7 @@
 package nl._42.restzilla.repository;
 
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.io.Serializable;
 
@@ -16,8 +16,6 @@ public interface CrudRepositoryFactory {
      * @param <ID> the identifier type
      * @return the repository
      */
-    <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> build(
-      final Class<T> entityClass
-    );
+    <T extends Persistable<ID>, ID extends Serializable> JpaRepository<T, ID> build(Class<T> entityClass);
 
 }

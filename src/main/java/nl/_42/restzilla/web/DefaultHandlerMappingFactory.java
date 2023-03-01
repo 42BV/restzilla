@@ -3,6 +3,7 @@ package nl._42.restzilla.web;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import io.beanmapper.BeanMapper;
+import jakarta.servlet.http.HttpServletRequest;
 import nl._42.restzilla.RestConfig;
 import nl._42.restzilla.RestProperties;
 import nl._42.restzilla.registry.CrudServiceRegistry;
@@ -32,7 +33,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
 
-import javax.servlet.http.HttpServletRequest;
 import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -282,7 +282,7 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
             Persistable<?> entity = entityService.getOne(id);
             if (patch) {
                 Set<String> propertyNames = JsonUtil.getPropertyNamesFromJson(json, objectMapper);
-                beanMapper.wrapConfig()
+                beanMapper.wrap()
                         .downsizeSource(new ArrayList<>(propertyNames))
                         .build()
                         .map(input, entity);
@@ -338,8 +338,7 @@ public class DefaultHandlerMappingFactory implements ResourceHandlerMappingFacto
      * @author Jeroen van Schagen
      * @since Sep 3, 2015
      */
-    private static class DefaultHandlerMapping
-      extends ResourceHandlerMapping {
+    private static class DefaultHandlerMapping extends ResourceHandlerMapping {
         
         private static final String FIND_ALL_NAME = "findAll";
         private static final String FIND_ONE_NAME = "findOne";

@@ -3,7 +3,7 @@
  */
 package nl._42.restzilla.web.security;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * Default implementation that grants everbody access.

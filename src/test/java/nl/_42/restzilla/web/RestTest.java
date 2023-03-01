@@ -4,6 +4,8 @@
 package nl._42.restzilla.web;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import nl._42.restzilla.AbstractControllerTest;
 import nl._42.restzilla.builder.EntityBuilder;
 import nl._42.restzilla.builder.OtherBuilder;
@@ -19,15 +21,15 @@ import nl._42.restzilla.model.WithSecurity;
 import nl._42.restzilla.model.WithService;
 import nl._42.restzilla.model.WithoutPatch;
 import nl._42.restzilla.model.dto.ValidationDto;
-import org.junit.Assert;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.TestingAuthenticationToken;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.util.NestedServletException;
 
-import java.util.Arrays;
+import java.util.List;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -56,102 +58,105 @@ public class RestTest extends AbstractControllerTest {
 
     @Autowired
     private ObjectMapper objectMapper;
-    
+
+    @PersistenceContext
+    private EntityManager entityManager;
+
     @Test
     public void testFindAllAsArray() throws Exception {
         userBuilder.createUser("Jan");
-        
+
         this.webClient.perform(get("/user/"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].name").value("Jan"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$[0].name").value("Jan"));
     }
-    
+
     @Test
     public void testFindAllAsArrayNoData() throws Exception {
         this.webClient.perform(get("/user/"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0]").doesNotExist());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$[0]").doesNotExist());
     }
-        
+
     @Test
     public void testFindAllAsPage() throws Exception {
         userBuilder.createUser("Jan");
-        
+
         this.webClient.perform(get("/user?page=0"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.number").value(0))
-                .andExpect(jsonPath("$.size").value(10))
-                .andExpect(jsonPath("$.content[0].name").value("Jan"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.number").value(0))
+            .andExpect(jsonPath("$.size").value(10))
+            .andExpect(jsonPath("$.content[0].name").value("Jan"));
     }
-    
+
     @Test
     public void testFindAllAsPageNoData() throws Exception {
         userBuilder.createUser("Jan");
-        
+
         this.webClient.perform(get("/user?page=1"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.number").value(1))
-                .andExpect(jsonPath("$.size").value(10))
-                .andExpect(jsonPath("$.content[0]").doesNotExist());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.number").value(1))
+            .andExpect(jsonPath("$.size").value(10))
+            .andExpect(jsonPath("$.content[0]").doesNotExist());
     }
-    
+
     @Test
     public void testFindById() throws Exception {
         User henk = userBuilder.createUser("Henk");
         userBuilder.createUser("Piet");
-        
+
         this.webClient.perform(get("/user/" + henk.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.name").value("Henk"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("Henk"));
     }
-    
+
     @Test
     public void testCreate() throws Exception {
         User piet = new User();
         piet.setName("Piet");
-        
+
         this.webClient.perform(post("/user")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(piet)))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$").exists());
-        
-        Assert.assertEquals(Long.valueOf(1), 
-                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(piet)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").exists());
+
+        Assertions.assertEquals(Long.valueOf(1), getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
     }
-    
+
     @Test
     public void testCreateAsArray() throws Exception {
         User piet = new User();
         piet.setName("Piet");
+
         User jan = new User();
         jan.setName("Jan");
-        
+
         this.webClient.perform(post("/user")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(Arrays.asList(piet, jan))))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$").isArray());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(List.of(piet, jan))))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray());
 
-        Assert.assertEquals(Long.valueOf(2),
-                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
+        Assertions.assertEquals(Long.valueOf(2), getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
     }
-    
+
     @Test
-    public void testUpdate() throws Exception {        
+    public void testUpdate() throws Exception {
         User henk = userBuilder.createUser("Henk");
-
         henk.setName("Piet");
-        
-        this.webClient.perform(put("/user/" + henk.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(henk)))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.name").value("Piet"));
 
-        Assert.assertEquals(Long.valueOf(1), 
-                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user", Long.class));
+        this.webClient.perform(put("/user/{id}", henk.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(henk)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("Piet"));
+
+
+        User updated = entityManager.find(User.class, henk.getId());
+        Assertions.assertNotNull(updated);
+        Assertions.assertEquals("Piet", updated.getName());
     }
 
     @Test
@@ -159,11 +164,11 @@ public class RestTest extends AbstractControllerTest {
         User henk = userBuilder.createUser("Henk");
         userBuilder.createUser("Piet");
         
-        this.webClient.perform(delete("/user/" + henk.getId()))
-                        .andExpect(status().isOk());
-        
-        Assert.assertEquals(Long.valueOf(0), 
-                            getJdbcTemplate().queryForObject("SELECT count(*) FROM user WHERE id = " + henk.getId(), Long.class));
+        this.webClient.perform(delete("/user/{id}", henk.getId()))
+            .andExpect(status().isOk());
+
+        User deleted = entityManager.find(User.class, henk.getId());
+        Assertions.assertNull(deleted);
     }
     
     //
@@ -175,10 +180,10 @@ public class RestTest extends AbstractControllerTest {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
         this.webClient.perform(get("/with-other-entity"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$[0].id").value(entity.getId().intValue()))
-                .andExpect(jsonPath("$[0].name").value("My name"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$[0].id").value(entity.getId().intValue()))
+            .andExpect(jsonPath("$[0].name").value("My name"));
     }
     
     @Test
@@ -186,9 +191,9 @@ public class RestTest extends AbstractControllerTest {
         WithOtherEntity entity = otherBuilder.createOther("My name"); 
 
         this.webClient.perform(get("/with-other-entity/" + entity.getId()))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value(entity.getId().intValue()))
-                .andExpect(jsonPath("$.name").value("My name"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(entity.getId().intValue()))
+            .andExpect(jsonPath("$.name").value("My name"));
     }
     
     @Test
@@ -196,11 +201,11 @@ public class RestTest extends AbstractControllerTest {
         WithOtherEntity entity = otherBuilder.createOther("My name");
         
         this.webClient.perform(put("/with-other-entity/" + entity.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(entity)))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.id").value(entity.getId().intValue()))
-                        .andExpect(jsonPath("$.name").value("My name"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(entity)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(entity.getId().intValue()))
+            .andExpect(jsonPath("$.name").value("My name"));
     }
 
     //
@@ -210,25 +215,25 @@ public class RestTest extends AbstractControllerTest {
     @Test
     public void testCustomBasePath() throws Exception {
         this.webClient.perform(get("/MyBasePath"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
     }
     
     @Test
     public void testNestedBasePath() throws Exception {
         this.webClient.perform(get("/mybase/path"))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
     
     @Test
     public void testDuplicate() throws Exception {
         this.webClient.perform(get("/with-duplicate"))
-                .andExpect(status().isOk());
+            .andExpect(status().isOk());
     }
     
     @Test
     public void testDisabled() throws Exception {
         this.webClient.perform(get("/with-disabled"))
-                .andExpect(status().isNotFound());
+            .andExpect(status().isNotFound());
     }
     
     @Test
@@ -237,23 +242,22 @@ public class RestTest extends AbstractControllerTest {
         entity.setName("Test");
         
         this.webClient.perform(post("/with-read-only/")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(entity)))
-                        .andExpect(status().isNotFound());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(entity)))
+            .andExpect(status().isNotFound());
     }
     
     @Test
     public void testPagedOnly() throws Exception {
         this.webClient.perform(get("/with-paged-only"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content").isArray())
-                .andExpect(jsonPath("$.number").value(0))
-                .andExpect(jsonPath("$.size").value(10));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.number").value(0))
+            .andExpect(jsonPath("$.size").value(10));
     }
-    
-    // TODO: This should not cause an exception
+
+    @Test
     @Transactional
-    @Test(expected = NestedServletException.class)
     public void testPatch() throws Exception {
         WithPatch entity = new WithPatch();
         entity.setName("My name");
@@ -261,19 +265,42 @@ public class RestTest extends AbstractControllerTest {
         entity.setNested(new WithPatchNested());
         entity.getNested().setNestedName("My nested name");
         entity.getNested().setNestedOther("My nested other");
-        
+
         entityBuilder.save(entity);
-        
-        this.webClient.perform(patch("/with-patch/" + entity.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\":\"New name\",\"nested\":{\"nestedName\":\"New nested name\"}}"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.name").value("New name"))
-                        .andExpect(jsonPath("$.email").value("email@42.nl"))
-                        .andExpect(jsonPath("$.nested.nestedName").value("New nested name"))
-                        .andExpect(jsonPath("$.nested.nestedOther").value("My nested other"));
+
+        this.webClient.perform(patch("/with-patch/{id}", entity.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"New name\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("New name"))
+            .andExpect(jsonPath("$.email").value("email@42.nl"))
+            .andExpect(jsonPath("$.nested.nestedName").value("My nested name"))
+            .andExpect(jsonPath("$.nested.nestedOther").value("My nested other"));
     }
-    
+
+    @Test
+    @Transactional
+    @Disabled("Disabled due to bug in bean mapper, nested patch does not work")
+    public void testPatchNested() throws Exception {
+        WithPatch entity = new WithPatch();
+        entity.setName("My name");
+        entity.setEmail("email@42.nl");
+        entity.setNested(new WithPatchNested());
+        entity.getNested().setNestedName("My nested name");
+        entity.getNested().setNestedOther("My nested other");
+
+        entityBuilder.save(entity);
+
+        this.webClient.perform(patch("/with-patch/{id}", entity.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"New name\",\"nested\":{\"nestedName\":\"New nested name\"}}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("New name"))
+            .andExpect(jsonPath("$.email").value("email@42.nl"))
+            .andExpect(jsonPath("$.nested.nestedName").value("New nested name"))
+            .andExpect(jsonPath("$.nested.nestedOther").value("My nested other"));
+    }
+
     @Test
     @Transactional
     public void testNoPatch() throws Exception {
@@ -283,11 +310,11 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(entity);
         
         this.webClient.perform(put("/without-patch/" + entity.getId())
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content("{\"name\":\"New name\"}"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.name").value("New name"))
-                        .andExpect(jsonPath("$.email").doesNotExist());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"New name\"}"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("New name"))
+            .andExpect(jsonPath("$.email").doesNotExist());
     }
     
     //
@@ -299,13 +326,13 @@ public class RestTest extends AbstractControllerTest {
         TestingAuthenticationToken user = new TestingAuthenticationToken("user", "user", "ROLE_READER");
         
         this.webClient.perform(get("/with-security").principal(user))
-                        .andExpect(status().isOk());
+            .andExpect(status().isOk());
     }
     
-    @Test(expected = NestedServletException.class)
+    @Test
     public void testSecuredReaderFail() throws Exception {
         this.webClient.perform(get("/with-security"))
-                        .andExpect(status().isOk());
+            .andExpect(status().isForbidden());
     }
     
     @Test
@@ -316,21 +343,21 @@ public class RestTest extends AbstractControllerTest {
         piet.setName("Piet");
         
         this.webClient.perform(post("/with-security")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(piet))
-                            .principal(user))
-                        .andExpect(status().isOk());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(piet))
+                .principal(user))
+            .andExpect(status().isOk());
     }
     
-    @Test(expected = NestedServletException.class)
+    @Test
     public void testSecuredModifyFail() throws Exception {
         WithSecurity piet = new WithSecurity();
         piet.setName("Piet");
         
         this.webClient.perform(post("/with-security")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(piet)))
-                        .andExpect(status().isOk());
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(piet)))
+            .andExpect(status().isForbidden());
     }
     
     @Test
@@ -347,7 +374,7 @@ public class RestTest extends AbstractControllerTest {
 
     }
     
-    @Test(expected = NestedServletException.class)
+    @Test
     @Transactional
     public void testSecuredCustomFail() throws Exception {
         WithSecurity piet = new WithSecurity();
@@ -355,7 +382,7 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(piet);
         
         this.webClient.perform(delete("/with-security/" + piet.getId()))
-            .andExpect(status().isOk());
+            .andExpect(status().isForbidden());
     }
         
     //
@@ -369,11 +396,11 @@ public class RestTest extends AbstractControllerTest {
         dto.street = "Teststreet 42";
         
         this.webClient.perform(post("/with-validation")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(dto)))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.name").value("Henk"))
-                        .andExpect(jsonPath("$.street").value("Teststreet 42"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(dto)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.name").value("Henk"))
+            .andExpect(jsonPath("$.street").value("Teststreet 42"));
     }
     
     @Test
@@ -394,8 +421,8 @@ public class RestTest extends AbstractControllerTest {
     @Test
     public void testCustomRepository() throws Exception {
         this.webClient.perform(get("/with-repository"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$").isArray());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray());
     }
         
     @Test
@@ -415,10 +442,10 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(piet);
         
         this.webClient.perform(get("/with-repository?active=true"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$").isArray())
-                        .andExpect(jsonPath("$[0].name").value("Henk"))
-                        .andExpect(jsonPath("$[1].name").value("Jan"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$[0].name").value("Henk"))
+            .andExpect(jsonPath("$[1].name").value("Jan"));
     }
 
     @Test
@@ -433,11 +460,11 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(piet);
         
         this.webClient.perform(get("/with-repository?active=true&page=0"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.number").value(0))
-                        .andExpect(jsonPath("$.size").value(10))
-                        .andExpect(jsonPath("$.content").isArray())
-                        .andExpect(jsonPath("$.content[0].name").value("Jan"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.number").value(0))
+            .andExpect(jsonPath("$.size").value(10))
+            .andExpect(jsonPath("$.content").isArray())
+            .andExpect(jsonPath("$.content[0].name").value("Jan"));
     }
 
     @Test
@@ -457,10 +484,10 @@ public class RestTest extends AbstractControllerTest {
         entityBuilder.save(piet);
         
         this.webClient.perform(get("/with-repository?active=true&type=name"))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$").isArray())
-                        .andExpect(jsonPath("$[0].name").value("Henk"))
-                        .andExpect(jsonPath("$[1].name").value("Jan"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray())
+            .andExpect(jsonPath("$[0].name").value("Henk"))
+            .andExpect(jsonPath("$[1].name").value("Jan"));
     }
 
     @Test
@@ -469,11 +496,11 @@ public class RestTest extends AbstractControllerTest {
         entity.setName("Test");
         
         this.webClient.perform(post("/with-service")
-                            .contentType(MediaType.APPLICATION_JSON)
-                            .content(objectMapper.writeValueAsString(entity)))
-                        .andExpect(status().isOk())
-                        .andExpect(jsonPath("$.id").value(1))
-                        .andExpect(jsonPath("$.name").value("Test with User!"));
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(entity)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.id").value(1))
+            .andExpect(jsonPath("$.name").value("Test with User!"));
     }
     
     @Test
@@ -482,41 +509,34 @@ public class RestTest extends AbstractControllerTest {
         entity.setName("Initial");
         entityBuilder.save(entity);
 
-        try {
-            this.webClient.perform(put("/with-rollback/" + entity.getId())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .content("{\"name\":\"Updated\"}"))
-                .andExpect(status().is5xxServerError());
-            
-            Assert.fail("Expected an UnsupportedOperationException.");
-        } catch (NestedServletException nse) {
-            Assert.assertEquals(UnsupportedOperationException.class, nse.getCause().getClass());
-        }
+        this.webClient.perform(put("/with-rollback/" + entity.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Updated\"}"))
+            .andExpect(status().is5xxServerError());
 
         WithRollback result = entityBuilder.get(WithRollback.class, entity.getId());
-        Assert.assertEquals("Initial", result.getName());
+        Assertions.assertEquals("Initial", result.getName());
     }
 
     @Test
     public void testCustomController() throws Exception {
         this.webClient.perform(get("/with-controller"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
-                //.andExpect(jsonPath("$.a").value("b"));
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray());
     }
     
     @Test
     public void testCustomControllerEmptyMapping() throws Exception {
         this.webClient.perform(get("/with-controller-empty-mapping"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray());
     }
     
     @Test
     public void testCustomControllerCustomMapping() throws Exception {
         this.webClient.perform(get("/with-controller-custom-test"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray());
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$").isArray());
     }
 
 }

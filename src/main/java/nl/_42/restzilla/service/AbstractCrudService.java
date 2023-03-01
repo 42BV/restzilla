@@ -2,7 +2,7 @@ package nl._42.restzilla.service;
 
 import nl._42.restzilla.repository.RepositoryAware;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.io.Serializable;
 
@@ -13,13 +13,13 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * this instance is not marked as final, because it can be
      * dynamically injected at runtime.
      */
-    private PagingAndSortingRepository<T, ID> repository;
+    private JpaRepository<T, ID> repository;
 
     /**
      * {@inheritDoc}
      */
     @Override
-    public PagingAndSortingRepository<T, ID> getRepository() {
+    public JpaRepository<T, ID> getRepository() {
         return repository;
     }
 
@@ -27,7 +27,7 @@ public abstract class AbstractCrudService<T extends Persistable<ID>, ID extends 
      * {@inheritDoc}
      */
     @Override
-    public void setRepository(PagingAndSortingRepository<T, ID> repository) {
+    public void setRepository(JpaRepository<T, ID> repository) {
         this.repository = repository;
     }
 

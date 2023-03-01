@@ -6,11 +6,10 @@ package nl._42.restzilla.service;
 import nl._42.restzilla.AbstractSpringTest;
 import nl._42.restzilla.builder.UserBuilder;
 import nl._42.restzilla.model.User;
-
 import nl._42.restzilla.web.mapping.ReadServiceEntityFinder;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public class ReadServiceEntityFinderTest extends AbstractSpringTest {
@@ -23,7 +22,7 @@ public class ReadServiceEntityFinderTest extends AbstractSpringTest {
 
     private ReadServiceEntityFinder entityFinder;
     
-    @Before
+    @BeforeEach
     public void setUp() {
         entityFinder = new ReadServiceEntityFinder(readService);
     }
@@ -32,8 +31,8 @@ public class ReadServiceEntityFinderTest extends AbstractSpringTest {
     public void testFind() {
         User jan = userBuilder.createUser("Jan");
         Object user = entityFinder.find(jan.getId(), User.class);
-        Assert.assertNotNull(user);
-        Assert.assertEquals("Jan", ((User) user).getName());
+        Assertions.assertNotNull(user);
+        Assertions.assertEquals("Jan", ((User) user).getName());
     }
 
 }

@@ -3,15 +3,15 @@
  */
 package nl._42.restzilla.repository;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.domain.Persistable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.support.SimpleJpaRepository;
-import org.springframework.data.repository.PagingAndSortingRepository;
 import org.springframework.util.StringUtils;
 
-import javax.persistence.EntityManager;
-import javax.persistence.PersistenceContext;
 import java.io.Serializable;
 
 /**
@@ -38,16 +38,14 @@ public class DefaultRepositoryFactory implements CrudRepositoryFactory {
     }
 
     @Override
-    public<T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> build(
-      final Class<T> entityClass
-    ) {
+    public<T extends Persistable<ID>, ID extends Serializable> JpaRepository<T, ID> build(Class<T> entityClass) {
 
-        PagingAndSortingRepository<T, ?> repository = new SimpleJpaRepository<T, ID>(entityClass, entityManager);
+        JpaRepository<T, ?> repository = new SimpleJpaRepository<>(entityClass, entityManager);
         beanFactory.autowireBean(repository);
 
         final String beanName = nameOf(entityClass);
         Object proxy = beanFactory.applyBeanPostProcessorsAfterInitialization(repository, beanName);
-        return (PagingAndSortingRepository<T, ID>) proxy;
+        return (JpaRepository<T, ID>) proxy;
     }
 
     private static String nameOf(Class<?> entityClass) {

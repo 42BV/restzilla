@@ -2,9 +2,9 @@ package nl._42.restzilla.service;
 
 import nl._42.restzilla.AbstractSpringTest;
 import nl._42.restzilla.model.WithCache;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
 
@@ -18,7 +18,7 @@ public class WithCacheServiceTest extends AbstractSpringTest {
     @Autowired
     private Cache cache;
     
-    @Before
+    @BeforeEach
     public void testSetup() {
         cache.clear();
         
@@ -32,13 +32,13 @@ public class WithCacheServiceTest extends AbstractSpringTest {
     @Test
     public void testCacheFindOne() {
         WithCache entity = service.findOne(42L);
-        Assert.assertEquals("Test", entity.getName());
+        Assertions.assertEquals("Test", entity.getName());
     }
     
     @Test
     public void testCacheFindOneNotFound() {
         Optional<WithCache> entity = service.find(24L);
-        Assert.assertEquals(false, entity.isPresent());
+        Assertions.assertEquals(false, entity.isPresent());
     }
     
     @Test
@@ -47,16 +47,16 @@ public class WithCacheServiceTest extends AbstractSpringTest {
         entity.setName("Other");
         
         WithCache result = service.save(entity);
-        Assert.assertEquals(result.getId(), entity.getId());
-        
-        Assert.assertEquals(1, service.findAll().size());
+        Assertions.assertEquals(result.getId(), entity.getId());
+
+        Assertions.assertEquals(1, service.findAll().size());
 
         WithCache cached1 = service.findOne(result.getId());
         WithCache cached2 = service.findOne(result.getId());
-        Assert.assertEquals(cached1, cached2);
+        Assertions.assertEquals(cached1, cached2);
         
         service.delete(cached2);
-        Assert.assertEquals(0, service.findAll().size());
+        Assertions.assertEquals(0, service.findAll().size());
     }
 
 }
