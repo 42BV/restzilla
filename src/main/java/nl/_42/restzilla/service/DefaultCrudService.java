@@ -11,7 +11,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.Optional;
 
 import static java.lang.String.format;
@@ -87,7 +86,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional
     public <S extends T> S save(S entity) {
-        Objects.requireNonNull(entity, "Cannot save a null entity");
+        requireNonNull(entity, "Cannot save a null entity");
         S result = getRepository().save(entity);
         cache.clear();
         return result;
@@ -99,14 +98,9 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional
     public void delete(T entity) {
-        Objects.requireNonNull(entity, "Cannot delete a null entity");
+        requireNonNull(entity, "Cannot delete a null entity");
         getRepository().delete(entity);
         cache.clear();
-    }
-
-    @Transactional
-    public void delete(ID id) {
-        find(id).ifPresent(this::delete);
     }
 
     /**
@@ -114,7 +108,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      * @param cache the new cache
      */
     protected void setCache(Cache cache) {
-        Objects.requireNonNull(cache, "Cache is required when calling setCache");
+        requireNonNull(cache, "Cache is required when calling setCache");
         this.cache = new CacheTemplate(cache);
     }
 
