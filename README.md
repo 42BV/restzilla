@@ -324,11 +324,6 @@ public class WebMvcConfig extends WebMvcConfigurerAdapter {
 
  private SpringSwaggerConfig springSwaggerConfig;
 
- @Bean
- public SwaggerRestPlugin swaggerRestPlugin(CrudHandlerMapping crudHandlerMapping) {
-  return new SwaggerRestPlugin(springSwaggerConfig, crudHandlerMapping);
- }
-
  @Autowired
  public void setSpringSwaggerConfig(SpringSwaggerConfig springSwaggerConfig) {
   this.springSwaggerConfig = springSwaggerConfig;

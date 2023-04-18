@@ -1,15 +1,14 @@
 package nl._42.restzilla.repository;
 
 import nl._42.restzilla.model.WithRepository;
-
-import java.util.List;
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface WithRepositoryRepository extends PagingAndSortingRepository<WithRepository, Long> {
+import java.util.List;
+
+public interface WithRepositoryRepository extends JpaRepository<WithRepository, Long> {
 
     WithRepository findByActive(boolean active);
     

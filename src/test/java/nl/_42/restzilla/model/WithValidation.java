@@ -7,7 +7,7 @@ import nl._42.restzilla.RestConfig;
 import nl._42.restzilla.RestResource;
 import nl._42.restzilla.model.dto.ValidationDto;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 @RestResource(create = @RestConfig(inputType = ValidationDto.class))

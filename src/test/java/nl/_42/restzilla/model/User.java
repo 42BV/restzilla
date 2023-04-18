@@ -9,7 +9,7 @@ import nl._42.restzilla.model.dto.CreateUserModel;
 import nl._42.restzilla.model.dto.UpdateUserModel;
 import nl._42.restzilla.model.dto.UserModel;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 /**
  * Represents a user.

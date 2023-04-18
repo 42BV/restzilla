@@ -7,7 +7,7 @@ import nl._42.restzilla.registry.EntityClassAware;
 import org.springframework.cache.Cache;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
@@ -53,7 +53,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      *
      * @param repository the repository
      */
-    public DefaultCrudService(PagingAndSortingRepository<T, ID> repository) {
+    public DefaultCrudService(JpaRepository<T, ID> repository) {
         this();
         setRepository(repository);
     }
@@ -64,7 +64,7 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
      * @param entityClass the entity class
      * @param repository the repository
      */
-    public DefaultCrudService(Class<T> entityClass, PagingAndSortingRepository<T, ID> repository) {
+    public DefaultCrudService(Class<T> entityClass, JpaRepository<T, ID> repository) {
         this(entityClass);
         setRepository(repository);
     }
@@ -87,7 +87,8 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional
     public <S extends T> S save(S entity) {
-        S result = super.save(entity);
+        Objects.requireNonNull(entity, "Cannot save a null entity");
+        S result = getRepository().save(entity);
         cache.clear();
         return result;
     }
@@ -98,14 +99,14 @@ public class DefaultCrudService<T extends Persistable<ID>, ID extends Serializab
     @Override
     @Transactional
     public void delete(T entity) {
-        super.delete(entity);
+        Objects.requireNonNull(entity, "Cannot delete a null entity");
+        getRepository().delete(entity);
         cache.clear();
     }
 
-    protected void delete(ID id) {
-        Objects.requireNonNull(id, "Cannot delete based on a null identifier");
-        getRepository().deleteById(id);
-        cache.clear();
+    @Transactional
+    public void delete(ID id) {
+        find(id).ifPresent(this::delete);
     }
 
     /**

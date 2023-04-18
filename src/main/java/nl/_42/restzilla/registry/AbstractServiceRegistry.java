@@ -4,7 +4,7 @@ import nl._42.restzilla.repository.RepositoryAware;
 import nl._42.restzilla.service.CrudService;
 import org.springframework.core.GenericTypeResolver;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -17,11 +17,8 @@ import java.util.function.Function;
  */
 abstract class AbstractServiceRegistry implements CrudServiceRegistry {
 
-    private final ConcurrentHashMap<Class<?>, PagingAndSortingRepository<?, ?>> repositories =
-      new ConcurrentHashMap<>();
-
-    private final ConcurrentHashMap<Class<?>, CrudService<?, ?>> services =
-      new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<?>, JpaRepository<?, ?>> repositories = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Class<?>, CrudService<?, ?>> services = new ConcurrentHashMap<>();
 
     /**
      * Retrieve or build the service.
@@ -56,17 +53,17 @@ abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      * @return the repository
      */
     @SuppressWarnings("unchecked")
-    <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> repositoryOf(
+    <T extends Persistable<ID>, ID extends Serializable> JpaRepository<T, ID> repositoryOf(
       final Class<T> entityClass,
-      final Function<Class<T>, PagingAndSortingRepository<T, ID>> factory
+      final Function<Class<T>, JpaRepository<T, ID>> factory
     ) {
 
-        PagingAndSortingRepository<?, ?> service = repositories.computeIfAbsent(
+        JpaRepository<?, ?> service = repositories.computeIfAbsent(
           entityClass,
           (type) -> factory.apply(entityClass)
         );
 
-        return (PagingAndSortingRepository<T, ID>) service;
+        return (JpaRepository<T, ID>) service;
     }
 
     /**
@@ -74,9 +71,9 @@ abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      *
      * @param repository the repository
      */
-    void registerRepository(PagingAndSortingRepository<?, ?> repository) {
-      getEntityClass(repository, PagingAndSortingRepository.class).ifPresent(entityClass ->
-          this.registerRepository(entityClass, repository)
+    void registerRepository(JpaRepository<?, ?> repository) {
+      getEntityClass(repository, JpaRepository.class).ifPresent(entityClass ->
+          registerRepository(entityClass, repository)
       );
     }
 
@@ -86,7 +83,7 @@ abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      * @param entityClass the entity class
      * @param repository the repository
      */
-    private void registerRepository(Class<?> entityClass, PagingAndSortingRepository<?, ?> repository) {
+    private void registerRepository(Class<?> entityClass, JpaRepository<?, ?> repository) {
         this.repositories.put(entityClass, repository);
     }
 
@@ -109,9 +106,9 @@ abstract class AbstractServiceRegistry implements CrudServiceRegistry {
      */
     @SuppressWarnings("unchecked")
     private void registerService(Class<?> entityClass, CrudService<?, ?> service) {
-        if (service instanceof RepositoryAware) {
-            PagingAndSortingRepository repository = getRepository((Class) entityClass);
-            ((RepositoryAware) service).setRepository(repository);
+        if (service instanceof RepositoryAware repositoryService) {
+            JpaRepository repository = getRepository((Class) entityClass);
+            repositoryService.setRepository(repository);
         }
 
         this.services.put(entityClass, service);

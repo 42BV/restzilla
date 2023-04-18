@@ -3,7 +3,7 @@
  */
 package nl._42.restzilla.model;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 @Entity
 // REST resource is defined in the controller class.

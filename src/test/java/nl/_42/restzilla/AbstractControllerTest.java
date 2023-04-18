@@ -1,13 +1,13 @@
 package nl._42.restzilla;
 
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
-
-import org.junit.Before;
+import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.DefaultMockMvcBuilder;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.log;
 
 /**
  * Template for testing the dynamic REST endpoints.
@@ -22,7 +22,7 @@ public abstract class AbstractControllerTest extends AbstractSpringTest {
     
     protected MockMvc webClient;
 
-    @Before
+    @BeforeEach
     public void initWebClient() {
         DefaultMockMvcBuilder webClientBuilder = MockMvcBuilders.webAppContextSetup(webApplicationContext)
                 .alwaysDo(log());

@@ -1,14 +1,14 @@
 package nl._42.restzilla.service;
 
 import com.google.common.collect.Lists;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Persistable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.persistence.EntityNotFoundException;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Optional;
@@ -112,6 +112,6 @@ public interface PagingAndSortingService<T extends Persistable<ID>, ID extends S
    * Retrieve the underlying repository.
    * @return the repository
    */
-  PagingAndSortingRepository<T, ID> getRepository();
+  JpaRepository<T, ID> getRepository();
 
 }

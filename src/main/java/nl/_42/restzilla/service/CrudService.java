@@ -25,21 +25,13 @@ public interface CrudService<T extends Persistable<ID>, ID extends Serializable>
      * @param entity the entity
      * @return the saved entity
      */
-    @Transactional
-    default <S extends T> S save(S entity) {
-        Objects.requireNonNull(entity, "Cannot save a null entity");
-        return getRepository().save(entity);
-    }
+    <S extends T> S save(S entity);
 
     /**
      * Deletes the entity.
      *
      * @param entity the entity to delete
      */
-    @Transactional
-    default void delete(T entity) {
-        Objects.requireNonNull(entity, "Cannot delete a null entity");
-        getRepository().delete(entity);
-    }
+    void delete(T entity);
 
 }

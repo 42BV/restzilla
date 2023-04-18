@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import nl._42.restzilla.service.CrudService;
 import org.springframework.data.domain.Persistable;
-import org.springframework.data.repository.PagingAndSortingRepository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 /**
  * Registry capable of retrieving a CRUD service or repository
@@ -33,6 +33,6 @@ public interface CrudServiceRegistry {
      * @param entityClass the entity class
      * @return the repository bean
      */
-    <T extends Persistable<ID>, ID extends Serializable> PagingAndSortingRepository<T, ID> getRepository(Class<T> entityClass);
+    <T extends Persistable<ID>, ID extends Serializable> JpaRepository<T, ID> getRepository(Class<T> entityClass);
 
 }

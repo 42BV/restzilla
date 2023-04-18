@@ -1,6 +1,6 @@
 package nl._42.restzilla.model.dto;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 
 public class ValidationDto {
 
