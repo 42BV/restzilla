@@ -41,7 +41,7 @@
 		<!-- Dependency versions -->
 		<spring.boot.version>3.0.5</spring.boot.version>
 		<beanmapper.version>5.0.0</beanmapper.version>
-		<commons-lang.version>3.12.0</commons-lang.version>
+		<commons-lang.version>3.18.0</commons-lang.version>
 	</properties>
 
 	<scm>
