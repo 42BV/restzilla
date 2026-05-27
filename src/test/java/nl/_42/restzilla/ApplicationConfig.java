@@ -8,7 +8,6 @@ import io.beanmapper.BeanMapper;
 import io.beanmapper.config.BeanMapperBuilder;
 import nl._42.restzilla.config.EnableRest;
 import nl._42.restzilla.web.GlobalExceptionHandler;
-import org.hibernate.cfg.ImprovedNamingStrategy;
 import org.hibernate.dialect.HSQLDialect;
 import org.hibernate.jpa.HibernatePersistenceProvider;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,7 +76,6 @@ public class ApplicationConfig {
         entityManagerFactoryBean.setJpaVendorAdapter(jpaVendorAdapter);
         
         Map<String, Object> jpaProperties = new HashMap<String, Object>();
-        jpaProperties.put("hibernate.ejb.naming_strategy", ImprovedNamingStrategy.class.getName());
         jpaProperties.put("hibernate.dialect", hibernateDialect);
         jpaProperties.put("hibernate.hbm2ddl.auto", "create-drop");
         jpaProperties.put("hibernate.jdbc.use_get_generated_keys", true);
@@ -118,11 +116,6 @@ public class ApplicationConfig {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
         converter.setObjectMapper(objectMapper());
         return converter;
-    }
-    
-    @Bean
-    public Validator validator() {
-        return new CustomValidatorBean();
     }
     
     @Bean

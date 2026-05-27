@@ -17,16 +17,16 @@ Add the Maven dependency:
 <dependency>
   <groupId>nl.42.restzilla</groupId>
   <artifactId>restzilla</artifactId>
-  <version>2.0.0</version>
+  <version>5.0.0</version>
 </dependency>
 ```
 
 Required dependencies:
 
-* Spring MVC (5.1+)
-* Spring Data JPA (2.1+)
-* Jackson (2.9+)
-* Java (1.8+)
+* Spring MVC (7+)
+* Spring Data JPA (4+)
+* Jackson (2.21+)
+* Java (21+)
 
 Annotate your Spring Configuration with `@EnableRest`:
 
