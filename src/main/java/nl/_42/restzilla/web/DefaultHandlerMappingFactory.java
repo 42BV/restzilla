@@ -1,6 +1,5 @@
 package nl._42.restzilla.web;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.io.CharStreams;
 import io.beanmapper.BeanMapper;
 import jakarta.servlet.http.HttpServletRequest;
@@ -32,6 +31,7 @@ import org.springframework.validation.Validator;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.method.HandlerMethod;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.Serializable;
 import java.lang.reflect.Method;

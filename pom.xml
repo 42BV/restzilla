@@ -40,7 +40,7 @@
 
 		<!-- Dependency versions -->
 		<spring.boot.version>4.0.6</spring.boot.version>
-		<beanmapper.version>5.0.0</beanmapper.version>
+		<beanmapper.version>7.0.2</beanmapper.version>
 		<commons-lang.version>3.18.0</commons-lang.version>
 
 		<!-- Plugin versions -->
@@ -99,7 +99,7 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
+			<groupId>tools.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
 			<scope>provided</scope>
 		</dependency>
