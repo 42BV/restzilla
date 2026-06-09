@@ -3,7 +3,6 @@
  */
 package nl._42.restzilla;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.config.BeanMapperBuilder;
 import nl._42.restzilla.config.EnableRest;
@@ -19,19 +18,18 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ComponentScan.Filter;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
-import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.json.JacksonJsonHttpMessageConverter;
 import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-import org.springframework.validation.Validator;
-import org.springframework.validation.beanvalidation.CustomValidatorBean;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandlerAdapter;
+import tools.jackson.databind.json.JsonMapper;
 
 import javax.sql.DataSource;
 import java.util.HashMap;
@@ -63,7 +61,7 @@ public class ApplicationConfig {
     @Autowired
     @Qualifier("hibernateDialect")
     private String hibernateDialect;
-    
+
     @Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean entityManagerFactoryBean = new LocalContainerEntityManagerFactoryBean();
@@ -94,13 +92,6 @@ public class ApplicationConfig {
     }
 
     @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.findAndRegisterModules();
-        return mapper;
-    }
-
-    @Bean
     public BeanMapper beanMapper() {
         return new BeanMapperBuilder().build();
     }
@@ -112,12 +103,15 @@ public class ApplicationConfig {
         return adapter;
     }
     
-    private MappingJackson2HttpMessageConverter mappingJackson2HttpMessageConverter() {
-        MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter();
-        converter.setObjectMapper(objectMapper());
-        return converter;
+    private JacksonJsonHttpMessageConverter mappingJackson2HttpMessageConverter() {
+        return new JacksonJsonHttpMessageConverter(jsonMapper());
     }
-    
+
+    @Bean
+    public JsonMapper jsonMapper() {
+        return new JsonMapper();
+    }
+
     @Bean
     public Cache cache() {
         return new ConcurrentMapCache("test");
@@ -129,17 +123,17 @@ public class ApplicationConfig {
     }
 
     public static class HsqlConfig {
-        
+
         @Bean
         public DataSource dataSource() {
             return new EmbeddedDatabaseBuilder().setName("dev").setType(HSQL).build();
         }
-        
+
         @Bean
         public String hibernateDialect() {
             return HSQLDialect.class.getName();
         }
-        
+
     }
 
 }

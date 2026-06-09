@@ -1,10 +1,9 @@
 package nl._42.restzilla.web.util;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 import org.springframework.util.StringUtils;
 
-import java.io.IOException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
@@ -28,14 +27,14 @@ public class JsonUtil {
         try {
             JsonNode tree = objectMapper.readTree(json);
             return getPropertyNames(tree, "");
-        } catch (IOException e) {
+        } catch (RuntimeException e) {
             throw new IllegalStateException("Could not retrieve property names from JSON.", e);
         }
     }
     
     private static Set<String> getPropertyNames(JsonNode node, String base) {
         Set<String> propertyNames = new HashSet<>();
-        Iterator<String> iterator = node.fieldNames();
+        Iterator<String> iterator = node.propertyNames().iterator();
         while (iterator.hasNext()) {
             String fieldName = iterator.next();
             String propertyName = StringUtils.isEmpty(base) ? fieldName : base + "." + fieldName;

@@ -3,7 +3,6 @@
  */
 package nl._42.restzilla.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.beanmapper.BeanMapper;
 import io.beanmapper.config.BeanMapperBuilder;
 import io.beanmapper.utils.Classes;
@@ -30,6 +29,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.ClassUtils;
 import org.springframework.validation.Validator;
 import org.springframework.web.servlet.HandlerMapping;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.HashSet;
 import java.util.Set;

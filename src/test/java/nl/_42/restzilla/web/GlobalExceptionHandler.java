@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.NoHandlerFoundException;
-import org.springframework.web.servlet.view.json.MappingJackson2JsonView;
+import org.springframework.web.servlet.view.json.JacksonJsonView;
 
 import static org.springframework.http.HttpStatus.FORBIDDEN;
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
@@ -47,7 +47,7 @@ public class GlobalExceptionHandler {
 
     private static ModelAndView error(HttpServletResponse response, HttpStatus status) {
         response.setStatus(status.value());
-        return new ModelAndView(new MappingJackson2JsonView(), "error", status.name());
+        return new ModelAndView(new JacksonJsonView(), "error", status.name());
     }
 
 }
